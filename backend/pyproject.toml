@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traystack"
-version = "0.1.0"
+version = "0.2.0"
 description = "Traceable contract storage and retrieval"
 requires-python = ">=3.12"
 dependencies = [
@@ -17,6 +17,7 @@ dependencies = [
   "python-multipart>=0.0.20,<1",
   "pymupdf>=1.25,<2",
   "pillow>=11,<13",
+  "pytesseract>=0.3.13,<1",
   "swagger-ui-py>=25.7.1,<26",
 ]
 
@@ -28,7 +29,7 @@ include = ["traystack*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: requires a dedicated PostgreSQL test database"]
+markers = ["integration: requires a dedicated PostgreSQL test database", "ocr: runs real Tesseract OCR"]
 
 [tool.ruff]
 line-length = 100

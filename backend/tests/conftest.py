@@ -35,7 +35,15 @@ def engine(database_url):
             .scalars()
             .all()
         )
-        if set(tables) - {"documents", "revisions", "artifacts", "alembic_version"}:
+        if set(tables) - {
+            "documents",
+            "revisions",
+            "artifacts",
+            "alembic_version",
+            "processing_jobs",
+            "revision_texts",
+            "page_texts",
+        }:
             pytest.fail("Unexpected tables in test database; use a dedicated test database")
     config = Config(str(ROOT / "backend" / "alembic.ini"))
     previous = os.environ.get("DATABASE_URL")
@@ -54,7 +62,12 @@ def engine(database_url):
 @pytest.fixture
 def client(engine, database_url, tmp_path):
     with engine.begin() as connection:
-        connection.execute(text("TRUNCATE artifacts, revisions, documents CASCADE"))
+        connection.execute(
+            text(
+                "TRUNCATE page_texts, revision_texts, processing_jobs, "
+                "artifacts, revisions, documents CASCADE"
+            )
+        )
     settings = Settings(
         database_url=database_url, storage_path=tmp_path / "blobs", upload_max_bytes=1024 * 1024
     )

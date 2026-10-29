@@ -13,8 +13,9 @@
   hält Originalbytes; ein späterer Blob-Storage-Adapter kann die Ablage ersetzen.
   Die tatsächliche Storage-Schnittstelle bietet Stream-/Byte-Ablage und Abruf.
 - **Ehrlicher Status:** Ein erfolgreicher Upload ist keine erfolgreiche Extraktion.
-  Alle Revisionen sind aktuell `not_processed`. Manuelle Prüfung kann vorgemerkt
-  werden; daraus wird kein Qualitätssiegel abgeleitet.
+  Jobstatus, Seitenabdeckung und Qualität sind getrennt. Eine Prüfvormerkung bleibt
+  auch bei vollständig verarbeitetem Text sichtbar und wird für dieselbe Quelle
+  nicht automatisch zurückgenommen; daraus wird kein Qualitätssiegel abgeleitet.
 - **Lokale API-Dokumentation:** Swagger-JavaScript und CSS kommen aus einer
   installierten Abhängigkeit statt aus einem CDN. Der Core braucht nach dem Build
   keine externen Dienste.
@@ -22,3 +23,25 @@
   ausgewählten Text. Fehlende oder fragwürdige Extraktion wird unverifizierbar;
   ein Treffer wird mit Quelle belegt. Fuzzy und semantische Ähnlichkeit sind
   getrennte spätere Funktionen und keine Beweise für Abwesenheit.
+
+- **Ein Job ist ein Lauf:** Pro Revision genau ein aktiver Lauf, transaktional
+  beansprucht. Wiederholung erstellt einen neuen Datensatz. Alte Artefakte bleiben
+  erhalten; erst die abgeschlossene Veröffentlichung wechselt den ausgewählten Text.
+- **Einfache Warteschlange:** PostgreSQL reicht für diesen lokalen Prototyp.
+  Ein eigener Worker hält OCR außerhalb von HTTP-Anfragen. Ein hart abgebrochener
+  Lauf erfordert explizite Wiederherstellung statt einer riskanten automatischen
+  Zeitüberschreitung mit eventuell noch arbeitendem Vorgänger.
+- **Konservative Extraktion:** Jede PDF-Seite mit Rasterbildern wird als Ganzes
+  OCRt, auch wenn eine Textschicht vorhanden ist. Das verhindert, dass ein Header
+  den unlesenen Scaninhalt verdeckt. Hochwertige Mischlayouts könnten später gezielt
+  kombiniert werden. Leere Seiten werden vorerst zur Prüfung markiert.
+- **Qualitätsheuristik v1:** Weniger als zehn alphanumerische Zeichen,
+  Unicode-Ersatzzeichen oder mehr als max(5, 8 Prozent der Zeichen) ungewöhnliche
+  Zeichen erzeugen Prüfbedarf. Bei OCR gelten ein mittlerer Wortscore unter 80/100
+  oder mehr als 20 Prozent Wörter unter 50/100 als Auffälligkeit. Fehlende
+  Konfidenzwerte erzeugen ebenfalls Prüfbedarf. Die Werte sind keine kalibrierten
+  Wahrscheinlichkeiten und keine Garantie für Handschrift oder korrektes Wording.
+- **Stabile Normalisierung:** NFC und Whitespace-/Casefold-Regeln behalten rechtlich
+  bedeutsame Zeichen bei. Mehrdeutige Silbentrennungen werden nicht repariert.
+  Unicode-Casefold kann Zeichen erweitern; deshalb referenzieren Seitenoffsets
+  ausdrücklich den normalisierten Text und keine geratenen Rohtextpositionen.

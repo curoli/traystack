@@ -16,6 +16,7 @@ from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload, sessionmaker
 
+from traystack.api.processing import router as processing_router
 from traystack.config import Settings
 from traystack.db import get_session
 from traystack.models import Artifact, Document, Revision
@@ -54,8 +55,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             engine.dispose()
 
     app = FastAPI(
-        title="TrayStack", version="0.1.0", lifespan=lifespan, docs_url=None, redoc_url=None
+        title="TrayStack", version="0.2.0", lifespan=lifespan, docs_url=None, redoc_url=None
     )
+    app.state.settings = config
+    app.include_router(processing_router)
     app.mount(
         "/api/docs-assets",
         StaticFiles(directory=distribution("swagger-ui-py").locate_file("swagger_ui/static")),
@@ -186,7 +189,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ):
         query = (
             select(Document)
-            .options(selectinload(Document.revisions).selectinload(Revision.artifacts))
+            .options(
+                selectinload(Document.revisions).selectinload(Revision.artifacts),
+                selectinload(Document.revisions).selectinload(Revision.jobs),
+                selectinload(Document.revisions).selectinload(Revision.text_index),
+            )
             .order_by(Document.created_at.desc(), Document.id)
             .limit(limit)
             .offset(offset)

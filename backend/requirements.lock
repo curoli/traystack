@@ -33,9 +33,13 @@ markupsafe==3.0.4
 opentelemetry-api==1.45.2
     # via fastapi
 packaging==26.3
-    # via swagger-ui-py
+    # via
+    #   pytesseract
+    #   swagger-ui-py
 pillow==12.3.0
-    # via traystack (backend/pyproject.toml)
+    # via
+    #   pytesseract
+    #   traystack (backend/pyproject.toml)
 psycopg==3.3.6
     # via traystack (backend/pyproject.toml)
 psycopg-binary==3.3.6
@@ -49,6 +53,8 @@ pydantic-core==2.50.2
 pydantic-settings==2.16.2
     # via traystack (backend/pyproject.toml)
 pymupdf==1.28.2
+    # via traystack (backend/pyproject.toml)
+pytesseract==0.3.13
     # via traystack (backend/pyproject.toml)
 python-dotenv==1.2.4
     # via pydantic-settings

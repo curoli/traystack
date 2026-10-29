@@ -1,4 +1,4 @@
-# Architektur — Meilenstein 1
+# Architektur — Meilensteine 1–2
 
 ```mermaid
 flowchart LR
@@ -7,13 +7,16 @@ flowchart LR
     API --> DB[(PostgreSQL 17)]
     API --> Blobs[(SHA-256-Dateispeicher)]
     Migration[Alembic: einmaliger Startjob] --> DB
+    Worker[Separater Python-Worker] --> DB
+    Worker --> Blobs
+    Worker --> Extract[PyMuPDF / Tesseract]
 ```
 
 Beim Upload entstehen in einer Datenbanktransaktion ein logisches Dokument,
 dessen erste Revision und ein Originalartefakt. Das JSONB-Feld `metadata` enthält
 optionale Metadaten; Dateiname, Typ, Größe, Hash und Uploadparameter sind am
 Artefakt gespeichert. Das Feld `requires_manual_review` wird am Originalartefakt
-als Parameter aufbewahrt, damit die spätere Verarbeitung es übernehmen kann.
+als Parameter aufbewahrt und in jeden Verarbeitungslauf übernommen.
 
 Dateiendung und tatsächlicher PDF-/Bildinhalt werden geprüft; das clientseitige
 MIME-Label wird nicht als Nachweis akzeptiert. Die API begrenzt die Dateigröße vor
@@ -33,7 +36,8 @@ nicht automatisch gelöscht, weil andere Artefakte denselben Inhalt nutzen könn
 Ein Garbage Collector ist für diesen Meilenstein nicht implementiert.
 
 Die API bietet Upload, paginierte Liste, Dokument-/Revisions-/Artefaktdetails,
-Dateidownload und Readiness. Fehler in Datenbank oder Storage liefern einen
+Dateidownload, Verarbeitungsstart/-status/-wiederholung, expliziten Textabruf und
+Readiness. Fehler in Datenbank oder Storage liefern einen
 sichtbaren Fehler; fehlende Originalbytes werden nicht als erfolgreicher leerer
 Download ausgegeben. Verträge und SQL-Parameter werden nicht in Fehlerlogs geschrieben.
 
@@ -42,6 +46,66 @@ Dokument sowie Quellenartefakte derselben Revision. Es gibt keine Mutation oder
 Löschung von Artefakten über die API. Beliebige Provenienzgraphen und alternative
 Uploads sind noch nicht exponiert.
 
-Worker, OCR, Texttabellen und Suche folgen in Meilensteinen 2–3. Daher enthält
-Compose noch keinen funktionslosen Worker-Service. Die Oberfläche nennt den
-realen Status `not_processed` und stellt keine Suchbedienelemente vorzeitig bereit.
+## Verarbeitung und Veröffentlichung
+
+`POST /api/revisions/{id}/process` nimmt die Originalartefakt-ID und optional eine
+Prüfvormerkung entgegen und antwortet mit 202. Nur wenn genau ein Original
+vorliegt, darf seine ID weggelassen werden. Weitere Repräsentationen wählen den
+Index nicht automatisch um. Ein partieller eindeutiger Index erlaubt höchstens
+einen queued/running Job pro Revision; Konflikte liefern 409.
+
+Der Worker beansprucht einen Job mit `FOR UPDATE SKIP LOCKED`, markiert ihn als
+laufend und committet vor der CPU-Arbeit. Er kontrolliert Größe und SHA-256 der
+Quelle. Für PDF-Seiten mit mindestens 20 Zeichen und ohne Rasterbilder nutzt er
+die Textschicht; Seiten mit Bildern oder wenig Text werden vollständig gerendert
+und OCR unterzogen. Damit geht der Scaninhalt neben einem eingebetteten Header
+nicht verloren. Diese konservative Regel OCRt auch digitale Seiten mit Logos.
+
+Tesseract liefert Wörter, Bounding Boxes und echte Wort-Konfidenzwerte. PDF-Boxes
+verwenden Punkte und x0/y0/x1/y1; OCR-Boxes beziehen sich auf das gerenderte,
+orientierte Bild in Pixeln und left/top/width/height. Bilder werden auf maximal
+25 Millionen Pixel begrenzt, PDF-Rendering standardmäßig auf 200 dpi. Ein Timeout
+oder ein leerer OCR-Text wird als Seitenproblem sichtbar, nicht als fehlende Klausel.
+
+Der Lauf erzeugt zwei neue immutable Artefakte, `structured_json` und
+`extracted_markdown`. Das JSON enthält Seiten, Text, Verfahren, Qualität,
+Koordinaten, Parameter und Engine-Versionen. In einer Datenbanktransaktion werden
+Artefaktmetadaten, ausgewählter Revisionstext, Seitentexte und der abgeschlossene
+Job veröffentlicht. Bei Datenbankfehlern bleiben weder halbe Seitensätze noch
+derivative Artefaktzeilen sichtbar. Nicht referenzierte Blob-Dateien sind wie
+beim Upload möglich; ein Garbage Collector bleibt offen.
+
+Erfolgreich veröffentlichte Teilergebnisse ersetzen ebenfalls den ausgewählten
+Index und tragen ihre tatsächliche Qualität. Ein fehlgeschlagener Lauf erhält
+den vorherigen ausgewählten Index; seine Fehlermeldung ist daneben sichtbar.
+Alte Laufartefakte bleiben herunterladbar. Die aktuelle Auswahl nennt eindeutig
+Quellartefakt, Job und Normalisierungsversion. `POST /api/jobs/{id}/retry` erstellt
+einen neuen Job mit übernommenen Parametern und Verweis auf den fehlgeschlagenen
+Vorgänger. Ein inzwischen hinzugekommener manueller Prüfbedarf wird beim Retry
+zusätzlich übernommen; die alten Laufparameter bleiben unverändert erhalten.
+Ein pro Lauf gesetzter manueller Prüfbedarf wird für dieselbe Quelle
+auch in späteren Läufen beibehalten.
+
+## Abdeckung, Qualität und Text
+
+Abdeckung (`complete`, `partial`, `unavailable`) und Qualität (`no_known_issue`,
+`needs_review`, `unassessed`) sind getrennte Felder. Eine Seite mit Text und
+manueller Prüfvormerkung ist beispielsweise vollständig verarbeitet und trotzdem
+prüfbedürftig. Die Oberfläche zeigt eine eigene Prüfgruppe sowie Originaldownload,
+Seitentext, JSON-/Markdown-Vorschau und Laufhistorie. Sie pollt den realen API-Stand
+alle zwei Sekunden. Volltext wird nur über den expliziten Text-/Dateiabruf
+zurückgegeben, nicht in Dokumentlisten und Metadaten.
+
+Normalisierung v1: Unicode NFC, einheitliche Zeilenenden, Whitespace auf ein
+Leerzeichen reduzieren, Randwhitespace entfernen und Unicode-Casefold. Zahlen,
+Negationen, Satzzeichen und Bindestriche bleiben erhalten; es gibt bewusst keine
+mehrdeutige Silbentrennungsreparatur. Rohtext verbindet Seiten mit `\n\f\n`;
+normalisierter Text verbindet nichtleere Seiten mit einem Leerzeichen. Die
+Seitenoffsets beziehen sich exakt auf diesen gespeicherten normalisierten String.
+
+Ein Job kann technisch abgeschlossen sein, obwohl einzelne Seiten unverfügbar
+oder prüfbedürftig sind. Erst Meilenstein 3 ergänzt die Suche und entscheidet
+anhand dieser Qualitätsdaten über die Zulässigkeit negativer Suchergebnisse.
+Automatische Wiederholung, Heartbeats und sichere Lease-Übernahme sind noch nicht
+implementiert; die README beschreibt den expliziten Wiederherstellungsablauf nach
+Worker-Abbruch. Während der Extraktion bleiben keine Datenbank-Rowlocks offen.

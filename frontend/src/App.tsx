@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
-  artifactUrl,
   getDocument,
   listDocuments,
   uploadDocument,
   type Document,
 } from "./api";
 
+import ArtifactCard from "./components/ArtifactCard";
+import ProcessingDetails from "./components/ProcessingDetails";
+import { needsReview, statusLabel } from "./components/processingLabels";
+
 const date = (value: string) =>
   new Date(value).toLocaleString("de-DE", {
     dateStyle: "medium",
     timeStyle: "short",
   });
-const size = (bytes: number) =>
-  bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : "Anfrage fehlgeschlagen.";
 
@@ -51,6 +52,43 @@ export default function App() {
       active = false;
     };
   }, [offset, generation]);
+
+  // Refresh list and the open document without hiding their contents while a worker runs.
+  useEffect(() => {
+    let alive = true;
+    const selectedId = selected?.id;
+    const timer = window.setInterval(async () => {
+      try {
+        const result = await listDocuments(offset);
+        if (alive) {
+          setDocuments(result.items);
+          setTotal(result.total);
+          setListError("");
+        }
+        if (selectedId) {
+          const detail = await getDocument(selectedId);
+          if (alive)
+            setSelected((current) =>
+              current?.id === selectedId ? detail : current,
+            );
+        }
+      } catch (error) {
+        if (alive) setListError(errorText(error));
+      }
+    }, 2000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [offset, selected?.id]);
+
+  async function refreshDocument(id: string) {
+    const document = await getDocument(id);
+    setSelected((current) => (current?.id === id ? document : current));
+    setDocuments((current) =>
+      current.map((item) => (item.id === id ? document : item)),
+    );
+  }
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,7 +130,7 @@ export default function App() {
         <a className="brand" href="/" aria-label="TrayStack Startseite">
           <span className="brand-mark">T</span>TrayStack
         </a>
-        <span className="environment">Lokale Demo · Meilenstein 1</span>
+        <span className="environment">Lokale Demo · Meilenstein 2</span>
         <a className="api-link" href="/docs" target="_blank" rel="noreferrer">
           API-Dokumentation ↗
         </a>
@@ -111,9 +149,10 @@ export default function App() {
           </p>
         </div>
         <div className="scope-note">
-          <strong>Aktueller Stand: Ablage und Download.</strong> Textextraktion,
-          OCR und Suche folgen in den nächsten Meilensteinen. Hochgeladene
-          Dokumente sind noch nicht verarbeitet.
+          <strong>Textextraktion und OCR sind verfügbar.</strong> Starte die
+          Verarbeitung in den Dokumentdetails. Seitenabdeckung und
+          Erkennungsqualität werden getrennt angezeigt. Die Suche folgt im
+          nächsten Meilenstein.
         </div>
         {notice && (
           <div role="status" className="message success">
@@ -162,8 +201,8 @@ export default function App() {
                 <span>
                   Manuelle Prüfung erforderlich
                   <small>
-                    Für Handschrift und schwer lesbare Scans. Wird für die
-                    spätere Verarbeitung vorgemerkt.
+                    Für Handschrift und schwer lesbare Scans. Bleibt auch nach
+                    erfolgreicher OCR als Prüfbedarf sichtbar.
                   </small>
                 </span>
               </label>
@@ -232,7 +271,14 @@ export default function App() {
                           {document.revisions.length} Revision(en)
                         </small>
                       </span>
-                      <span className="badge">Nicht verarbeitet</span>
+                      <span className="badge">
+                        {
+                          statusLabel[
+                            document.revisions.at(-1)?.processing_status ||
+                              "not_processed"
+                          ]
+                        }
+                      </span>
                       <span aria-hidden="true">→</span>
                     </button>
                   </li>
@@ -258,6 +304,34 @@ export default function App() {
             </nav>
           </section>
         </div>
+        {documents.some((document) => document.revisions.some(needsReview)) && (
+          <section
+            className="panel review-group"
+            aria-labelledby="review-heading"
+          >
+            <p className="eyebrow">MANUELLE PRÜFUNG · AKTUELLE LISTENSEITE</p>
+            <h2 id="review-heading">Original prüfen</h2>
+            <p>
+              Diese Dokumente haben eine Prüfvormerkung oder auffällige
+              Extraktionsqualität. Öffne das Original und verifiziere den
+              Inhalt.
+            </p>
+            <ul>
+              {documents
+                .filter((document) => document.revisions.some(needsReview))
+                .map((document) => (
+                  <li key={document.id}>
+                    <button
+                      className="review-link"
+                      onClick={() => openDocument(document.id)}
+                    >
+                      {document.title} →
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        )}
         {selected && (
           <section className="panel details" aria-labelledby="detail-heading">
             <div className="section-heading">
@@ -288,42 +362,16 @@ export default function App() {
                   Revision {revision.revision_number} {revision.label}
                 </h3>
                 <p className="identifier">Revision-ID: {revision.id}</p>
+                <ProcessingDetails
+                  revision={revision}
+                  onUpdated={() => refreshDocument(selected.id)}
+                />
                 {revision.artifacts.map((artifact) => (
-                  <article className="artifact" key={artifact.id}>
-                    <div className="artifact-heading">
-                      <div>
-                        <span className="eyebrow">ORIGINAL</span>
-                        <h3>{artifact.original_filename}</h3>
-                      </div>
-                      <a className="download" href={artifactUrl(artifact.id)}>
-                        Original herunterladen ↓
-                      </a>
-                    </div>
-                    <dl>
-                      <div>
-                        <dt>Dateityp / Größe</dt>
-                        <dd>
-                          {artifact.mime_type} · {size(artifact.size_bytes)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Verarbeitung</dt>
-                        <dd>
-                          Noch nicht verarbeitet
-                          {artifact.parameters.requires_manual_review ===
-                            true && " · Manuelle Prüfung vorgemerkt"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Artefakt-ID</dt>
-                        <dd>{artifact.id}</dd>
-                      </div>
-                      <div>
-                        <dt>SHA-256 der Originaldatei</dt>
-                        <dd className="hash">{artifact.sha256}</dd>
-                      </div>
-                    </dl>
-                  </article>
+                  <ArtifactCard
+                    key={artifact.id}
+                    artifact={artifact}
+                    revision={revision}
+                  />
                 ))}
               </div>
             ))}

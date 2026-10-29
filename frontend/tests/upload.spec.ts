@@ -28,7 +28,9 @@ test("upload, inspect, reload and download identical original bytes", async ({
   );
   await page.getByRole("button", { name: "Dokument speichern" }).click();
   expect((await uploadResponse).status()).toBe(201);
-  await expect(page.getByRole("status")).toContainText("wurde gespeichert");
+  await expect(
+    page.getByRole("status").filter({ hasText: "wurde gespeichert" }),
+  ).toContainText("wurde gespeichert");
   await expect(
     page.getByRole("heading", { name: title, exact: true }),
   ).toBeVisible();
@@ -37,7 +39,10 @@ test("upload, inspect, reload and download identical original bytes", async ({
     page.getByText("Noch nicht verarbeitet · Manuelle Prüfung vorgemerkt"),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: new RegExp(title) }).click();
+  await page
+    .locator(".document-list")
+    .getByRole("button", { name: new RegExp(title) })
+    .click();
   await expect(
     page.getByRole("heading", { name: title, exact: true }),
   ).toBeVisible();
