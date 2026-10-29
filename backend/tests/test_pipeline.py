@@ -124,17 +124,44 @@ def test_manual_flag_survives_actual_ocr(client, filename):
         assert index["status"] == "complete"  # Independent from the quality verdict.
 
 
-@pytest.fixture
-def mixed_pdf():
+@pytest.fixture(params=["xobject", "inline"], ids=["xobject-image", "inline-image"])
+def mixed_pdf(request):
     with pymupdf.open() as document:
         with pymupdf.open(FIXTURES / "D-delivery.pdf") as digital:
             document.insert_pdf(digital)
         page = document.new_page(width=595, height=842)
         page.insert_text((50, 30), "Embedded header beside scanned contract body", fontsize=10)
-        page.insert_image(
-            pymupdf.Rect(0, 60, 595, 842), filename=str(FIXTURES / "P-printed-scan.jpg")
-        )
-        return document.tobytes()
+        if request.param == "xobject":
+            page.insert_image(
+                pymupdf.Rect(0, 60, 595, 842), filename=str(FIXTURES / "P-printed-scan.jpg")
+            )
+        else:
+            # BI/ID/EI puts the JPEG directly in the page content stream, with no
+            # image XObject for get_images() to find. Keep the embedded text header.
+            from PIL import Image
+
+            image_path = FIXTURES / "P-printed-scan.jpg"
+            with Image.open(image_path) as image:
+                width, height = image.size
+            stream_id = page.get_contents()[0]
+            stream = document.xref_stream(stream_id)
+            inline = (
+                b"\nq\n595 0 0 782 0 0 cm\nBI\n"
+                + f"/W {width} /H {height} /CS /RGB /BPC 8 /F /DCTDecode\nID\n".encode()
+                + image_path.read_bytes()
+                + b"\nEI\nQ\n"
+            )
+            document.update_stream(stream_id, stream + inline)
+        data = document.tobytes()
+    # Validate the serialized fixture's actual PDF structure, not just the builder.
+    with pymupdf.open(stream=data, filetype="pdf") as document:
+        page = document[1]
+        assert len(page.get_text().strip()) >= 20
+        assert PHRASE not in page.get_text().casefold()
+        assert len(page.get_image_info()) == 1
+        if request.param == "inline":
+            assert page.get_images() == []
+    return data
 
 
 def upload_bytes(client, data):
@@ -151,8 +178,10 @@ def test_mixed_pdf_extracts_each_page_without_ignoring_scan_beside_header(client
     enqueue(client, document)
     run_worker(client)
     index = selected_text(client, document)
-    assert [page["extraction_method"] for page in index["pages"]] == ["embedded_pdf_text", "ocr"]
     assert PHRASE in index["pages"][1]["normalized_text"]
+    assert [page["extraction_method"] for page in index["pages"]] == ["embedded_pdf_text", "ocr"]
+    assert index["status"] == "complete"
+    assert index["quality_status"] == "no_known_issue"
     assert index["pages_processed"] == 2
     for page in index["pages"]:
         assert (
