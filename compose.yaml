@@ -20,6 +20,9 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-traystack}:${POSTGRES_PASSWORD:-traystack_local}@postgres:5432/${POSTGRES_DB:-traystack}
       STORAGE_PATH: /data/blobs
       UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-26214400}
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-eng}
+      OCR_TIMEOUT_SECONDS: ${OCR_TIMEOUT_SECONDS:-30}
+      PROCESSING_MAX_PAGES: ${PROCESSING_MAX_PAGES:-100}
     command: [alembic, upgrade, head]
     depends_on:
       postgres:
@@ -40,6 +43,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 15
+  worker:
+    image: traystack-backend:local
+    environment: *backend-environment
+    command: [python, -m, traystack.worker]
+    volumes:
+      - blob_storage:/data/blobs
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    stop_grace_period: 45s
   frontend:
     build: ./frontend
     ports:
