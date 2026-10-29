@@ -29,7 +29,26 @@ export default function App() {
   const [error, setError] = useState("");
   const [listError, setListError] = useState("");
   const [notice, setNotice] = useState("");
+  const [openingDocumentId, setOpeningDocumentId] = useState<string | null>(
+    null,
+  );
+  const [detailNavigation, setDetailNavigation] = useState(0);
   const detailRequest = useRef(0);
+  const detailsRef = useRef<HTMLElement>(null);
+  const detailHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // Navigate only after an explicit open/upload, never on background polling.
+  // A separate counter also handles opening the already selected document again.
+  useEffect(() => {
+    if (detailNavigation === 0) return;
+    detailHeadingRef.current?.focus({ preventScroll: true });
+    detailsRef.current?.scrollIntoView({
+      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, [detailNavigation]);
 
   useEffect(() => {
     let active = true;
@@ -99,7 +118,9 @@ export default function App() {
     try {
       const document = await uploadDocument(new FormData(form));
       detailRequest.current++;
+      setOpeningDocumentId(null);
       setSelected(document);
+      setDetailNavigation((value) => value + 1);
       setOffset(0);
       setGeneration((value) => value + 1);
       setNotice(
@@ -116,11 +137,17 @@ export default function App() {
   async function openDocument(id: string) {
     const requestId = ++detailRequest.current;
     setError("");
+    setOpeningDocumentId(id);
     try {
       const document = await getDocument(id);
-      if (requestId === detailRequest.current) setSelected(document);
+      if (requestId === detailRequest.current) {
+        setSelected(document);
+        setDetailNavigation((value) => value + 1);
+      }
     } catch (error) {
       if (requestId === detailRequest.current) setError(errorText(error));
+    } finally {
+      if (requestId === detailRequest.current) setOpeningDocumentId(null);
     }
   }
 
@@ -260,6 +287,7 @@ export default function App() {
                       className={`document-row ${selected?.id === document.id ? "selected" : ""}`}
                       onClick={() => openDocument(document.id)}
                       aria-pressed={selected?.id === document.id}
+                      aria-busy={openingDocumentId === document.id}
                     >
                       <span className="document-icon" aria-hidden="true">
                         ▤
@@ -272,12 +300,12 @@ export default function App() {
                         </small>
                       </span>
                       <span className="badge">
-                        {
-                          statusLabel[
-                            document.revisions.at(-1)?.processing_status ||
-                              "not_processed"
-                          ]
-                        }
+                        {openingDocumentId === document.id
+                          ? "Wird geöffnet …"
+                          : statusLabel[
+                              document.revisions.at(-1)?.processing_status ||
+                                "not_processed"
+                            ]}
                       </span>
                       <span aria-hidden="true">→</span>
                     </button>
@@ -333,16 +361,23 @@ export default function App() {
           </section>
         )}
         {selected && (
-          <section className="panel details" aria-labelledby="detail-heading">
+          <section
+            ref={detailsRef}
+            className="panel details"
+            aria-labelledby="detail-heading"
+          >
             <div className="section-heading">
               <div>
                 <p className="eyebrow">DOKUMENTDETAILS</p>
-                <h2 id="detail-heading">{selected.title}</h2>
+                <h2 id="detail-heading" ref={detailHeadingRef} tabIndex={-1}>
+                  {selected.title}
+                </h2>
               </div>
               <button
                 className="secondary"
                 onClick={() => {
                   detailRequest.current++;
+                  setOpeningDocumentId(null);
                   setSelected(null);
                 }}
               >
