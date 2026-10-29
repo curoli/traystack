@@ -160,8 +160,9 @@ def extract_source(path: Path, mime_type: str, parameters: dict[str, Any]) -> Ex
                 try:
                     source_page = document[index]
                     embedded = source_page.get_text("text", sort=True)
-                    # Any raster content may contain contract text, even beside an embedded header.
-                    if len(embedded.strip()) >= 20 and not source_page.get_images():
+                    # Displayed raster content may contain contract text beside a header.
+                    # Include inline images, which get_images() does not enumerate.
+                    if len(embedded.strip()) >= 20 and not source_page.get_image_info():
                         words = source_page.get_text("words", sort=True)
                         page = ExtractedPage(
                             index + 1,
