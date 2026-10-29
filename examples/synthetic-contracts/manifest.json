@@ -1,0 +1,58 @@
+{
+  "target_phrase": "The receiving party shall not disclose confidential information",
+  "scope": "All files are synthetic. Search expectations apply after Milestones 2\u20133, not at upload time.",
+  "generator_versions": {
+    "pymupdf": "1.28.2",
+    "pillow": "12.3.0"
+  },
+  "fixtures": [
+    {
+      "id": "A",
+      "file": "A-confidentiality.pdf",
+      "sha256": "bbcd348e7fc89da6a2d3d5f88d1c7628765eb22e6b997d7177a4bb8708842421",
+      "size_bytes": 1474,
+      "requires_manual_review": false,
+      "phrase_in_source": true,
+      "milestone_1_expected": "not_processed; download bytes and sha256 match original",
+      "normalized_contains_expected": "found",
+      "normalized_lacks_expected": "excluded: phrase found",
+      "condition": "Full extraction coverage and no known quality issue required for negative eligibility"
+    },
+    {
+      "id": "D",
+      "file": "D-delivery.pdf",
+      "sha256": "d787fbbba1c60110a65d558fcd7b55a5a7a2ef277e57b958bdf7cbbcbeea17c3",
+      "size_bytes": 1481,
+      "requires_manual_review": false,
+      "phrase_in_source": false,
+      "milestone_1_expected": "not_processed; download bytes and sha256 match original",
+      "normalized_contains_expected": "no positive match",
+      "normalized_lacks_expected": "not_found_in_processed_text",
+      "condition": "Full extraction coverage and no known quality issue required for negative eligibility"
+    },
+    {
+      "id": "P",
+      "file": "P-printed-scan.jpg",
+      "sha256": "2ac520951dc0b9866a43fe24491d3600eb805a54dd579d0b60f7221803a71af0",
+      "size_bytes": 95706,
+      "requires_manual_review": false,
+      "phrase_in_source": true,
+      "milestone_1_expected": "not_processed; download bytes and sha256 match original",
+      "normalized_contains_expected": "found",
+      "normalized_lacks_expected": "excluded: phrase found",
+      "condition": "OCR must actually recover the phrase; otherwise surface real quality/failure status"
+    },
+    {
+      "id": "E",
+      "file": "E-difficult-scan.jpg",
+      "sha256": "68c94a1141bd6399382bccdde89b9f5bb2b96f0329a18050e8838e2a08c4edf6",
+      "size_bytes": 198570,
+      "requires_manual_review": true,
+      "phrase_in_source": false,
+      "milestone_1_expected": "not_processed; download bytes and sha256 match original",
+      "normalized_contains_expected": "no positive match",
+      "normalized_lacks_expected": "unverifiable",
+      "condition": "Manual-review flag excludes negative eligibility regardless of OCR coverage"
+    }
+  ]
+}

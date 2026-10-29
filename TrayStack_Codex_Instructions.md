@@ -9,7 +9,7 @@
 
 1. Inspect the repository before changing anything. Preserve relevant existing files, conventions, licenses, and user work. If the repo is empty, initialize it as specified below.
 2. Implement the application, not just a design. Make reasonable implementation decisions without repeatedly asking for approval. If a decision is not specified, choose the simplest maintainable approach and document it.
-3. Follow the **milestones in order**. Get the minimum end-to-end workflow running before tackling optional capabilities.
+3. Follow the **milestones in order**. Milestones 1–4 define the required case-study core; Milestone 5 is an optional extension. The scope rules below take precedence over later descriptions of the full target design. Get the minimum end-to-end workflow running before tackling optional capabilities.
 4. Use established libraries, clear types, migrations, automated tests, and explicit error handling. Do not create elaborate abstractions that have no current purpose.
 5. **Do not silently fake functionality.** If OCR, a conversion, indexing, or a query fails, show a real failure/partial-status result; never use placeholder search results in the running application.
 6. Do not require paid cloud services, API keys, LLMs, embeddings, or external network calls at runtime. A laptop and Docker should be enough for the core demonstration.
@@ -51,6 +51,22 @@ The motivating Riverty case study describes contracts on SharePoint, PDFs and ol
 9. I can search for documents **not containing** a literal passage, but the app must distinguish a genuine negative result over fully processed text from a document that could not be reliably examined.
 10. I can inspect why a result was returned: matched text, snippet, document, revision, page if known, and the extraction/processing status.
 
+### Delivery scope and priorities
+
+The case study asks for a basic pipeline, a basic frontend, and a 15–20-minute presentation. The detailed design below is a target, not a requirement to build every feature before demonstrating value.
+
+| Required case-study core (Milestones 1–4) | Extension after the core is verified (Milestone 5) |
+|---|---|
+| Combined upload creating one document, first revision and immutable original | Convenient creation of further revisions and alternative uploaded representations |
+| List/detail UI, downloads, worker processing and visible errors | Rich revision/representation management UI |
+| Digital PDF extraction and printed-scan OCR; manual-review path for uncertain input | Additional extraction engines and evaluated handwriting recognition |
+| Structured JSON, extracted Markdown, canonical page/full text | Separate normalized Markdown artifact and richer layout conversion |
+| Exact and normalized full-text contains/lacks search with evidence and uncertainty | Indexed fuzzy positive search using pg_trgm and RapidFuzz |
+| Small synthetic fixture set, PostgreSQL integration checks, repeatable demo | Larger evaluation corpus and optional dataset import tooling |
+| Architecture, Microsoft comparison and user-adoption presentation concept | Cloud deployment and enterprise integrations |
+
+Keep document, revision and artifact identities distinct from the start. Start with the tables needed by the core; add `search_segments` and trigram migrations when implementing fuzzy search. Do not expose unavailable search modes or endpoints as working functionality; document which subset is implemented. No runtime cloud dependency is introduced by the presentation concept.
+
 ### Non-goals for the first working version
 
 - No autonomous AI agents, LangChain/LangGraph, RAG, embedding model, or knowledge graph.
@@ -85,7 +101,7 @@ Use the following default stack, unless the existing repository already has a cl
 | Python tests | pytest | Include real PostgreSQL integration tests |
 | Frontend checks | TypeScript typecheck + Vitest if practical | At minimum build successfully |
 
-**Important:** Do not use SQLite as a quiet substitute for PostgreSQL search. `pg_trgm` and the SQL semantics are part of the solution. A SQLite-only test suite is insufficient.
+**Important:** Do not use SQLite as a quiet substitute for PostgreSQL search. PostgreSQL query semantics are part of the core; `pg_trgm` is added with the fuzzy extension. A SQLite-only test suite is insufficient.
 
 Use a Python lock/dependency mechanism (`uv` preferred if available, otherwise standard `pip` tooling) and a checked-in frontend lockfile. Select mutually compatible versions rather than assuming old library examples still work.
 
@@ -186,7 +202,7 @@ File organization is flexible if the existing repo has sensible conventions. Avo
 
 ## 4. Core data model
 
-Design and implement Alembic migrations for these entities. Use UUID primary keys, foreign keys, appropriate uniqueness constraints, timestamps in UTC, and cascade/restrict rules appropriate to immutable artifacts.
+Design and implement Alembic migrations for these entities as their milestone requires them; `search_segments` is deferred to the fuzzy extension. Use UUID primary keys, foreign keys, appropriate uniqueness constraints, timestamps in UTC, and cascade/restrict rules appropriate to immutable artifacts.
 
 ### 4.1 `documents`
 
@@ -238,6 +254,10 @@ Artifacts are immutable. A new processing run may produce another artifact of th
 - `attempts`, `started_at`, `finished_at`, `created_at`
 - `error_message` nullable, sanitized (no secrets or raw contract content)
 - `result_artifact_ids` optional JSONB array or relationship
+- `processor_versions` JSONB and `parameters` JSONB: snapshot of actual engine versions and effective settings
+- `normalization_version` string identifying the deterministic normalization rules
+
+A job represents one processing run. Retrying a failed job creates a new job linked by `retry_of_job_id` (nullable FK), preserving the failed run and its recorded settings.
 
 Worker should claim jobs transactionally. A simple `SELECT ... FOR UPDATE SKIP LOCKED` pattern is suitable if multiple worker instances exist. MVP may run only one worker, but it must never process the same job concurrently by mistake. Failed jobs should be visible and retryable.
 
@@ -246,14 +266,18 @@ Worker should claim jobs transactionally. A simple `SELECT ... FOR UPDATE SKIP L
 One row per revision that has a currently selected canonical indexed text:
 
 - `revision_id` PK/FK
-- `source_artifact_id` pointing to the artifact that produced the indexed representation
+- `source_artifact_id` pointing to the selected input artifact
+- `processing_job_id` FK identifying the run that produced this entire selected index
+- `normalization_version` string, matching the selected job
 - `plain_text` full extracted text (not interpreted as Markdown)
 - `normalized_text` search normalization applied to the full text
-- `status`: `complete`, `partial`, or `unavailable`
+- `status`: `complete`, `partial`, or `unavailable` — processing coverage only
+- `quality_status`: `no_known_issue`, `needs_review`, or `unassessed`
+- `quality_warnings` JSONB array of reason codes, such as `suspected_handwriting`, `low_ocr_confidence`, `suspicious_text`, `quality_not_assessed`
 - `pages_total`, `pages_processed`, `pages_failed`
 - `updated_at`
 
-This table makes it possible to search the **entire processed document**, rather than relying on Top-k chunks. A negative search result is valid only within a clearly declared processing scope and quality state.
+This table makes it possible to search the **entire processed document**, rather than relying on Top-k chunks. `complete` means all pages were processed, not that every word was recognized correctly. `no_known_issue` means documented quality checks found no issue; it is not a correctness guarantee. A negative search result is eligible only with complete coverage and `quality_status = no_known_issue`, and remains a statement about extracted text.
 
 ### 4.6 `page_texts`
 
@@ -264,7 +288,8 @@ This table makes it possible to search the **entire processed document**, rather
 - `normalized_text` text
 - `start_offset`, `end_offset` offsets into `revision_texts.normalized_text` if reliable
 - `extraction_method` (`embedded_pdf_text`, `ocr`, etc.)
-- `status` (`complete`, `partial`, `unavailable`)
+- `status` (`complete`, `partial`, `unavailable`) for coverage
+- `quality_status` and `quality_warnings`, using the same definitions as revision text
 - `confidence` nullable, only if the engine actually provides it
 - optional `layout_metadata` JSONB for bounding boxes and structured provenance
 
@@ -285,8 +310,8 @@ Prefer paragraphs/lines or sliding overlapping windows; **never rely on segments
 
 ### Indices and migration requirements
 
-- `CREATE EXTENSION IF NOT EXISTS pg_trgm` through an Alembic migration.
-- GIN trigram index on `search_segments.normalized_text` (`gin_trgm_ops`).
+- When implementing the fuzzy extension: `CREATE EXTENSION IF NOT EXISTS pg_trgm` through an Alembic migration.
+- In that extension, GIN trigram index on `search_segments.normalized_text` (`gin_trgm_ops`).
 - Consider GIN trigram index on `revision_texts.normalized_text` for literal substring matching with `LIKE`/`ILIKE`, evaluating index size and query plans.
 - Indices on foreign keys, revision numbers, job statuses, and timestamps as appropriate.
 - A PostgreSQL full-text `tsvector` index is **optional**. It is for word-oriented search, not an exact replacement for phrase-substring matching.
@@ -333,8 +358,8 @@ Implement real, idempotent-ish processing, preferably as a small series of expli
 3. **Assess extraction status**: identify failed/empty/suspicious pages. An empty page with actual image content must not quietly count as successfully processed empty text. Mark `partial`/`unavailable` when appropriate. Heuristics are imperfect; be conservative and document limits.
 4. **Build a structured result** containing page number, extracted text, extraction method, and optional blocks/bounding boxes; serialize to a `structured_json` artifact.
 5. **Generate extracted Markdown** retaining paragraph breaks and page awareness where possible. Basic valid Markdown is fine. Do not invent headings or clauses based solely on guesses. If Docling is enabled, its structure can improve Markdown generation.
-6. **Generate normalized Markdown** as a separate immutable artifact. Preserve readable structure; use reversible or explicitly documented transformations where possible.
-7. **Build canonical text** and search segments; write `revision_texts`, `page_texts`, and `search_segments` consistently in a database transaction. Page offsets should refer to the exact normalized string saved in the database.
+6. **Extension: generate normalized Markdown** as a separate immutable artifact. Preserve readable structure; use reversible or explicitly documented transformations where possible.
+7. **Build canonical text** (and search segments when fuzzy search is implemented); write `revision_texts`, `page_texts`, and any implemented `search_segments` consistently in a database transaction. Page offsets should refer to the exact normalized string saved in the database.
 8. **Mark the job completed** only when derived artifacts and database index have been committed and are mutually consistent. On error, mark failed, retain originals, and make retry possible.
 
 ### Normalization: define precisely
@@ -357,15 +382,31 @@ Implement and unit-test a deterministic `normalize_for_search(text)` with a docu
 - Docling is a useful optional higher-quality converter. If implemented, use its current documented API (`DocumentConverter().convert(path).document`; `export_to_markdown()`, `export_to_dict()`). Keep an easy reliable fallback and do not assume Docling's OCR/model setup is fast on every machine.
 - For the demo, direct extraction + optional OCR is more important than perfect layout fidelity.
 
+### Quality assessment and manual review
+
+- Track coverage and quality independently on pages and on the selected revision index. A successful worker execution can produce complete coverage with `needs_review`; job completion is not an extraction-quality verdict.
+- Document deterministic checks and thresholds (for example empty image pages, suspicious character patterns and actual OCR confidence). Confidence is engine-specific evidence, not a calibrated probability. Aggregate quality conservatively: any page needing review makes the revision need review; any unassessed page prevents `no_known_issue`.
+- Do not assume handwriting can be detected reliably. Provide a simple upload/process option `requires_manual_review` so known handwritten or difficult inputs can be flagged. Automated suspicions may add warnings but must not silently clear an explicit flag.
+- The core UI shows a separate manual-review group, warning reasons and a link to the original/page. A flag alone is not a transcription workflow; the MVP does not let a user certify OCR correctness by clicking a button. Positive text matches may still be shown with warnings; these inputs are excluded from negative matches.
+- For handwriting, explain the next step: compare an appropriate recognition service against human transcriptions on representative, approved samples; evaluate phrase retrieval and failures before enabling it. Until then, direct the user to manual verification of the original.
+
 ### Reprocessing and provenance
 
-A reprocessing run should not mutate source files. It may produce new artifacts and select a new current canonical index for the revision. Keep earlier artifacts and document which processor and parameters produced the selected index. If a run fails midway, old valid search results should remain intact or the index should clearly reflect a failed/unavailable state, never an inconsistent mixture.
+A reprocessing run should not mutate source files. It may produce new artifacts and select a new current canonical index for the revision. Keep earlier artifacts and document which processor and parameters produced the selected index.
+
+Selection rules for the core:
+
+1. The process request names an input artifact belonging to the revision. The combined first-upload flow may default to its sole original; with multiple inputs, require explicit selection. Merely uploading another representation never replaces the index.
+2. Permit only one queued/running job per revision, enforced transactionally in PostgreSQL (for example a partial unique index). Return 409 for conflicting requests. This avoids competing runs overwriting each other by completion order.
+3. A successful run atomically replaces the selected revision text, pages and any segments, and records `processing_job_id`. Publish its real coverage and quality even if partial; never silently fall back to an older, better-looking extraction. Preserve older run artifacts.
+4. A failed run leaves the previous selected index intact. The UI and search response expose both the selected run and any later failed attempt. If no index exists, the revision is unverifiable. Failed attempts do not create mixed page/index state.
+5. Normalize queries using the selected index's normalization version. Reindex when changing rules; until then retain the older normalizer or reject unsupported versions explicitly.
 
 ---
 
 ## 7. Search: the critical functional requirement
 
-Implement **three distinct text-matching semantics**:
+The target design has **three distinct text-matching semantics**. Implement exact and normalized in the core; add fuzzy only in the optional extension:
 
 ### A. Exact literal match (`exact`)
 
@@ -398,8 +439,8 @@ For a specified exact or normalized literal query:
 - For each revision, search the **entire canonical extracted text**, not just the top-ranked segments.
 - Split outcomes into:
   1. `found` — phrase present in the selected text;
-  2. `not_found_in_processed_text` — phrase not present **and** the selected extraction status is `complete`;
-  3. `unverifiable` — no text, incomplete extraction, failed OCR, or missing processing.
+  2. `not_found_in_processed_text` — phrase not present, coverage is `complete`, **and** quality is `no_known_issue`; this is not proof about the original contract;
+  3. `unverifiable` — no match was observed, but there is no text, incomplete extraction, failed OCR, missing processing, or quality `needs_review`/`unassessed`. Include the reason; complete coverage alone is insufficient. An observed positive remains `found` with its quality warnings even on an uncertain extraction.
 - For `relation: "lacks"`, list `not_found_in_processed_text` as the negative matches and show `unverifiable` separately as a warning group. Avoid stating simply "clause missing" or "contract compliant".
 - `lacks` with `fuzzy` is **not required in the MVP** because no fuzzy candidate above a threshold is not proof of absence. Either return an explicit 422 validation error with explanation or implement a carefully labeled `no_possible_match_above_threshold` result that remains nondefinitive. Prefer 422 for the MVP.
 
@@ -417,7 +458,7 @@ For a positive result include:
 - `page_number` if known
 - `start_offset`, `end_offset` if reliably known
 - `score` nullable (null for exact; fuzzy scoring only for fuzzy)
-- extraction-quality information and any relevant warning
+- coverage, quality status/warnings, selected `processing_job_id`, normalization version, and any later failed-attempt warning
 
 Do not invent page numbers or offsets when unavailable. If exact highlighting is difficult, provide a page jump and textual snippet first, and document the limitation.
 
@@ -431,7 +472,7 @@ A trigram index is good for *finding candidate text passages even with OCR error
 
 Use `/api` prefix. Make request and response schemas explicit with Pydantic, and expose `/docs` as FastAPI's interactive OpenAPI documentation.
 
-Suggested endpoints (adapt details consistently as needed):
+Target endpoints (adapt details consistently as needed). For the core, implement combined upload, list/detail, downloads, process/job status and search first. Additional mutation endpoints and convenient revision management may follow in Milestone 5:
 
 | Method / path | Behavior |
 |---|---|
@@ -565,22 +606,27 @@ Provide `.env.example` with DB URL, storage path, upload size limit, OCR languag
 
 ## 11. Test data and automated checks
 
-Use **synthetic** contracts checked into `examples/synthetic-contracts/`. Do not commit real private contracts. The user has separately downloaded ContractNLI and CUAD; document how to optionally import a local directory of such files, but do not assume their presence, distribute them in the repository, or remove their license information.
+Use **synthetic** contracts checked into `examples/synthetic-contracts/`. Do not commit real private contracts. ContractNLI and CUAD may be evaluated later if provided locally; do not assume they are available or redistribute them. Import tooling is optional; preserve any applicable license information.
 
-Create small, deterministic test fixtures:
+Prepare the core demo fixtures before building the pipeline: A and D as digital PDFs, a clearly printed JPEG containing the target phrase, and E as a difficult scan flagged for manual review. Use the fixed target phrase `The receiving party shall not disclose confidential information`. Record expected mode/relation/status outcomes in a small manifest alongside reproducible fixture-generation instructions. These are test inputs, never precomputed UI results. A hand-entered transcription may provide evaluation ground truth, but must not replace OCR output in the application.
+
+Create small, deterministic test fixtures as their feature is implemented:
 
 | ID | Example document | Expected behavior |
 |---|---|---|
 | A | Digital PDF with exact confidentiality passage | `exact contains` -> found |
+| P | Clearly printed JPEG with the target passage | Real OCR -> `normalized contains` found; retain OCR method/quality evidence |
 | B | Same passage but line breaks and varied whitespace | `normalized contains` -> found |
 | C | Text with OCR-like character mistake (`Haflung` vs `Haftung`) | `fuzzy contains` -> possible match; exact -> no match |
-| D | Different clause, no target phrase | `normalized lacks` -> not found in processed text if extraction complete |
+| D | Different clause, no target phrase | `normalized lacks` -> not found in processed text if coverage complete and quality has no known issue |
 | E | Unreadable/failed scanned page or explicitly simulated extraction failure | `lacks` -> **unverifiable**, never negative match |
 | F | `50,000` vs `500,000`, or a sentence with/without `not` | Fuzzy match can be high but must remain **possible**, not accepted as equivalent |
 | G | Multi-page/multi-paragraph phrase | Correct positive result even across supported page/line boundaries |
 | H | A second revision of a document | Latest scope uses newest revision only |
 
-Automated tests should cover:
+For the core demo, E is a real difficult image with `requires_manual_review` set, not a fabricated OCR result. If OCR finds no target passage it is `unverifiable`; if it finds the passage it is a warned positive, never a negative match. Use a separate deterministic test of complete coverage plus `needs_review` and no observed match to verify negative-search exclusion regardless of OCR engine variability.
+
+Automated tests should cover the implemented scope (defer fuzzy and multi-revision workflow checks with their features):
 
 1. Data model uniqueness and foreign keys; artifact belongs to correct revision.
 2. Upload, storage, SHA-256 and byte-for-byte retrieval.
@@ -588,9 +634,9 @@ Automated tests should cover:
 4. Normalization behavior, including line breaks, Unicode, hyphenation, numbers and negations.
 5. Exact, normalized and fuzzy positive searches; threshold behavior.
 6. Exact/normalized negative search over **full text**, independent of arbitrary search-segment boundaries.
-7. `unverifiable` behavior for absent/partial/failed extraction.
+7. `unverifiable` behavior for absent/partial/failed extraction and complete-but-needs-review/unassessed OCR; positive matches retain quality warnings.
 8. Several documents sharing similar text and multiple revisions of one document.
-9. Processing success, processing failure, and at least basic job retry behavior.
+9. Processing success/failure, retry as a new run, rejection of overlapping runs, explicit source selection and atomic index replacement. Verify failed reprocessing preserves the previous selected run and exposes the failure.
 10. API validation, SQL injection resistance via parameter binding, unsafe filenames, unsupported upload types.
 11. Integration tests against **real PostgreSQL** with migrations applied; at least one end-to-end API test exercising upload → process → search → retrieve artifact.
 12. Typecheck/build the frontend; smoke-test UI routes if feasible.
@@ -605,96 +651,85 @@ Provide a short evaluation script with known phrase-level ground truth: exact an
 
 ## 12. MVP milestones — implement in this order
 
-### Milestone 1 — project boots and stores artifacts (must finish)
+### Milestone 1 — fixtures, project boot and immutable uploads (required)
 
-- Create backend + frontend scaffolding and Docker Compose.
-- Define SQLAlchemy models and Alembic migrations.
-- Implement create/list document and revisions.
-- Implement artifact upload, storage, listing and download.
-- Make `docker compose up --build` start the app and API docs.
-- Show a basic upload/list/detail screen.
-- Tests: migration, upload/download and SHA-256.
+- Define the four core fixture inputs and expected results described in Section 11.
+- Create backend/frontend scaffolding, Docker Compose, initial models and Alembic migrations; defer fuzzy segments and their indexes.
+- Implement combined upload creating document, first revision and original artifact; list/detail and byte-for-byte download.
+- Show a basic upload/list/detail screen. Keep identities distinct without requiring a full revision editor.
+- Verify fresh PostgreSQL migration, upload validation, SHA-256 and retrieval.
 
-**Acceptance:** Upload `contract.pdf`, see one document/revision/original artifact, download the exact same bytes.
+**Acceptance:** `docker compose up --build` starts the app; upload a PDF, see its document/revision/artifact and download identical bytes.
 
-### Milestone 2 — document processing end to end (must finish)
+### Milestone 2 — extraction, quality and selected run (required)
 
-- Worker + job status.
-- Extract text from digital PDFs using PyMuPDF, and printed JPEGs/scanned PDFs using Tesseract.
-- Store structured JSON, extracted Markdown, normalized Markdown and canonical searchable text.
-- Show variants and status in the UI.
-- Handle unreadable pages honestly as partial/unavailable.
+- Worker, job status, explicit source selection and one active job per revision.
+- Digital PDF extraction and printed JPEG/scanned PDF OCR, including per-page handling for mixed PDFs.
+- Store structured JSON, extracted Markdown and canonical full/page text. Normalized searchable text is required; a separate normalized Markdown artifact is deferred.
+- Show coverage, independent quality status, warnings and original/derived downloads.
+- Add the manual-review input flag and review group; retain run provenance and handle failed reprocessing without corrupting the selected index.
 
-**Acceptance:** Uploaded digital PDF and a simple scanned JPEG are processed; derived artifacts are viewable/downloadable and page text is present in PostgreSQL.
+**Acceptance:** Digital PDF and printed JPEG produce real searchable text and downloadable derivatives. A difficult flagged scan is sent to manual review even if OCR returns text for every page.
 
-### Milestone 3 — reliable exact and negative search (must finish)
+### Milestone 3 — full-text search and evidence (required)
 
-- Full-document exact and normalized search.
-- `contains` and `lacks` semantics.
-- Distinguish `found`, `not_found_in_processed_text`, `unverifiable`.
-- Support snippets, document/revision linking and available page numbers.
-- Tests for negative search, page/segment boundaries and partial OCR.
+- Full-document exact and normalized `contains`/`lacks` search, defaulting to latest revision.
+- Separate `found`, `not_found_in_processed_text` and `unverifiable`; negative eligibility requires complete coverage and no known quality issue.
+- Snippets, available page references, original links and selected-run provenance.
+- PostgreSQL integration checks for full-text boundaries, literal wildcard characters, partial/uncertain OCR and upload → process → search → download.
 
-**Acceptance:** Search for a passage across several contracts; the correct containing and non-containing documents are returned, and an unreadable document is not falsely classified as missing the passage.
+**Acceptance:** The core fixture set produces its declared outcomes through the real UI/API. No failed, partial or review-required extraction appears as a negative match.
 
-### Milestone 4 — fuzzy OCR-tolerant search (high priority)
+### Milestone 4 — repeatable demo and presentation (required)
 
-- `pg_trgm` indexed candidates.
-- RapidFuzz alignment/scoring, configurable threshold.
-- Fuzzy positive matches shown as **possible matches** with examples and warnings.
-- Tests for OCR-like errors and dangerous near-matches (`not`, amounts).
+- Finish clear UI labels, polling/status/errors and the manual-review group.
+- README with exact startup/check commands; architecture, decisions and demo documentation.
+- Prepare the 15–20-minute presentation outline required in Section 17: solution, proposed Azure infrastructure, Microsoft comparison, adoption plan and limitations.
+- Run relevant backend checks against PostgreSQL and frontend typecheck/build; record actual results and blockers.
 
-**Acceptance:** OCR-corrupted wording can be found approximately while an exact match is correctly distinguished from a fuzzy match.
+**Acceptance:** A reviewer can start the core, reproduce the demo and understand both the implemented capabilities and the proposed production path. Presentation material covers adoption as well as technology.
 
-### Milestone 5 — demo polish and documentation (high priority)
+### Milestone 5 — extensions after the verified core (optional)
 
-- User-friendly frontend, revision/artifact viewer, job status and clear warnings.
-- `README.md`, `docs/architecture.md`, `docs/decisions.md`, `docs/demo.md`.
-- Sample synthetic contracts and repeatable demo script.
-- Run tests, migrations, formatter/linter, frontend build. Fix problems.
+- Indexed fuzzy positive search: add search segments, pg_trgm migration/index and RapidFuzz alignment, threshold, possible-match warnings and meaningful OCR/negation/amount tests.
+- Convenient revision creation and alternative-representation uploads, without changing index selection implicitly; test latest-revision scope.
+- Separate normalized Markdown artifacts, richer previews and optional dataset import/evaluation.
 
-**Acceptance:** A reviewer can clone repo, run one documented command, upload sample contracts, run processing, try both search modes, and understand the architecture and tradeoffs.
+**Acceptance:** Each delivered extension works end to end and has relevant checks. Omitted extensions are documented and are not prerequisites for completing the core.
 
-### Stretch goals — only after all required milestones are solid
+### Further stretch goals
 
-1. Generate a PDF with a genuine OCR text layer using OCRmyPDF as an additional artifact.
-2. Docling processor option with richer structure, tables and page location metadata.
-3. Add `tsvector` ranking for word-oriented search if helpful.
-4. A small optional **semantic clause comparison** endpoint behind explicit feature flag with a configurable model backend; must be clearly separated from deterministic text search and be disabled without credentials. Never claim a missing clause based on Top-k RAG alone.
-5. Azure Blob Storage adapter; SharePoint connector *design only*, no fake integration.
-6. Auth/RBAC, audit log, more robust work queue and enterprise production hardening.
-
-Do not allow stretch goals to postpone basic upload → processing → search → display.
+OCRmyPDF text-layer artifacts, richer Docling conversion, word-oriented full-text ranking, optional semantic clause comparison, Azure storage implementation, and production identity/audit/queue hardening may follow. SharePoint integration remains design-only here; the archival REST API is solely for an additional compliant copy, never the search backend. Do not let these goals delay the required core or presentation.
 
 ---
 
 ## 13. Definition of done
 
-The implementation is done for the case study only when the following hold:
+The required case-study core is complete when:
 
-- [ ] `docker compose up --build` works with documented prerequisites.
-- [ ] Database migrations execute on a fresh PostgreSQL instance.
-- [ ] A user can upload at least a digital PDF and a JPEG image.
-- [ ] Original file bytes are preserved and downloadable.
-- [ ] Document, revision and artifact concepts remain distinct in the data model and API.
-- [ ] Worker generates actual searchable text and at least Markdown + structured JSON artifacts.
-- [ ] Processing jobs report honest success/failure and extraction quality.
-- [ ] Exact and normalized search work over the full selected revision text.
-- [ ] `lacks` never classifies an unprocessed/partial document as safely negative.
-- [ ] Fuzzy positive search uses genuine indexed candidates plus a character-level similarity check.
-- [ ] Search results have snippets and source document/revision references.
-- [ ] React UI exercises the actual API and does not show fabricated results.
-- [ ] Core backend tests and frontend build/typechecks pass, or unmet checks are reported accurately.
-- [ ] README contains architecture summary, setup, assumptions, limitations, and a 3–5-minute demo walkthrough.
+- [ ] One documented command starts the app; migrations work on fresh PostgreSQL.
+- [ ] Digital PDF and printed JPEG upload/processing work; original bytes are preserved and downloadable.
+- [ ] Document, revision and artifact identities remain distinct.
+- [ ] The worker generates real text, extracted Markdown and structured JSON.
+- [ ] Coverage and quality are separate; difficult/handwritten inputs have an explicit manual-review path.
+- [ ] Selected run, input artifact, processor settings and normalization version are traceable; failed reprocessing preserves a coherent prior index with a visible failure warning.
+- [ ] Exact and normalized search cover the entire selected revision text and show evidence/source links.
+- [ ] Negative matches exclude unprocessed, partial and review-required/unassessed inputs; no result implies legal compliance.
+- [ ] The real React UI reproduces the four core fixture outcomes without fabricated results.
+- [ ] Relevant backend/PostgreSQL checks and frontend typecheck/build pass. Blocked checks are reported accurately and remain unmet acceptance criteria.
+- [ ] Setup, assumptions, limitations and a repeatable demo are documented.
+- [ ] Presentation outline includes infrastructure, Microsoft comparison, handwriting strategy and user adoption.
 
-### Suggested live demo (3–5 minutes)
+Fuzzy search, rich revision management and normalized Markdown artifacts have separate extension acceptance in Milestone 5. Report them as implemented or deferred explicitly.
 
-1. Open TrayStack; upload two synthetic PDFs and one OCR-corrupted image.
-2. Show one document's original plus extracted Markdown/JSON and its processing status.
-3. Search for an exact contract phrase. Show matching documents and snippets.
-4. Switch to “does not contain”; show full-text negative results and any unverifiable document separately.
-5. Run fuzzy search for text containing a deliberately introduced OCR error; show the highlighted possible match and score.
-6. Explain the architecture: deterministic search first; OCR and richer AI assistance as needed; no unjustified RAG/graph overhead.
+### Suggested core live demo (5–7 minutes within the presentation)
+
+1. Upload the two digital PDFs, printed JPEG and flagged difficult scan.
+2. Show an original, its extracted Markdown/JSON, selected run, coverage and quality.
+3. Search the target phrase in normalized mode; open a positive result and its source.
+4. Switch to “not found in extracted text”; show the expected negative PDF separately from the unverifiable difficult scan.
+5. Show the manual-review path and explain that complete OCR coverage does not guarantee correct recognition.
+6. If the fuzzy extension is implemented, briefly show an OCR near-match as a possible match; otherwise state that it is deferred.
 
 ---
 
@@ -721,16 +756,17 @@ The implementation is done for the case study only when the following hold:
 1. Runnable source code in the repository, not pseudocode.
 2. Database migrations and Docker Compose configuration.
 3. Backend tests and a basic frontend with real API integration.
-4. At least a few synthetic test contracts and an optional import mechanism for the user's locally downloaded ContractNLI/CUAD documents.
+4. Four core synthetic demo inputs with an expected-results manifest and reproducible generation instructions; additional evaluation/import tooling is optional.
 5. README with exact commands, screenshots optional.
 6. `docs/architecture.md`: architecture/data-flow diagram and design choices.
 7. `docs/decisions.md`: concise ADR-like notes, especially exact vs fuzzy vs semantic search and negative-search semantics.
 8. `docs/demo.md`: reproducible demonstration steps and expected outcomes.
-9. Final report to the user: what was implemented, tests actually run, remaining limitations, and suggested next step.
+9. `docs/presentation.md`: a 15–20-minute outline covering the requirements in Section 17.
+10. Final report to the user: what was implemented, tests actually run, remaining limitations, and suggested next step.
 
 ### Start now
 
-Inspect the repository and begin with **Milestone 1**. Continue through the milestones, testing after each one. If runtime or tooling constraints prevent completing a step, record the exact limitation and continue with the most valuable feasible work rather than replacing real behavior with mocks.
+Inspect the repository and begin with **Milestone 1**. Continue through required Milestones 1–4, testing after each one. Apply Section 13 as the core acceptance gate before optional Milestone 5. If runtime or tooling constraints prevent completing a step, record the exact limitation and continue with the most valuable feasible work rather than replacing real behavior with mocks.
 
 ---
 
@@ -751,3 +787,32 @@ Use official/current documentation and validate APIs against installed versions:
 - Docker Compose: https://docs.docker.com/compose/
 
 **Reminder:** The emphasis is on a clear, working contract-document pipeline and reliable information retrieval—not on maximizing AI framework usage.
+
+
+---
+
+## 17. Presentation, production concept and adoption
+
+Prepare a concise presentation outline during implementation. Distinguish working local features, evaluated options and proposed production architecture; do not present an untested cloud or handwriting capability as delivered.
+
+### Suggested timing (18 minutes)
+
+- 0–3 minutes: legal-team problem, literal wording versus meaning, and why negative searches need full-text coverage and quality information.
+- 3–9 minutes: core demo with positive, negative and unverifiable outcomes, source evidence and manual review.
+- 9–13 minutes: architecture, proposed Azure mapping and comparison with Microsoft alternatives.
+- 13–16 minutes: pilot, adoption and measures of value.
+- 16–18 minutes: limitations, handwriting evaluation, next steps and engineering tradeoffs.
+
+### Proposed production architecture and technology comparison
+
+Sketch API/worker containers, managed PostgreSQL, blob storage, enterprise identity and monitoring as proposed Azure building blocks. Explain how source permissions, retention and access control would be carried through ingestion and search before using private contracts. Show SharePoint as the source and the restricted archival API only as a destination for an additional compliant copy. Cloud deployment, Terraform and live connectors are not core deliverables.
+
+Include a short comparison of local PDF extraction/Tesseract with Azure AI Document Intelligence as a candidate extraction service; optionally assess another relevant non-Microsoft candidate. Compare on the same approved sample set: printed scans and handwriting, phrase-level retrieval errors, evidence/page traceability, human-review burden, operational effort, latency, cost, data handling and offline availability. State the reason for the local demo baseline separately from any future production recommendation. Verify current capabilities and constraints from official documentation when preparing that comparison; label unmeasured capabilities as hypotheses. No cloud credentials or benchmark purchases are required for the core.
+
+### Pilot and user adoption
+
+1. Co-design two tasks with a small legal-team pilot: locating a company name and finding contracts where a specified phrase was not found. Define whether users need literal wording or semantic interpretation.
+2. Create a permission-approved, human-reviewed reference set with digital, printed-scan and difficult/handwritten documents. Preserve known positives, known negatives and uncertain cases.
+3. Teach users to open source evidence, interpret extraction-quality warnings, and verify the original for uncertain cases. Capture feedback on missed/incorrect matches and terminology; users remain responsible for contract decisions.
+4. Compare assisted and current manual work on the same tasks: time per review, positive retrieval precision/recall, false negatives including erroneous absence suggestions, unverifiable rate and manual-review burden. Agree success criteria with legal before the pilot; do not invent measured improvements.
+5. Expand only after pilot review, documented failure handling and clarification of source permissions, ownership and support. Prioritize a better handwriting extractor if the unresolved share of the actual corpus justifies it.

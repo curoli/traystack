@@ -1,0 +1,52 @@
+name: traystack
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-traystack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-traystack_local}
+      POSTGRES_DB: ${POSTGRES_DB:-traystack}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build: ./backend
+    image: traystack-backend:local
+    environment: &backend-environment
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-traystack}:${POSTGRES_PASSWORD:-traystack_local}@postgres:5432/${POSTGRES_DB:-traystack}
+      STORAGE_PATH: /data/blobs
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-26214400}
+    command: [alembic, upgrade, head]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    build: ./backend
+    image: traystack-backend:local
+    environment: *backend-environment
+    ports:
+      - '127.0.0.1:${API_PORT:-8000}:8000'
+    volumes:
+      - blob_storage:/data/blobs
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  frontend:
+    build: ./frontend
+    ports:
+      - '127.0.0.1:${WEB_PORT:-8080}:8080'
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  postgres_data:
+  blob_storage:
