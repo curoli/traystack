@@ -335,6 +335,7 @@ input::file-selector-button {
   margin-top: 12px;
 }
 .details {
+  scroll-margin-top: 20px;
   margin-top: 24px;
   padding: 26px;
 }
