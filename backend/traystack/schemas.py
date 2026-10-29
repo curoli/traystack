@@ -121,4 +121,4 @@ class HealthOut(BaseModel):
     status: Literal["ok", "unavailable"]
     database: Literal["ok", "unavailable"]
     storage: Literal["ok", "unavailable"]
-    milestone: int = Field(default=2)
+    milestone: int = Field(default=3)

@@ -19,7 +19,7 @@
 - **Lokale API-Dokumentation:** Swagger-JavaScript und CSS kommen aus einer
   installierten Abhängigkeit statt aus einem CDN. Der Core braucht nach dem Build
   keine externen Dienste.
-- **Suchprinzip für die nächsten Meilensteine:** Exact/normalized prüfen den ganzen
+- **Suchprinzip:** Exact/normalized prüfen den ganzen
   ausgewählten Text. Fehlende oder fragwürdige Extraktion wird unverifizierbar;
   ein Treffer wird mit Quelle belegt. Fuzzy und semantische Ähnlichkeit sind
   getrennte spätere Funktionen und keine Beweise für Abwesenheit.
@@ -45,3 +45,13 @@
   bedeutsame Zeichen bei. Mehrdeutige Silbentrennungen werden nicht repariert.
   Unicode-Casefold kann Zeichen erweitern; deshalb referenzieren Seitenoffsets
   ausdrücklich den normalisierten Text und keine geratenen Rohtextpositionen.
+
+- **Ein gemeinsamer Such-Snapshot:** Die neueste Revision wird unabhängig vom
+  Verarbeitungszustand gewählt. PostgreSQL prüft den gesamten ausgewählten Text
+  per `strpos`; eine Read-only-Transaktion mit `REPEATABLE READ` hält Zählungen,
+  Herkunft, Ausschnitte und Seitenpositionen konsistent. Unverifizierbare Dokumente
+  haben eigene Pagination und werden nie in negativen Treffern versteckt.
+- **Erste Fundstelle pro Dokument:** Dokumente sind die Einheit der Ergebnisliste,
+  kein Ranking über Textsegmente. Alle Offsets nennen ihren Roh-/Normaltextbezug
+  und sind Unicode-Codepoints. Seiten und Originale sind aufrufbar; geänderte
+  ausgewählte Läufe lösen einen Hinweis zur erneuten Suche aus.

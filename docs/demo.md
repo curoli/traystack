@@ -1,4 +1,4 @@
-# Demo und Prüfstand — Meilenstein 2
+# Demo und Prüfstand — Meilenstein 3
 
 ## Reproduzierbarer Ablauf
 
@@ -14,7 +14,8 @@
    PDF-Textschicht. JSON und Markdown stehen als neue Artefakte mit Quelle, Lauf-ID,
    Verfahren und Hash bereit; ihre Vorschau zeigt tatsächlichen Dateiinhalt.
 5. **Original herunterladen** wählen und Bytes/Hash mit der Eingabedatei vergleichen.
-6. `P-printed-scan.jpg` hochladen und verarbeiten. Hier arbeitet tatsächlich
+6. `D-delivery.pdf` ebenfalls hochladen und verarbeiten; es enthält die Zielpassage
+   nicht. Danach `P-printed-scan.jpg` hochladen und verarbeiten. Hier arbeitet tatsächlich
    Tesseract. Die Seitenansicht nennt OCR und den mittleren Wortscore; der Score
    ist keine Wahrscheinlichkeit für einen korrekten Vertragstext.
 7. `E-difficult-scan.jpg` mit **Manuelle Prüfung erforderlich** hochladen und
@@ -28,11 +29,19 @@
    Normalisierungsversion sind pro Lauf nachvollziehbar. Bei Fehlern wird ein
    fester Fehlercode gezeigt; vorhandener ausgewählter Text bleibt erhalten.
 10. Seite neu laden. Dokumente, Artefakte, Status und ausgewählter Text bleiben
-    bestehen. Die Suche ist in diesem Meilenstein noch nicht implementiert.
+    bestehen. Nun oben die Passage `The receiving party shall not disclose confidential information`
+    im normalisierten Modus suchen. A und P liefern positive Treffer; D erscheint
+    bei „Nicht im extrahierten Text gefunden“. E bleibt unverifizierbar.
+11. Einen weiteren Vertrag hochladen und noch nicht verarbeiten: Auch er bleibt
+    unverifizierbar und wird nicht als negativer Treffer ausgegeben.
+12. Bei einem Treffer **Seite 1 ansehen** wählen. Der Seitentext wird geöffnet;
+    Qualitätsinformationen und Originaldownload bleiben verfügbar. Nach erneuter
+    Verarbeitung eines Treffers weist ein Klick auf die alte Suchfundstelle auf
+    die veraltete Momentaufnahme hin.
 
 Die schwierige Datei ist ein degradierter Druckscan und ersetzt keine Evaluation
-historischer Handschrift. Die Sucherwartungen im Fixture-Manifest sind Akzeptanzziele
-für Meilenstein 3, keine vorberechneten Ergebnisse der Anwendung.
+historischer Handschrift. Die Sucherwartungen im Fixture-Manifest dienen der Prüfung tatsächlicher Ergebnisse;
+die Anwendung berechnet ihre Treffer ausschließlich aus dem gewählten Textbestand.
 
 ## API-Demo
 
@@ -63,6 +72,16 @@ Seine Parameter werden übernommen; ein inzwischen gesetzter manueller Prüfbeda
 wird zusätzlich beibehalten. Bei geänderten OCR-Sprachen oder Grenzen einen neuen
 Verarbeitungslauf starten statt die alten Parameter unverändert zu wiederholen.
 
+Suchanfrage:
+
+```sh
+curl --fail -X POST http://localhost:8000/api/search \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"The receiving party shall not disclose confidential information","mode":"normalized","relation":"lacks","scope":"latest","limit":25}'
+```
+
+Den [Suchvertrag](search.md) für Status, separate Pagination und Offsetregeln beachten.
+
 ## Prüfungen
 
 Die exakten Testkommandos stehen in der README. Backendtests verwenden eine
@@ -71,6 +90,8 @@ Scans. Sie prüfen auch gemischte PDFs, Text-/Seitenoffsets, Fremdquellen, paral
 Worker-Claims, Timeout/Enginefehler, fehlerhafte Veröffentlichung, Auswahl alter
 Ergebnisse nach Fehlschlag und neue Wiederholungsläufe. Kontrolliert simulierte
 Fehler ergänzen die Tests; erfolgreiche Demo-Ergebnisse werden nie simuliert.
+Kontrollierte kanonische Textfixtures decken zusätzliche Suchrandfälle ab; ein
+End-to-End-Test führt PDF/JPEG-Upload, echten Worker, Suche und Originalabruf aus.
 
 Worker-Abbruch und Wiederherstellung sind in der README beschrieben. Für diesen
 Prototyp sind weder automatische Wiederholungen noch sichere zeitbasierte
@@ -82,12 +103,15 @@ zu behandeln. Leere Seiten werden vorsichtshalber zur Prüfung markiert.
 
 - Beide Migrationen auf einer frischen PostgreSQL-17-Testdatenbank sowie Upgrade
   des laufenden Meilenstein-1-Stacks mit erhaltenen Originalen: erfolgreich.
-- 60 Backendtests: bestanden, keine übersprungenen Tests. Darunter echte Tesseract-
-  OCR, gemischte PDFs, zeitgleiche Worker-Claims und atomare Rücknahme bei einem
-  absichtlich ausgelösten Datenbankfehler während der Veröffentlichung.
-- Fünf Chrome-/Playwright-Szenarien gegen den Compose-Stack: Upload/bytegleicher
-  Download, PDF-Verarbeitung/Neuverarbeitung, echte JPEG-OCR, schwieriger Scan mit
-  Prüfbedarf und API-Explorer ohne externe CDN-Aufrufe.
+- 102 Backendtests: bestanden, keine übersprungenen Tests. Darunter echte OCR,
+  gemischte/Inline-PDFs, Worker-Claims und atomare Veröffentlichung sowie Volltext-
+  suche, neueste Revisionen, getrennte Negativ-/Unverifizierbar-Pagination,
+  Unicode-Fundstellen und ein Snapshot-Test bei gleichzeitiger Neuverarbeitung.
+- Neun Chrome-/Playwright-Szenarien: Upload/Download, echte Verarbeitung, Navigation
+  auf Desktop/Mobil, positive/negative Suche mit separaten unverifizierbaren
+  Dokumenten, Seitensprung, veraltete Fundstellen und API-Explorer ohne CDN.
+  Ein isolierter Renderer-Test prüft Unicode-Codepoint-Hervorhebung; die übrigen
+  Abläufe verwenden den echten Compose-Stack.
 - TypeScript-Prüfung, Vite-Produktionsbuild, Ruff, Prettier und `git diff --check`:
   bestanden. Der ORM-/Migrationsabgleich meldet keine Schemaabweichung.
 

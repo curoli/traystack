@@ -8,6 +8,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import FileResponse, JSONResponse
@@ -17,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload, sessionmaker
 
 from traystack.api.processing import router as processing_router
+from traystack.api.search import router as search_router
 from traystack.config import Settings
 from traystack.db import get_session
 from traystack.models import Artifact, Document, Revision
@@ -55,10 +57,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             engine.dispose()
 
     app = FastAPI(
-        title="TrayStack", version="0.2.0", lifespan=lifespan, docs_url=None, redoc_url=None
+        title="TrayStack", version="0.3.0", lifespan=lifespan, docs_url=None, redoc_url=None
     )
     app.state.settings = config
     app.include_router(processing_router)
+    app.include_router(search_router)
     app.mount(
         "/api/docs-assets",
         StaticFiles(directory=distribution("swagger-ui-py").locate_file("swagger_ui/static")),
@@ -82,6 +85,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, error: RequestValidationError) -> JSONResponse:
+        # Keep field locations/messages, without echoing contract text or invalid Unicode.
+        issues = [{key: issue[key] for key in ("type", "loc", "msg")} for issue in error.errors()]
+        return JSONResponse(status_code=422, content={"detail": issues})
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(request: Request, error: SQLAlchemyError) -> JSONResponse:

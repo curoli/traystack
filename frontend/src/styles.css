@@ -597,3 +597,141 @@ select {
     justify-content: center;
   }
 }
+
+.search-panel {
+  padding: 26px;
+  margin-bottom: 28px;
+}
+.search-form {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr auto;
+  gap: 16px;
+  align-items: end;
+}
+.search-form label {
+  margin: 12px 0 6px;
+}
+.search-query {
+  grid-column: 1/-1;
+}
+.search-query textarea {
+  font: inherit;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #d6dfd6;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 76px;
+  color: #243e3b;
+  background: #fff;
+}
+.search-query textarea::placeholder {
+  color: #87958b;
+  font-size: 12px;
+}
+.search-form .primary {
+  min-height: 42px;
+  width: auto;
+}
+.scope-tag {
+  font-size: 11px;
+  color: #6d826e;
+}
+.search-notice {
+  font-size: 12px;
+  color: #66745e;
+  margin: 12px 0 0;
+}
+.search-response {
+  border-top: 1px solid #e2e9dd;
+  margin-top: 22px;
+  padding-top: 18px;
+}
+.search-query-summary {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.search-response > section {
+  margin-top: 20px;
+}
+.search-result {
+  border: 1px solid #dce6d7;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  background: #fafcf8;
+  min-width: 0;
+}
+.search-result h4 {
+  font-size: 14px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.search-result .section-heading {
+  align-items: flex-start;
+}
+.search-snippet {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.7;
+  max-height: 240px;
+  overflow: auto;
+}
+.search-snippet mark {
+  background: #e0edb4;
+  color: #254633;
+  border-radius: 2px;
+}
+.search-warnings {
+  padding-left: 18px;
+  font-size: 12px;
+  color: #8a6739;
+}
+.search-empty {
+  font-size: 12px;
+  color: #7b8a78;
+}
+.search-unknown {
+  padding: 18px;
+  border: 1px solid #e4d2ac;
+  border-radius: 8px;
+  background: #fffbf2;
+}
+.search-result.uncertain {
+  border-color: #e9dcc4;
+  background: #fffdf8;
+}
+.search-provenance {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #637760;
+}
+.search-provenance p {
+  margin: 8px 0;
+}
+.page-viewer {
+  scroll-margin-top: 20px;
+}
+@media (max-width: 700px) {
+  .search-form {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .search-form .primary {
+    justify-content: center;
+  }
+  .search-panel {
+    padding: 20px;
+  }
+  .scope-tag {
+    display: none;
+  }
+  .search-unknown {
+    padding: 12px;
+  }
+}
+.search-panel .pagination {
+  flex-wrap: wrap;
+  gap: 8px;
+}
