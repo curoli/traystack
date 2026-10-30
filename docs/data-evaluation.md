@@ -83,13 +83,27 @@ management API. Original bytes are preserved, and import source/hash plus synthe
 group/split/difficulty are attached as metadata. Review flags are carried through.
 Processing waits for real jobs, reports actual failures and has a bounded wait.
 
-`data/import-receipts.json` records endpoint + byte hash + review intent → document ID.
+`data/import-receipts.json` records a versioned key containing endpoint + source
+MIME type + byte hash + review intent → document ID. The source type uses the
+server's extension mapping: `.htm`/`.html` share a type, as do `.jpg`/`.jpeg`;
+TXT and HTML never reuse one another even when their bytes are identical.
 A repeated single-process import checks whether that document still exists and
 reuses it. A pending job is awaited; a completed job is retained. A failed run can
 be processed again. Receipts are saved immediately after upload, so processing
 failure can be resumed. Different review intent creates a separate document rather
 than reusing a less restrictive import. Equal bytes at different paths are reused
-by this convenience tool; application-level document identity remains separate.
+by this convenience tool only when their processing type and review intent also
+match; application-level document identity remains separate.
+
+Legacy keys without a type are retained in the receipt file but are not reused.
+The first import with the new key therefore creates a new document, even for a
+previously imported file. This avoids guessing a processing type from unsafe old
+receipts. Existing app documents are not rewritten: reimport any HTML previously
+misidentified as TXT to obtain its proper text extraction and quality warnings.
+The receipt fix was verified with 122 passing backend tests, including real
+API/worker execution in both TXT→HTML and HTML→TXT import orders, repeat reuse,
+legacy receipts and uppercase `.HTM` alias reuse. The frontend was unchanged;
+the 13 browser scenarios documented below were not rerun for this receipt fix.
 
 Receipts are local to this tool and are not a distributed idempotency protocol:
 concurrent imports, a lost receipt or interruption between server upload and

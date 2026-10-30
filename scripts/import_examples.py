@@ -3,14 +3,23 @@
 import argparse
 import hashlib
 import json
-import mimetypes
 import time
 import uuid
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-SUPPORTED = {".pdf", ".jpg", ".jpeg", ".png", ".txt", ".htm", ".html"}
+# Match the server's extension-based source interpretation, including aliases.
+SOURCE_TYPES = {
+    ".pdf": "application/pdf",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".txt": "text/plain",
+    ".htm": "text/html",
+    ".html": "text/html",
+}
+SUPPORTED = set(SOURCE_TYPES)
 
 
 def inputs(source: Path):
@@ -107,8 +116,10 @@ def main():
         if info.get("sha256", digest) != digest:
             raise ValueError(f"Manifest hash mismatch: {path}")
         manual = args.manual_review or info.get("requires_manual_review", False)
-        # Review intent is part of identity, so a stricter request never reuses a clean import.
-        key = f"{base}|{digest}|manual={bool(manual)}"
+        source_type = SOURCE_TYPES[path.suffix.lower()]
+        # Equal bytes can require different extraction/quality rules (TXT vs HTML).
+        # Do not reuse legacy untyped receipts: their processing type is ambiguous.
+        key = f"v2|{base}|{source_type}|{digest}|manual={bool(manual)}"
         count += 1
         if args.dry_run:
             print(f"Would import {path} sha256={digest} manual_review={bool(manual)}")
@@ -147,7 +158,7 @@ def main():
             )
             body += (
                 f'--{boundary}\r\nContent-Disposition: form-data; name="file"; '
-                f'filename="{path.name}"\r\nContent-Type: {mimetypes.guess_type(path.name)[0]}\r\n\r\n'.encode()
+                f'filename="{path.name}"\r\nContent-Type: {source_type}\r\n\r\n'.encode()
                 + data
                 + f"\r\n--{boundary}--\r\n".encode()
             )
