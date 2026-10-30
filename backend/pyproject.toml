@@ -19,6 +19,7 @@ dependencies = [
   "pillow>=11,<13",
   "pytesseract>=0.3.13,<1",
   "swagger-ui-py>=25.7.1,<26",
+  "rapidfuzz>=3.14,<4",
 ]
 
 [project.optional-dependencies]

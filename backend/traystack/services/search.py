@@ -26,6 +26,45 @@ def search_snapshot(session: Session, request: SearchRequest) -> SearchResponse:
     column = (
         RevisionText.normalized_text if request.mode == "normalized" else RevisionText.plain_text
     )
+    statement = selected_scope(phrase, column)
+    # PostgreSQL inspects every full selected text. Only metadata and positions are
+    # transferred for the whole scope; snippets/page metadata are fetched for returned hits.
+    results = [classify(row, request) for row in session.execute(statement).mappings()]
+    counts = Counter(result.status for result in results)
+    wanted = "found" if request.relation == "contains" else "not_found_in_processed_text"
+    matches = [result for result in results if result.status == wanted]
+    unknown = [result for result in results if result.status == "unverifiable"]
+    visible = matches[request.offset : request.offset + request.limit]
+    if wanted == "found":
+        add_evidence(session, visible, phrase, column, request.mode)
+    return SearchResponse(
+        query=request.query,
+        effective_query=phrase,
+        mode=request.mode,
+        relation=request.relation,
+        scope=request.scope,
+        searched_at=searched_at,
+        summary=SearchSummary(
+            documents_total=len(results),
+            found=counts["found"],
+            not_found_in_processed_text=counts["not_found_in_processed_text"],
+            unverifiable=counts["unverifiable"],
+        ),
+        results=visible,
+        total=len(matches),
+        limit=request.limit,
+        offset=request.offset,
+        unverifiable=unknown[
+            request.unverifiable_offset : request.unverifiable_offset + request.unverifiable_limit
+        ],
+        unverifiable_total=len(unknown),
+        unverifiable_limit=request.unverifiable_limit,
+        unverifiable_offset=request.unverifiable_offset,
+    )
+
+
+def selected_scope(phrase, column):
+    """One latest revision and its selected-run/quality provenance per document."""
     latest_number = (
         select(func.max(Revision.revision_number))
         .where(Revision.document_id == Document.id)
@@ -51,7 +90,7 @@ def search_snapshot(session: Session, request: SearchRequest) -> SearchResponse:
         .correlate(RevisionText)
         .exists()
     )
-    statement = (
+    return (
         select(
             Document.id.label("document_id"),
             Document.title,
@@ -86,40 +125,6 @@ def search_snapshot(session: Session, request: SearchRequest) -> SearchResponse:
         .outerjoin(selected_job, selected_job.id == RevisionText.processing_job_id)
         .outerjoin(latest_job, latest_job.id == latest_job_id)
         .order_by(Document.created_at.desc(), Document.id)
-    )
-    # PostgreSQL inspects every full selected text. Only metadata and positions are
-    # transferred for the whole scope; snippets/page metadata are fetched for returned hits.
-    results = [classify(row, request) for row in session.execute(statement).mappings()]
-    counts = Counter(result.status for result in results)
-    wanted = "found" if request.relation == "contains" else "not_found_in_processed_text"
-    matches = [result for result in results if result.status == wanted]
-    unknown = [result for result in results if result.status == "unverifiable"]
-    visible = matches[request.offset : request.offset + request.limit]
-    if wanted == "found":
-        add_evidence(session, visible, phrase, column, request.mode)
-    return SearchResponse(
-        query=request.query,
-        effective_query=phrase,
-        mode=request.mode,
-        relation=request.relation,
-        scope=request.scope,
-        searched_at=searched_at,
-        summary=SearchSummary(
-            documents_total=len(results),
-            found=counts["found"],
-            not_found_in_processed_text=counts["not_found_in_processed_text"],
-            unverifiable=counts["unverifiable"],
-        ),
-        results=visible,
-        total=len(matches),
-        limit=request.limit,
-        offset=request.offset,
-        unverifiable=unknown[
-            request.unverifiable_offset : request.unverifiable_offset + request.unverifiable_limit
-        ],
-        unverifiable_total=len(unknown),
-        unverifiable_limit=request.unverifiable_limit,
-        unverifiable_offset=request.unverifiable_offset,
     )
 
 

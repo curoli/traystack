@@ -121,3 +121,17 @@ verbindet die globale Klassifikation mit Ausschnitten und Seitenpositionen.
 Automatische Wiederholung, Heartbeats und sichere Lease-Übernahme sind noch nicht
 implementiert; die README beschreibt den expliziten Wiederherstellungsablauf nach
 Worker-Abbruch. Während der Extraktion bleiben keine Datenbank-Rowlocks offen.
+
+## Textuelle Kandidatensuche
+
+`POST /api/search/textual` verwendet dieselbe Auswahl der neuesten Revision,
+Provenienz und Qualitätswarnungen wie die Literalsuche. In einem eigenen
+Read-only-Snapshot vergleicht RapidFuzz den Suchtext mit exakten Vorkommen und
+variablen Wortfenstern. Überlappende Kandidaten werden konsolidiert; mehrere
+Fundstellen bleiben je Dokument blätterbar. Der Score bezieht sich auf die
+tatsächlich angezeigte Passage. Fundstellen und Seiteninformationen stammen aus
+demselben Snapshot. Es gibt kein zusätzliches Indexschema oder stilles Top-k-Limit.
+
+Die [Kandidatenregeln](textual-search.md) und vollständige Ressourcenfehler machen
+die Grenzen des aktuellen Vollscans sichtbar. Dieser Ablauf liefert mögliche
+positive Treffer; er darf keine juristische Äquivalenz oder Abwesenheit feststellen.

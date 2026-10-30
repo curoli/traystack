@@ -20,6 +20,9 @@ hash, random seed and Pillow/FreeType/JPEG versions.
   representative evaluation sample.
 - [evaluation-train45.json](evaluation-train45.json): actual local OCR outputs and
   metrics for the first 45 images in the training split. No semantic model was run.
+- [textual-evaluation-train.json](textual-evaluation-train.json): candidate-search
+  threshold curves on training text and those measured OCR outputs; see the
+  [textual score contract](../../docs/textual-search.md) for interpretation.
 - Fonts and their licenses are bundled; the other 297 JPEGs are reproduced locally
   rather than adding approximately 42 MB of generated image content to Git.
 

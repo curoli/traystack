@@ -16,6 +16,11 @@ Der [Daten- und Evaluationsunterbau](docs/data-evaluation.md) ergänzt lokale
 Importwerkzeuge und 300 reproduzierbare Handschrift-Simulationen mit Ground Truth.
 Die [drei Bildbeispiele](examples/synthetic-handwriting/samples/manifest.json)
 können direkt in der App geprüft werden; das vollständige Bildset wird lokal erzeugt.
+Unter **Similar passages** gibt es zusätzlich eine textuelle Ähnlichkeitssuche:
+Schwelle von 0 bis 100, mehrere Fundstellen je Dokument, Kontext und markierte
+Textunterschiede. Die [Score- und Fundstellenregeln](docs/textual-search.md) erklären
+auch die Trainingsmessung mit echten OCR-Ausgaben. Semantische Scores und
+**Keep / Dismiss / Decide later** folgen in späteren Schritten.
 
 ## Start
 
@@ -143,6 +148,10 @@ an `localhost:8000` weiter. Für Backend-Entwicklung `DATABASE_URL` und
 DB-/Storage-Einstellungen `.venv/bin/python -m traystack.worker` in einem zweiten
 Terminal starten. Keine SQLite-Ersatzdatenbank.
 
+Wenn nach dem alleinigen Austausch des API-Containers der Webserver 502 liefert,
+`docker compose restart frontend` ausführen: Nginx muss dann die geänderte interne
+Containeradresse neu auflösen.
+
 Fixtures regenerieren: `.venv/bin/python scripts/generate_fixtures.py`.
 Abhängigkeiten aktualisieren: mit `pip-tools` aus `backend/pyproject.toml`
 beide Python-Lockdateien neu erzeugen; Frontend-Lockdatei mit npm pflegen.
@@ -159,8 +168,9 @@ Client und leitet API-Aufrufe weiter.
 [Präsentation](docs/presentation.md) und [Produktionskonzept](docs/production.md)
 trennen gelieferte Funktionen von Azure-Vorschlag, Technologieevaluation und Pilot.
 Die [Implementierungsanleitung](TrayStack_Codex_Instructions.md) enthält den
-weiteren Plan: Fuzzy-Suche und komfortable Revisionsverwaltung sind optionale
-Erweiterungen nach dem abgeschlossenen Core.
+weiteren Plan: Textuelle Ähnlichkeit ist als eigener positiver Suchablauf umgesetzt;
+semantische Suche, gespeicherte Fundstellenentscheidungen und komfortable
+Revisionsverwaltung folgen nach dem abgeschlossenen Core.
 Der [Suchvertrag](docs/search.md) erklärt Literalität, Qualität, Pagination,
 Seitenoffsets und konsistente Momentaufnahmen.
 

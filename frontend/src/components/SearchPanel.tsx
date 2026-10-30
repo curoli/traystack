@@ -9,7 +9,7 @@ import {
 } from "../api";
 import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
 
-const searchWarnings: Record<string, string> = {
+export const searchWarnings: Record<string, string> = {
   no_revision: "No revision available yet.",
   no_selected_text: "No selected text yet; processing is required.",
   processing_failed: "Processing failed; no selected text is available yet.",

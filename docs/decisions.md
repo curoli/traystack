@@ -9,8 +9,9 @@
   und Original an. Weitere Revisionen und Repräsentationen bleiben im Datenmodell
   möglich; ihre Schreib-APIs und komfortable Verwaltung folgen später.
 - **PostgreSQL von Anfang an:** JSONB, Fremdschlüssel und echte Migrationen werden
-  gegen PostgreSQL geprüft. `pg_trgm` und Suchsegmente werden erst mit der optionalen
-  Fuzzy-Suche hinzugefügt.
+  gegen PostgreSQL geprüft. Die erste textuelle Ähnlichkeitssuche scannt begrenzte
+  vollständige Textbestände mit RapidFuzz. Ein `pg_trgm`-Kandidatenindex und
+  persistierte Suchsegmente bleiben einer gemessenen Optimierung vorbehalten.
 - **Originalbytes und Herkunft:** Dateiname ist ein bereinigtes Anzeigefeld,
   niemals ein Dateipfad. SHA-256 adressiert Inhalt, die Artefakt-ID dessen konkrete
   Herkunft. Inhaltsgleiche Uploads werden nicht als dasselbe Dokument behandelt.
@@ -26,8 +27,9 @@
   keine externen Dienste.
 - **Suchprinzip:** Exact/normalized prüfen den ganzen
   ausgewählten Text. Fehlende oder fragwürdige Extraktion wird unverifizierbar;
-  ein Treffer wird mit Quelle belegt. Fuzzy und semantische Ähnlichkeit sind
-  getrennte spätere Funktionen und keine Beweise für Abwesenheit.
+  ein Treffer wird mit Quelle belegt. Textuelle Ähnlichkeit hat einen separaten
+  positiven Kandidatenablauf; sie und eine spätere semantische Ähnlichkeit sind
+  keine Beweise für Abwesenheit.
 
 - **Ein Job ist ein Lauf:** Pro Revision genau ein aktiver Lauf, transaktional
   beansprucht. Wiederholung erstellt einen neuen Datensatz. Alte Artefakte bleiben
