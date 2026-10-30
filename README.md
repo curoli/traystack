@@ -9,6 +9,9 @@ Textes. Exakte und normalisierte Volltextsuche liefern Fundstellen, negative
 Ergebnisse im vollständig verarbeiteten Text und getrennte unverifizierbare Dokumente.
 Eine [18-Minuten-Präsentation](docs/presentation.md) mit Demo, vorgeschlagener
 Azure-Architektur, Microsoft-Vergleich und Nutzerpilot ergänzt den lokalen Core.
+Die App-Oberfläche ist auf Englisch. Datumsanzeigen verwenden englische Monatsnamen
+und das 24-Stunden-Format in der lokalen Zeitzone des Browsers. Dokumenttitel,
+Metadaten und Vertragsinhalte bleiben in ihrer ursprünglichen Sprache erhalten.
 
 ## Start
 
@@ -42,20 +45,20 @@ sind ausschließlich lokale Demo-Standardwerte.
 1. Oberfläche öffnen und einen Titel eingeben.
 2. `examples/synthetic-contracts/A-confidentiality.pdf` auswählen und speichern.
 3. Dokumentdetails zeigen Dokument-, Revisions- und Artefakt-ID, Dateityp, Größe und SHA-256.
-4. **Original herunterladen** wählen und mit der Eingabedatei vergleichen.
-5. In den Dokumentdetails **Verarbeitung starten** wählen. Der Jobstatus aktualisiert sich automatisch.
-6. Seitenabdeckung und Qualität getrennt ansehen; **Seitentext ansehen** öffnen.
+4. **Download original** wählen und mit der Eingabedatei vergleichen.
+5. In den Dokumentdetails **Start processing** wählen. Der Jobstatus aktualisiert sich automatisch.
+6. Seitenabdeckung und Qualität getrennt ansehen; **View page text** öffnen.
 7. JSON-/Markdown-Artefakte in der Textvorschau ansehen oder herunterladen.
 8. `D-delivery.pdf` als Beispiel ohne Zielpassage verarbeiten. `P-printed-scan.jpg`
    hochladen und echte OCR durchführen. Bei `E-difficult-scan.jpg`
-   **Manuelle Prüfung erforderlich** setzen: Der Eintrag bleibt auch nach Verarbeitung
+   **Manual review required** setzen: Der Eintrag bleibt auch nach Verarbeitung
    in der Prüfgruppe. Die Vormerkung lässt sich nicht durch Neuverarbeitung beseitigen.
-9. **Erneut verarbeiten** erzeugt neue Artefakte und wählt deren Textbestand aus.
+9. **Reprocess** erzeugt neue Artefakte und wählt deren Textbestand aus.
    Frühere Artefakte bleiben erhalten. Fehlgeschlagene Läufe lassen sich als neue
    Läufe wiederholen; der bisher ausgewählte Text bleibt bei Fehlschlag unverändert.
 
-10. Oben die Vertraulichkeitspassage eingeben und **Suche ausführen** wählen.
-    Zwischen **Enthält die Passage** und **Nicht im extrahierten Text gefunden**
+10. Oben die Vertraulichkeitspassage eingeben und **Run search** wählen.
+    Zwischen **Contains the passage** und **Not found in extracted text**
     wechseln. Die Prüfgruppe der Suche bleibt separat; Treffer öffnen die Quellseite.
 
 Die [Demo-Dateien](examples/synthetic-contracts/README.md) sind synthetisch. Ihre

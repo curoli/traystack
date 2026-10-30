@@ -56,34 +56,34 @@ der README zeigen. Fehlgeschlagene oder unsichere Dokumente bleiben prüfbedürf
    Bereits hochgeladene Dokumente aus Meilenstein 1 bleiben erhalten.
 2. `examples/synthetic-contracts/A-confidentiality.pdf` mit einem Titel hochladen.
    Die Details zeigen Dokument, Revision 1 und das unveränderte Original.
-3. Quelle in den Details prüfen und **Verarbeitung starten** wählen. Der Status
+3. Quelle in den Details prüfen und **Start processing** wählen. Der Status
    wechselt von wartend/laufend auf verarbeitet. Seitenabdeckung und Qualität
    erscheinen getrennt: eine verarbeitete Seite, keine bekannte Auffälligkeit.
-4. **Seitentext ansehen** öffnen. Die Vertraulichkeitspassage stammt aus der realen
+4. **View page text** öffnen. Die Vertraulichkeitspassage stammt aus der realen
    PDF-Textschicht. JSON und Markdown stehen als neue Artefakte mit Quelle, Lauf-ID,
    Verfahren und Hash bereit; ihre Vorschau zeigt tatsächlichen Dateiinhalt.
-5. **Original herunterladen** wählen und Bytes/Hash mit der Eingabedatei vergleichen.
+5. **Download original** wählen und Bytes/Hash mit der Eingabedatei vergleichen.
 6. `D-delivery.pdf` ebenfalls hochladen und verarbeiten; es enthält die Zielpassage
    nicht. Danach `P-printed-scan.jpg` hochladen und verarbeiten. Hier arbeitet tatsächlich
    Tesseract. Die Seitenansicht nennt OCR und den mittleren Wortscore; der Score
    ist keine Wahrscheinlichkeit für einen korrekten Vertragstext.
-7. `E-difficult-scan.jpg` mit **Manuelle Prüfung erforderlich** hochladen und
+7. `E-difficult-scan.jpg` mit **Manual review required** hochladen und
    verarbeiten. Der Eintrag bleibt in der gesonderten Prüfgruppe. Auch vollständig
    verarbeitete Seiten können weiterhin prüfbedürftig sein. Original herunterladen
    und manuell prüfen; es gibt keinen Knopf, der OCR als rechtlich korrekt bestätigt.
-8. Beim digitalen PDF **Erneut verarbeiten** wählen. Es entstehen ein neuer Lauf
+8. Beim digitalen PDF **Reprocess** wählen. Es entstehen ein neuer Lauf
    und zwei neue Artefakte; alte Artefakte bleiben zugänglich. Die Textansicht
    nennt den neu ausgewählten Lauf.
-9. **Verarbeitungsläufe** aufklappen: Eingabeparameter, Engine-Versionen und
+9. **Processing runs** aufklappen: Eingabeparameter, Engine-Versionen und
    Normalisierungsversion sind pro Lauf nachvollziehbar. Bei Fehlern wird ein
    fester Fehlercode gezeigt; vorhandener ausgewählter Text bleibt erhalten.
 10. Seite neu laden. Dokumente, Artefakte, Status und ausgewählter Text bleiben
     bestehen. Nun oben die Passage `The receiving party shall not disclose confidential information`
     im normalisierten Modus suchen. A und P liefern positive Treffer; D erscheint
-    bei „Nicht im extrahierten Text gefunden“. E bleibt unverifizierbar.
+    bei „Not found in extracted text“. E bleibt unverifizierbar.
 11. Einen weiteren Vertrag hochladen und noch nicht verarbeiten: Auch er bleibt
     unverifizierbar und wird nicht als negativer Treffer ausgegeben.
-12. Bei einem Treffer **Seite 1 ansehen** wählen. Der Seitentext wird geöffnet;
+12. Bei einem Treffer **View page 1** wählen. Der Seitentext wird geöffnet;
     Qualitätsinformationen und Originaldownload bleiben verfügbar. Nach erneuter
     Verarbeitung eines Treffers weist ein Klick auf die alte Suchfundstelle auf
     die veraltete Momentaufnahme hin.
@@ -174,3 +174,26 @@ zu behandeln. Leere Seiten werden vorsichtshalber zur Prüfung markiert.
 Die installierte Starlette-Version meldet weiterhin eine Deprecation-Warnung für
 HTTPX im Testclient. Die Tests laufen erfolgreich; diese Warnung betrifft nicht
 die HTTP-Verarbeitung der laufenden Anwendung.
+
+## Englische Oberfläche — geprüft am 30.10.2026
+
+Die App verwendet durchgehend englische Bedienelemente, Status-/Qualitätshinweise,
+Fehlermeldungen und zugängliche Beschriftungen. Die Dokumentensprache bleibt
+unverändert. Datumsanzeigen in Bibliothek, Such-Snapshot und Laufhistorie verwenden
+englische Monatsnamen und 24-Stunden-Zeit in der Zeitzone des Browsers.
+Die oben genannten Bedienaktionen sind an die englischen Beschriftungen angepasst.
+
+- Alle elf Playwright-/Chrome-Szenarien gegen den echten Compose-Stack auf Port
+  8080 bestanden: darunter Upload/Download, echte OCR, Suche, Desktop/Mobil,
+  wiederholter Seitensprung und ein realer ungültiger PDF-Upload.
+- Mit deutscher Browser-Sprache geprüft: `lang="en"`, Seitentitel, englische
+  Datumsanzeige und unveränderte deutsche Dokumenttitel.
+- Isolierte Tests decken Unicode-Hervorhebung sowie Verbindungsfehler und den
+  Fallback für strukturierte Validierungsfehler ab; sie simulieren keine
+  erfolgreichen Verarbeitungsergebnisse in der laufenden Anwendung.
+- TypeScript, Vite-Produktionsbuild, Prettier und `git diff --check`: erfolgreich.
+  Sichtprüfung der englischen Oberfläche durchgeführt.
+
+Backend, Datenmodell und Suchregeln wurden für diese Sprachumstellung nicht
+geändert. Der Backend-Prüfstand bleibt der oben dokumentierte Lauf; die 102 Tests
+wurden für diese reine Frontend-Änderung nicht erneut ausgeführt.

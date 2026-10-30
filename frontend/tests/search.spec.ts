@@ -52,34 +52,37 @@ test("real full-text search separates negative and unverifiable results and open
   const positive = await upload(
     page.request,
     "A-confidentiality.pdf",
-    `Suche positiv ${tag}`,
+    `Search positive ${tag}`,
   );
   const negative = await upload(
     page.request,
     "D-delivery.pdf",
-    `Suche negativ ${tag}`,
+    `Search negative ${tag}`,
   );
   const review = await upload(
     page.request,
     "D-delivery.pdf",
-    `Suche prüfen ${tag}`,
+    `Search review ${tag}`,
     true,
   );
   const pending = await upload(
     page.request,
     "A-confidentiality.pdf",
-    `Suche unverarbeitet ${tag}`,
+    `Search unprocessed ${tag}`,
   );
   for (const document of [positive, negative, review])
     await process(page.request, document.revisions[0].id);
   await page.goto("/");
   await page
-    .getByLabel("Textpassage", { exact: true })
+    .getByLabel("Text passage", { exact: true })
     .fill("THE receiving party\n shall not disclose confidential information");
-  await page.getByRole("button", { name: "Suche ausführen" }).click();
-  const hits = page.getByRole("region", { name: "Suchtreffer", exact: true });
+  await page.getByRole("button", { name: "Run search" }).click();
+  const hits = page.getByRole("region", {
+    name: "Search results",
+    exact: true,
+  });
   const unknown = page.getByRole("region", {
-    name: "Unverifizierbare Dokumente",
+    name: "Unverifiable documents",
     exact: true,
   });
   const card = hits
@@ -87,9 +90,9 @@ test("real full-text search separates negative and unverifiable results and open
     .filter({ hasText: positive.title });
   await expect(card).toBeVisible();
   await expect(card.locator("mark")).toHaveText(PHRASE.toLowerCase());
-  await card.getByRole("button", { name: "Seite 1 ansehen" }).click();
+  await card.getByRole("button", { name: "View page 1" }).click();
   const viewer = page.getByRole("region", {
-    name: "Extrahierter Seitentext",
+    name: "Extracted page text",
     exact: true,
   });
   await expect(viewer).toBeFocused();
@@ -105,38 +108,38 @@ test("real full-text search separates negative and unverifiable results and open
           .includes(`/revisions/${positive.revisions[0].id}/text`) &&
         response.status() === 200,
     );
-    await card.getByRole("button", { name: "Seite 1 ansehen" }).click();
+    await card.getByRole("button", { name: "View page 1" }).click();
     await textResponse;
     await expect(viewer).toBeFocused();
     await expect(viewer).toBeInViewport();
     await expect(viewer.locator("pre")).toContainText("shall not disclose");
   }
 
-  await page.getByLabel("Gesuchte Dokumente").selectOption("lacks");
-  await page.getByRole("button", { name: "Suche ausführen" }).click();
+  await page.getByLabel("Find documents").selectOption("lacks");
+  await page.getByRole("button", { name: "Run search" }).click();
   await expect(hits).toContainText(negative.title);
   await expect(hits).not.toContainText(review.title);
   await expect(hits).not.toContainText(pending.title);
   await expect(unknown).toContainText(review.title);
   await expect(unknown).toContainText(pending.title);
-  await expect(unknown).toContainText("Noch kein ausgewählter Text vorhanden");
+  await expect(unknown).toContainText("No selected text yet");
 
-  await page.getByLabel("Suchmodus").selectOption("exact");
-  await page.getByLabel("Gesuchte Dokumente").selectOption("contains");
+  await page.getByLabel("Search mode").selectOption("exact");
+  await page.getByLabel("Find documents").selectOption("contains");
   await page
-    .getByLabel("Textpassage", { exact: true })
+    .getByLabel("Text passage", { exact: true })
     .fill(PHRASE.toLowerCase());
-  await page.getByRole("button", { name: "Suche ausführen" }).click();
-  await expect(page.locator(".search-query-summary")).toContainText("Exakt");
+  await page.getByRole("button", { name: "Run search" }).click();
+  await expect(page.locator(".search-query-summary")).toContainText("Exact");
   await expect(hits).not.toContainText(positive.title);
 
-  await page.getByLabel("Suchmodus").selectOption("normalized");
-  await page.getByRole("button", { name: "Suche ausführen" }).click();
+  await page.getByLabel("Search mode").selectOption("normalized");
+  await page.getByRole("button", { name: "Run search" }).click();
   await expect(card).toBeVisible();
   await process(page.request, positive.revisions[0].id); // Change the selected run after the search snapshot.
-  await card.getByRole("button", { name: "Seite 1 ansehen" }).click();
+  await card.getByRole("button", { name: "View page 1" }).click();
   await expect(page.locator(".details").getByRole("alert")).toContainText(
-    "seit der Suche geändert",
+    "changed since the search",
   );
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
@@ -206,8 +209,8 @@ test("search highlighting respects code-point offsets before non-BMP characters"
     }),
   );
   await page.goto("/");
-  await page.getByLabel("Textpassage", { exact: true }).fill("target");
-  await page.getByRole("button", { name: "Suche ausführen" }).click();
+  await page.getByLabel("Text passage", { exact: true }).fill("target");
+  await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.locator(".search-snippet mark")).toHaveText("target");
   await expect(page.locator(".search-snippet")).toHaveText("😀 target 🧾");
 });

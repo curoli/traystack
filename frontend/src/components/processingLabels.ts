@@ -1,36 +1,35 @@
 import type { Revision } from "../api";
 
 export const statusLabel: Record<Revision["processing_status"], string> = {
-  not_processed: "Nicht verarbeitet",
-  queued: "Wartet auf Verarbeitung",
-  running: "Wird verarbeitet",
-  completed: "Verarbeitet",
-  failed: "Verarbeitung fehlgeschlagen",
+  not_processed: "Not processed",
+  queued: "Queued for processing",
+  running: "Processing",
+  completed: "Processed",
+  failed: "Processing failed",
 };
 export const qualityLabel = {
-  no_known_issue: "Keine Auffälligkeit erkannt",
-  needs_review: "Manuelle Prüfung erforderlich",
-  unassessed: "Qualität nicht bewertet",
+  no_known_issue: "No known quality issue",
+  needs_review: "Manual review required",
+  unassessed: "Quality not assessed",
 };
 export const coverageLabel = {
-  complete: "Vollständig verarbeitet",
-  partial: "Teilweise verarbeitet",
-  unavailable: "Text nicht verfügbar",
+  complete: "Fully processed",
+  partial: "Partially processed",
+  unavailable: "Text unavailable",
 };
 const warnings: Record<string, string> = {
-  manual_review_requested: "Manuelle Prüfung wurde angefordert.",
+  manual_review_requested: "Manual review was requested.",
   no_text_detected:
-    "Kein lesbarer Text erkannt; auch leere Seiten werden vorsichtshalber zur Prüfung markiert.",
-  low_ocr_confidence: "Die OCR meldet geringe Erkennungssicherheit.",
-  ocr_confidence_unavailable:
-    "Die OCR hat keine bewertbaren Konfidenzwerte geliefert.",
+    "No readable text detected; blank pages are also flagged for review as a precaution.",
+  low_ocr_confidence: "OCR reports low recognition confidence.",
+  ocr_confidence_unavailable: "OCR did not provide usable confidence scores.",
   suspicious_text:
-    "Der erkannte Text enthält auffällige Zeichen oder sehr wenig Inhalt.",
+    "The extracted text contains unusual characters or very little content.",
   null_character_replaced:
-    "Ein nicht speicherbares Nullzeichen wurde durch ein Ersatzzeichen markiert.",
-  ocr_timeout: "Die OCR hat das Zeitlimit überschritten.",
-  ocr_failed: "Die OCR konnte diese Seite nicht verarbeiten.",
-  page_extraction_failed: "Die Seite konnte nicht ausgelesen werden.",
+    "A null character that cannot be stored was marked with a replacement character.",
+  ocr_timeout: "OCR exceeded the time limit.",
+  ocr_failed: "OCR could not process this page.",
+  page_extraction_failed: "The page could not be extracted.",
 };
 export const warningLabel = (reason: string) => warnings[reason] || reason;
 export function needsReview(revision: Revision): boolean {
