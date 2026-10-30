@@ -88,7 +88,10 @@ Der Prototyp scannt den ausgewählten Volltext in PostgreSQL und lädt Metadaten
 den gesamten Suchumfang, Ausschnitte und Seitenmetadaten nur für die ausgegebenen
 positiven Treffer. Für große Bestände wären Abfragepläne und serverseitige
 Aggregation/Pagination zu optimieren. Dieser Meilenstein benötigt keine neue
-Tabelle oder Migration. Fuzzy- und semantische Suche sind nicht implementiert.
+Tabelle oder Migration. Die zusätzliche [textuelle Ähnlichkeitssuche](textual-search.md)
+hat einen eigenen Endpunkt, mehrere Fundstellen und einen expliziten Score. Sie
+ändert diesen Literal-/Negativ-Suchvertrag nicht. Semantische Suche ist noch nicht
+implementiert.
 
 Die Aussage bleibt auf den extrahierten Text beschränkt, nicht auf juristische
 Vollständigkeit oder fehlerfreie OCR. Bereits mit einer fehlerhaften älteren

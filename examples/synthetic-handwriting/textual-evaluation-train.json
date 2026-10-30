@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "split": "train",
+  "scorer_version": "levenshtein-max-length-v1",
+  "rapidfuzz_version": "3.14.6",
+  "candidate_policy": "literal-and-best-word-window-per-start-v1-nonoverlap",
+  "corpus_sha256": "76fcf2a95c6a047eb25b69b58f536a0f697a5e98cd8c31eeef1d614cc118fc39",
+  "ocr_report_sha256": "8a8862f777ee704d15e3fea16c7c05216902193df3f0f260492dd2c0e2371b3c",
+  "scope": "Training development sample only. Actual OCR reused from the measured report; no new OCR or semantic model run. Literal precision is only a proxy: candidate similarity does not establish equivalent meaning.",
+  "source_text": [
+    {
+      "threshold": 0,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 42,
+      "literal_precision_proxy": 0.4,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 14,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-paraphrase",
+          "case": "paraphrase",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 48.4375,
+          "best_passage": "the recipient must keep the confidential material"
+        },
+        {
+          "id": "clause-01-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-unrelated",
+          "case": "unrelated",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 34.375,
+          "best_passage": "this fictional short agreement is for software evaluation"
+        }
+      ]
+    },
+    {
+      "threshold": 50,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 20,
+      "literal_precision_proxy": 0.5833333333333334,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 14,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-02-paraphrase",
+          "case": "paraphrase",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 55.5556,
+          "best_passage": "paid no later than thirty days after it"
+        },
+        {
+          "id": "clause-02-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        }
+      ]
+    },
+    {
+      "threshold": 70,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 12,
+      "literal_precision_proxy": 0.7,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 12,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-02-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        },
+        {
+          "id": "clause-03-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        }
+      ]
+    },
+    {
+      "threshold": 80,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 11,
+      "literal_precision_proxy": 0.717948717948718,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 11,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-02-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        },
+        {
+          "id": "clause-03-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        }
+      ]
+    },
+    {
+      "threshold": 85,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 10,
+      "literal_precision_proxy": 0.7368421052631579,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 10,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-02-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        },
+        {
+          "id": "clause-03-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        }
+      ]
+    },
+    {
+      "threshold": 90,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 7,
+      "literal_precision_proxy": 0.8,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 7,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-02-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        },
+        {
+          "id": "clause-03-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        },
+        {
+          "id": "clause-04-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 93.1034,
+          "best_passage": "the supplier shall deliver the goods within forty days."
+        }
+      ]
+    },
+    {
+      "threshold": 95,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 3,
+      "literal_precision_proxy": 0.9032258064516129,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 3,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-03-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        },
+        {
+          "id": "clause-11-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.0149,
+          "best_passage": "the supplier shall notify the customer of a breach within 72 hours."
+        },
+        {
+          "id": "clause-12-counterexample",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 96.2264,
+          "best_passage": "insurance coverage shall be at least 100,000 euros."
+        }
+      ]
+    },
+    {
+      "threshold": 100,
+      "pairs": 70,
+      "source_literal_recovered": 28,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 0,
+      "literal_precision_proxy": 1.0,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 0,
+      "material_counterexamples_total": 14,
+      "missed_literal_ids": [],
+      "nonliteral_examples": []
+    }
+  ],
+  "measured_ocr": [
+    {
+      "threshold": 0,
+      "pairs": 45,
+      "source_literal_recovered": 18,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 27,
+      "literal_precision_proxy": 0.4,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 9,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-paraphrase-clear",
+          "case": "paraphrase",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 48.4375,
+          "best_passage": "the recipient must keep the confidential material"
+        },
+        {
+          "id": "clause-01-paraphrase-irregular",
+          "case": "paraphrase",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 48.4375,
+          "best_passage": "the recipient must keep the confidential material"
+        },
+        {
+          "id": "clause-01-paraphrase-difficult",
+          "case": "paraphrase",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 48.4375,
+          "best_passage": "the recipient must keep the confidential material"
+        }
+      ]
+    },
+    {
+      "threshold": 50,
+      "pairs": 45,
+      "source_literal_recovered": 18,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 12,
+      "literal_precision_proxy": 0.6,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 9,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample-clear",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-irregular",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-difficult",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        }
+      ]
+    },
+    {
+      "threshold": 70,
+      "pairs": 45,
+      "source_literal_recovered": 18,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 9,
+      "literal_precision_proxy": 0.6666666666666666,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 9,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample-clear",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-irregular",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-difficult",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        }
+      ]
+    },
+    {
+      "threshold": 80,
+      "pairs": 45,
+      "source_literal_recovered": 18,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 9,
+      "literal_precision_proxy": 0.6666666666666666,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 9,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample-clear",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-irregular",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-difficult",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        }
+      ]
+    },
+    {
+      "threshold": 85,
+      "pairs": 45,
+      "source_literal_recovered": 18,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 9,
+      "literal_precision_proxy": 0.6666666666666666,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 9,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-01-counterexample-clear",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-irregular",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        },
+        {
+          "id": "clause-01-counterexample-difficult",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 87.5,
+          "best_passage": "the receiving party may disclose confidential information."
+        }
+      ]
+    },
+    {
+      "threshold": 90,
+      "pairs": 45,
+      "source_literal_recovered": 18,
+      "source_literal_missed": 0,
+      "nonliteral_candidates": 6,
+      "literal_precision_proxy": 0.75,
+      "literal_recall": 1.0,
+      "material_counterexamples_returned": 6,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [],
+      "nonliteral_examples": [
+        {
+          "id": "clause-02-counterexample-clear",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        },
+        {
+          "id": "clause-02-counterexample-irregular",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        },
+        {
+          "id": "clause-02-counterexample-difficult",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 91.1111,
+          "best_passage": "payment is due within ninety days of receipt."
+        }
+      ]
+    },
+    {
+      "threshold": 95,
+      "pairs": 45,
+      "source_literal_recovered": 17,
+      "source_literal_missed": 1,
+      "nonliteral_candidates": 3,
+      "literal_precision_proxy": 0.85,
+      "literal_recall": 0.9444444444444444,
+      "material_counterexamples_returned": 3,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [
+        "clause-03-formatting-clear"
+      ],
+      "nonliteral_examples": [
+        {
+          "id": "clause-03-counterexample-clear",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        },
+        {
+          "id": "clause-03-counterexample-irregular",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        },
+        {
+          "id": "clause-03-counterexample-difficult",
+          "case": "counterexample",
+          "source_literal": false,
+          "candidate_found": true,
+          "best_score": 97.3684,
+          "best_passage": "liability is limited to 500,000 euros."
+        }
+      ]
+    },
+    {
+      "threshold": 100,
+      "pairs": 45,
+      "source_literal_recovered": 12,
+      "source_literal_missed": 6,
+      "nonliteral_candidates": 0,
+      "literal_precision_proxy": 1.0,
+      "literal_recall": 0.6666666666666666,
+      "material_counterexamples_returned": 0,
+      "material_counterexamples_total": 9,
+      "missed_literal_ids": [
+        "clause-01-exact-irregular",
+        "clause-01-exact-difficult",
+        "clause-01-formatting-clear",
+        "clause-03-formatting-clear",
+        "clause-03-formatting-irregular",
+        "clause-03-formatting-difficult"
+      ],
+      "nonliteral_examples": []
+    }
+  ]
+}

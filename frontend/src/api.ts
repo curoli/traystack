@@ -223,3 +223,98 @@ export const searchDocuments = (payload: SearchRequest) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
+export interface SearchTarget {
+  document_id: string;
+  revision_id: string | null;
+  processing_job_id: string | null;
+  page_number: number | null;
+}
+export interface TextualSearchRequest {
+  query: string;
+  mode: "exact" | "normalized";
+  minimum_score: number;
+  scope?: "latest";
+  document_id?: string;
+  limit?: number;
+  offset?: number;
+  occurrence_limit?: number;
+  occurrence_offset?: number;
+  unsearchable_limit?: number;
+  unsearchable_offset?: number;
+}
+export type TextualDocument = Pick<
+  SearchResult,
+  | "document_id"
+  | "title"
+  | "revision_id"
+  | "revision_number"
+  | "artifact_id"
+  | "processing_job_id"
+  | "normalization_version"
+  | "processor_versions"
+  | "coverage"
+  | "quality_status"
+  | "pages_total"
+  | "pages_processed"
+  | "pages_failed"
+  | "warnings"
+  | "latest_job"
+>;
+export interface TextualOccurrence {
+  occurrence_id: string;
+  score: number;
+  start_offset: number;
+  end_offset: number;
+  matched_text: string;
+  snippet: string;
+  snippet_start_offset: number;
+  page_numbers: number[];
+  page_reference: "physical" | "logical" | "unavailable";
+  differences: {
+    kind: "equal" | "replace" | "insert" | "delete";
+    query_text: string;
+    passage_text: string;
+  }[];
+}
+export interface TextualGroup {
+  document: TextualDocument;
+  occurrences: TextualOccurrence[];
+  occurrence_total: number;
+  occurrence_offset: number;
+  occurrence_limit: number;
+}
+export interface TextualSearchResponse {
+  query: string;
+  effective_query: string;
+  mode: "exact" | "normalized";
+  minimum_score: number;
+  searched_at: string;
+  scorer_version: string;
+  scorer_library_version: string;
+  candidate_policy: string;
+  offset_basis: "plain_text" | "normalized_text";
+  warnings: string[];
+  summary: {
+    documents_total: number;
+    documents_searched: number;
+    documents_with_matches: number;
+    documents_without_matches: number;
+    documents_unsearchable: number;
+    occurrences_total: number;
+  };
+  results: TextualGroup[];
+  total: number;
+  limit: number;
+  offset: number;
+  unsearchable: TextualDocument[];
+  unsearchable_total: number;
+  unsearchable_limit: number;
+  unsearchable_offset: number;
+}
+export const searchTextual = (payload: TextualSearchRequest) =>
+  request<TextualSearchResponse>("/api/search/textual", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });

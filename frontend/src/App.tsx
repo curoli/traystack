@@ -4,13 +4,14 @@ import {
   listDocuments,
   uploadDocument,
   type Document,
-  type SearchResult,
+  type SearchTarget,
   type SearchPageLocation,
 } from "./api";
 
 import { formatDate } from "./format";
 
 import SearchPanel from "./components/SearchPanel";
+import TextualSearchPanel from "./components/TextualSearchPanel";
 import ArtifactCard from "./components/ArtifactCard";
 import ProcessingDetails from "./components/ProcessingDetails";
 import { needsReview, statusLabel } from "./components/processingLabels";
@@ -19,6 +20,9 @@ const errorText = (error: unknown) =>
   error instanceof Error ? error.message : "Request failed.";
 
 export default function App() {
+  const [searchWorkflow, setSearchWorkflow] = useState<"literal" | "textual">(
+    "literal",
+  );
   const [documents, setDocuments] = useState<Document[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -137,7 +141,7 @@ export default function App() {
     }
   }
 
-  async function openDocument(id: string, result?: SearchResult) {
+  async function openDocument(id: string, result?: SearchTarget) {
     const requestId = ++detailRequest.current;
     setError("");
     setOpeningDocumentId(id);
@@ -205,11 +209,39 @@ export default function App() {
             {error}
           </div>
         )}
-        <SearchPanel
-          onOpen={(result) => {
-            void openDocument(result.document_id, result);
-          }}
-        />
+        <div
+          className="search-workflows"
+          role="group"
+          aria-label="Search workflow"
+        >
+          <button
+            className={searchWorkflow === "literal" ? "primary" : "secondary"}
+            aria-pressed={searchWorkflow === "literal"}
+            onClick={() => setSearchWorkflow("literal")}
+          >
+            Literal search
+          </button>
+          <button
+            className={searchWorkflow === "textual" ? "primary" : "secondary"}
+            aria-pressed={searchWorkflow === "textual"}
+            onClick={() => setSearchWorkflow("textual")}
+          >
+            Similar passages
+          </button>
+        </div>
+        {searchWorkflow === "literal" ? (
+          <SearchPanel
+            onOpen={(result) => {
+              void openDocument(result.document_id, result);
+            }}
+          />
+        ) : (
+          <TextualSearchPanel
+            onOpen={(result) => {
+              void openDocument(result.document_id, result);
+            }}
+          />
+        )}
         <div className="workspace">
           <aside className="panel upload-panel">
             <p className="eyebrow">NEW DOCUMENT</p>
