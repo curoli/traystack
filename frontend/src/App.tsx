@@ -186,7 +186,7 @@ export default function App() {
             Trace every result.
           </h1>
           <p className="lead">
-            PDFs and scans in one place, with unchanged original files and
+            Contracts and scans in one place, with unchanged original files and
             traceable file information.
           </p>
         </div>
@@ -230,11 +230,11 @@ export default function App() {
                   id="file"
                   name="file"
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf,.jpg,.jpeg,.png,.txt,.htm,.html"
                   required
                 />
                 <small>
-                  PDF, JPEG or PNG · up to 25 MiB with the default configuration
+                  PDF, JPEG, PNG, UTF-8 TXT or HTML · up to 25 MiB by default
                 </small>
               </div>
               <label className="checkbox">

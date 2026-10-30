@@ -10,5 +10,8 @@ frontend/dist/
 .coverage
 htmlcov/
 /data/
+# User-provided corpora remain local; their original redistribution terms are unknown.
+/examples/contracts/
+/examples/contract-nli/
 frontend/playwright-report/
 frontend/test-results/

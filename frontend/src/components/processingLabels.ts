@@ -18,6 +18,8 @@ export const coverageLabel = {
   unavailable: "Text unavailable",
 };
 const warnings: Record<string, string> = {
+  html_requires_review:
+    "HTML was read as text without executing scripts or loading images. Layout, hidden text and image content require review.",
   manual_review_requested: "Manual review was requested.",
   no_text_detected:
     "No readable text detected; blank pages are also flagged for review as a precaution.",

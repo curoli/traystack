@@ -1,0 +1,23 @@
+{
+  "google_fonts_commit": "6c1dbe27dcf7d817d4b62cec033ba77fa8e2a5ec",
+  "fonts": [
+    {
+      "family": "caveat",
+      "file": "caveat/Caveat[wght].ttf",
+      "source": "https://github.com/google/fonts/tree/6c1dbe27dcf7d817d4b62cec033ba77fa8e2a5ec/ofl/caveat",
+      "license": "caveat/OFL.txt"
+    },
+    {
+      "family": "kalam",
+      "file": "kalam/Kalam-Regular.ttf",
+      "source": "https://github.com/google/fonts/tree/6c1dbe27dcf7d817d4b62cec033ba77fa8e2a5ec/ofl/kalam",
+      "license": "kalam/OFL.txt"
+    },
+    {
+      "family": "patrickhand",
+      "file": "patrickhand/PatrickHand-Regular.ttf",
+      "source": "https://github.com/google/fonts/tree/6c1dbe27dcf7d817d4b62cec033ba77fa8e2a5ec/ofl/patrickhand",
+      "license": "patrickhand/OFL.txt"
+    }
+  ]
+}

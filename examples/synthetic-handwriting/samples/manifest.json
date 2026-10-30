@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "generator_version": "handwriting-simulation-v1",
+  "pillow_version": "12.3.0",
+  "freetype_version": "2.14.3",
+  "jpeg_version": "6.2",
+  "kind": "font-based simulation, not real human handwriting",
+  "ground_truth_file": "../ground_truth.json",
+  "images": [
+    {
+      "id": "clause-01-exact-clear",
+      "document_id": "clause-01-exact",
+      "group_id": "clause-01",
+      "split": "train",
+      "file": "clause-01-exact-clear.jpg",
+      "sha256": "40a1eb8dbc7f4eea30b1f7ae1ad6d373f9feb4decedb9d493cbde1d9deebe234",
+      "difficulty": "clear",
+      "seed": 4315512658156181309,
+      "font": "caveat/Caveat[wght].ttf",
+      "font_sha256": "0bdb6b660482d31531b3945849fba5916b3ef8695da7024a9e6b9ee3c4157988",
+      "requires_manual_review": true
+    },
+    {
+      "id": "clause-02-counterexample-irregular",
+      "document_id": "clause-02-counterexample",
+      "group_id": "clause-02",
+      "split": "train",
+      "file": "clause-02-counterexample-irregular.jpg",
+      "sha256": "4779367b05a79ac53c2c3a9dde8938fb41ded49ed93ea6ccf4644746b7524117",
+      "difficulty": "irregular",
+      "seed": 17889967611780071347,
+      "font": "kalam/Kalam-Regular.ttf",
+      "font_sha256": "57cecb63d4608019371954274ae1d8c397764debd5b19d4a33c1efa4dc923c0b",
+      "requires_manual_review": true
+    },
+    {
+      "id": "clause-03-paraphrase-difficult",
+      "document_id": "clause-03-paraphrase",
+      "group_id": "clause-03",
+      "split": "train",
+      "file": "clause-03-paraphrase-difficult.jpg",
+      "sha256": "e548b9f7ef4a33dc8ec18a97705fd9952945d849e15fd64d8dc9069000c42c8a",
+      "difficulty": "difficult",
+      "seed": 7022127062044490791,
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "font_sha256": "0f173b3e6cb6d1af25babf7f0057c5ac4ee11f9992b0469bb817e967ef4ad0fc",
+      "requires_manual_review": true
+    }
+  ]
+}

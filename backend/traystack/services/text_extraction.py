@@ -13,6 +13,7 @@ import pytesseract
 from PIL import Image, ImageOps
 
 from traystack.services.normalization import normalize_for_search
+from traystack.services.text_documents import TEXT_DOCUMENT_VERSION, decode_text, html_text
 
 
 class ProcessingError(Exception):
@@ -150,7 +151,22 @@ def extract_source(path: Path, mime_type: str, parameters: dict[str, Any]) -> Ex
     except (OSError, pytesseract.TesseractNotFoundError):
         versions["tesseract"] = "unavailable"
     pages = []
-    if mime_type == "application/pdf":
+    if mime_type in {"text/plain", "text/html"}:
+        try:
+            content = decode_text(path.read_bytes())
+        except (UnicodeDecodeError, ValueError):
+            raise ProcessingError("invalid_text_document") from None
+        is_html = mime_type == "text/html"
+        versions["text_documents"] = TEXT_DOCUMENT_VERSION
+        page = ExtractedPage(
+            1,
+            html_text(content) if is_html else content,
+            "html_text" if is_html else "plain_text",
+            quality_warnings=["html_requires_review"] if is_html else [],
+            layout_metadata={"coordinate_space": "logical_text", "physical_page": False},
+        )
+        pages.append(assess_page(page, parameters["requires_manual_review"]))
+    elif mime_type == "application/pdf":
         with pymupdf.open(path) as document:
             if document.needs_pass:
                 raise ProcessingError("encrypted_pdf")

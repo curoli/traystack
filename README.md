@@ -1,7 +1,7 @@
 # TrayStack
 
 Lokaler Prototyp für nachvollziehbare Vertragsablage und Volltextsuche.
-**Meilensteine 1–4 sind umgesetzt:** PDF/JPEG/PNG hochladen, Originalbytes
+**Meilensteine 1–4 sind umgesetzt:** PDF/JPEG/PNG und UTF-8-TXT/HTML hochladen, Originalbytes
 herunterladen und Dokumente im Hintergrund auslesen. Ein eigener Worker erzeugt
 Seitentext, strukturierte JSON-Daten und Markdown. Oberfläche und API zeigen
 Jobstatus, Seitenabdeckung, Qualitätswarnungen und die Herkunft des ausgewählten
@@ -12,6 +12,10 @@ Azure-Architektur, Microsoft-Vergleich und Nutzerpilot ergänzt den lokalen Core
 Die App-Oberfläche ist auf Englisch. Datumsanzeigen verwenden englische Monatsnamen
 und das 24-Stunden-Format in der lokalen Zeitzone des Browsers. Dokumenttitel,
 Metadaten und Vertragsinhalte bleiben in ihrer ursprünglichen Sprache erhalten.
+Der [Daten- und Evaluationsunterbau](docs/data-evaluation.md) ergänzt lokale
+Importwerkzeuge und 300 reproduzierbare Handschrift-Simulationen mit Ground Truth.
+Die [drei Bildbeispiele](examples/synthetic-handwriting/samples/manifest.json)
+können direkt in der App geprüft werden; das vollständige Bildset wird lokal erzeugt.
 
 ## Start
 

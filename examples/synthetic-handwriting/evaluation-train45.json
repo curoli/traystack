@@ -1,0 +1,972 @@
+{
+  "schema_version": 1,
+  "generator_version": "handwriting-simulation-v1",
+  "manifest_sha256": "c3c666b209dc0bc0433cd66ba2a73a51e421ae581f8ef2fb88a0220fea6861cb",
+  "ground_truth_sha256": "76fcf2a95c6a047eb25b69b58f536a0f697a5e98cd8c31eeef1d614cc118fc39",
+  "scope": "Font simulation only. No real handwriting, semantic model or legal equivalence evaluated.",
+  "split": "train",
+  "selection": "First 45 matching manifest entries; not a random sample",
+  "processor_versions": {
+    "pymupdf": "1.28.2",
+    "pillow": "12.3.0",
+    "pytesseract": "0.3.13",
+    "tesseract": "5.5.0"
+  },
+  "parameters": {
+    "ocr_languages": "eng",
+    "ocr_timeout_seconds": 30,
+    "ocr_dpi": 200,
+    "max_pages": 100,
+    "max_pixels": 25000000,
+    "ocr_min_mean_confidence": 80,
+    "requires_manual_review": true
+  },
+  "summary": {
+    "images": 45,
+    "true_positive": 12,
+    "false_positive": 0,
+    "false_negative": 6,
+    "literal_precision": 1.0,
+    "literal_recall": 0.6666666666666666,
+    "normalized_character_error_rate": 0.009779031499764928,
+    "warned_positive": 12,
+    "unverifiable": 33
+  },
+  "by_difficulty": {
+    "clear": {
+      "images": 15,
+      "true_positive": 4,
+      "false_positive": 0,
+      "false_negative": 2,
+      "literal_precision": 1.0,
+      "literal_recall": 0.6666666666666666,
+      "normalized_character_error_rate": 0.007334273624823695,
+      "warned_positive": 4,
+      "unverifiable": 11
+    },
+    "irregular": {
+      "images": 15,
+      "true_positive": 4,
+      "false_positive": 0,
+      "false_negative": 2,
+      "literal_precision": 1.0,
+      "literal_recall": 0.6666666666666666,
+      "normalized_character_error_rate": 0.007898448519040903,
+      "warned_positive": 4,
+      "unverifiable": 11
+    },
+    "difficult": {
+      "images": 15,
+      "true_positive": 4,
+      "false_positive": 0,
+      "false_negative": 2,
+      "literal_precision": 1.0,
+      "literal_recall": 0.6666666666666666,
+      "normalized_character_error_rate": 0.014104372355430184,
+      "warned_positive": 4,
+      "unverifiable": 11
+    }
+  },
+  "images": [
+    {
+      "id": "clause-01-exact-clear",
+      "sha256": "40a1eb8dbc7f4eea30b1f7ae1ad6d373f9feb4decedb9d493cbde1d9deebe234",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "clear",
+      "case": "exact",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 241,
+      "edit_distance": 3,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-exact\nParties: Example Company 07 and Demo Partner 07.\nThe receiving party shall not disclose confidential information.\nThis fictional chort agreement is For software evaluation only."
+    },
+    {
+      "id": "clause-01-exact-irregular",
+      "sha256": "8f4f116f2e60b3ccbb35364ca381c94e4fc048d09f8ba313a196bfe04b09296a",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "irregular",
+      "case": "exact",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": false,
+      "reference_characters": 241,
+      "edit_distance": 6,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "CYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-exact\nParties: Example Company 07 and Demo Partner 07.\nThe receiving party chall not disclose confidential information.\nThis fictional short agreement i¢ For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-exact-difficult",
+      "sha256": "2160bd412cd5405387d75a494410d15cdae2936683043998835caa831864ca2f",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "difficult",
+      "case": "exact",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": false,
+      "reference_characters": 241,
+      "edit_distance": 7,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-exact\nParties: Example Company 97 and Demo Partner 07.\nThe receiving party chall not disclose confiden tial information.\nThis fictional chort agreement ic For software evaluation only."
+    },
+    {
+      "id": "clause-01-formatting-clear",
+      "sha256": "f84da7978566c4530c46fef11d7db6ecd93b579ba1bb76c220e2a488fbe987c2",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "clear",
+      "case": "formatting",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": false,
+      "reference_characters": 246,
+      "edit_distance": 4,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-formatting\nParties: Example Company 01 and Demo Partner 07.\nthE RECEIVING PARTY SHALL MOT DISCLOSE\nCONFIDENTIAL INFORMATION.\nThis fictional chort agreement i For software evaluation only."
+    },
+    {
+      "id": "clause-01-formatting-irregular",
+      "sha256": "f6c49fd8e25152f5c27896491cdf2f13430d864409f96d7a934e86876e73a450",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "irregular",
+      "case": "formatting",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 246,
+      "edit_distance": 5,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-formatting\nParties: Example Company 07 and Demo Partner 07.\ntHE RECEIVING PARTY SHALL NOT DISCLOSE\nCONFIDENTIAL INFORMATION.\nThis fictional chort agreement i¢ For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-formatting-difficult",
+      "sha256": "50c98a001d7ca3595fedd6a36e0e5489fd05c8f908cc08f86c1e76fab1e0cbdf",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "difficult",
+      "case": "formatting",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 246,
+      "edit_distance": 7,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clauce- 91-formatting\nParties: Example Company 01 and Demo Partner 07.\ntHE RECEIVING PARTY SHALL NOT DISCLOSE\nCONFIDENTIAL INFORMATION.\nThis fictional chore agreement ic for software evaluation only."
+    },
+    {
+      "id": "clause-01-paraphrase-clear",
+      "sha256": "cf84cc3038b892f3d12271cbf73f358a51c0cbadd1dd4c8ebe3dd53f2cbec4ff",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "clear",
+      "case": "paraphrase",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 239,
+      "edit_distance": 6,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-paraphrase\nParties: Example Company 07 and Demo Partner 07.\nThe recipient must keep the confidential material cecret.\nThis fictional chort agreement ic For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-paraphrase-irregular",
+      "sha256": "04eb1db168083227795e24090fe747758f65652808ea8bdbb5acc4c1dc82677d",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "irregular",
+      "case": "paraphrase",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 239,
+      "edit_distance": 3,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-paraphrase\nParties: Example Company 01 and Demo Partner 07.\nThe recipient must keep the confidential material secret.\nThis fictional chort agreement is For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-paraphrase-difficult",
+      "sha256": "2054ea84bc82a99c2d7e3814235752b6aa64fd4271b2791cac9e3955526cbef9",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "difficult",
+      "case": "paraphrase",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 239,
+      "edit_distance": 6,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clauce- 01-paraphrase\nParties: Example Company 01 and Demo Partner 01.\nThe recipient must keep the confidential material secret.\nThis fictional chore agreement ic for coftware evaluation only."
+    },
+    {
+      "id": "clause-01-counterexample-clear",
+      "sha256": "9672bbc3dc8c61cf9021d9ef3fd951242948daadc4e99b7045adeb25c0c69a17",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "clear",
+      "case": "counterexample",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 244,
+      "edit_distance": 4,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-counterexample\nParties: Example Company 01 and Demo Partner 07.\nThe receiving party may disclose confidential information.\nThis fictional chort agreement ic For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-counterexample-irregular",
+      "sha256": "7dd91e3153e370ba156abfb221cb2e4a15574dbfdf6d310cb95d777d28c9291d",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "irregular",
+      "case": "counterexample",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 244,
+      "edit_distance": 5,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-coun ferexample\nParties: Example Company 01 and Demo Partner 07.\nThe receiving party may disclose confidential information.\nThis fictional chort agreement is For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-counterexample-difficult",
+      "sha256": "cdc2782b0ff11d4a540672e92eb085bc393f43a30c2ed130d1ce5fb5e3e08422",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "difficult",
+      "case": "counterexample",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 244,
+      "edit_distance": 5,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-coun ferexample\nParties: Example Company 01 and Demo Partner 07.\nThe receiving party may disclose confidential information.\nThis fictional short agreement i¢ for coftware evaluation only."
+    },
+    {
+      "id": "clause-01-unrelated-clear",
+      "sha256": "e58109a0d08fd69b2ec3acb8e599242bc107806c31a0401dd1861975f864b62e",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "clear",
+      "case": "unrelated",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 4,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-unrelated\nParties: Example Company 07 and Demo Partner 07.\nRoutine correspondence is sent to the registered office address.\nThis fictional chort agreement is For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-unrelated-irregular",
+      "sha256": "393bd0211922f7447da0467b5c970b549ad45f101e5c9abb8999503560a36423",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "irregular",
+      "case": "unrelated",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 7,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "CYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-unrelated\nParties: Example Company 07 and Demo Partner 07.\nRoutine correspondence is cent to the registered office address.\nThis fictional chort agreement ic For coftware evaluation only."
+    },
+    {
+      "id": "clause-01-unrelated-difficult",
+      "sha256": "c4a4b7980ce7bfddeb9204516b50ff0ed6b87268ea9cd67c717028011728abd5",
+      "font": "caveat/Caveat[wght].ttf",
+      "difficulty": "difficult",
+      "case": "unrelated",
+      "group_id": "clause-01",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 7,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clauce- 01-unrelated\nParties: Example Company 01 and Demo Partner 07.\nRoutine correspondence ic cent to the registered office address.\nThis fictional short agreement ic For coftware evaluation only."
+    },
+    {
+      "id": "clause-02-exact-clear",
+      "sha256": "f24c3fc7799b1043a23c2e7c3b5ab35aa18654cefe3f49445af37e827790091f",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "clear",
+      "case": "exact",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 222,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-exact\nParties: Example Company 02 and Demo Partner 02.\nPayment is due within thirty days of receipt.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-exact-irregular",
+      "sha256": "945c0114d1a87f7baa85462426a3345328ed8eb451c141c3ee030019bc0be301",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "exact",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 222,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-exact\nParties: Example Company 02 and Demo Partner 02.\nPayment is due within thirty days of receipt.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-exact-difficult",
+      "sha256": "659645b8856641a185ce35514c4a45a74903979c68136df0d553780044861acf",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "exact",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 222,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-exact\nParties: Example Company 02 and Demo Partner 02.\nPayment is due within thirty days of receipt.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-formatting-clear",
+      "sha256": "5af05bc1a2992bd049a7d0b58e21a57bcb88aa6c711e1538d3892cfd0dea3351",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "clear",
+      "case": "formatting",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 227,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference; clause-02-formatting\nParties: Example Company 02 and Demo Partner 02.\nPAYMENT IS DUE WITHIN THIRTY DAYS OF\nRECEIPT.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-formatting-irregular",
+      "sha256": "05c8bb5dc73853a738e5009515dc556e8fd029bffa8047a915730380474041a9",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "formatting",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 227,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference; clause-02-formatting\nParties: Example Company 02 and Demo Partner 02.\npAYMENT IS DUE WITHIN THIRTY DAYS OF\nRECEIPT.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-formatting-difficult",
+      "sha256": "e8f1e06b74ea7b3242261ffbb47672c361b1b9843fa3d2452a5190d99730ca6f",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "formatting",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 227,
+      "edit_distance": 2,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference; clause-02-formatting\nParties; Example Company 02 and Demo Partner 02.\nPAYMENT IS DUE WITHIN THIRTY Days OF\nRECEIPT.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-paraphrase-clear",
+      "sha256": "9d76d0c450622c8114341aeb3494418f9456685da002e4e859c593439ff96779",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "clear",
+      "case": "paraphrase",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 254,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference; clause-02-paraphrase\nParties: Example Company 02 and Demo Partner 02.\nThe invoice must be paid no later than thirty days after\nit is received.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-paraphrase-irregular",
+      "sha256": "2d7ddafbe542e3bd463fc1371519558985b4498e551d41ac2222c2445ec49658",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "paraphrase",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 254,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-paraphrase\nParties: Example Company 02 and Demo Partner 02.\nThe invoice must be paid no later than thirty days after\nit is received.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-paraphrase-difficult",
+      "sha256": "a054047ee12f328cfc6cfa1fbaf4c48aa842d90342d3ae737a06916772220873",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "paraphrase",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 254,
+      "edit_distance": 2,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference; clause-02-paraphrase\nParties; Example Company 02 and Demo Partner 02.\nThe invoice must be paid no later than thirty days after\nit is received.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-counterexample-clear",
+      "sha256": "a2b502b0332e589941669d31562aea969f52fc9b328f7e6a047b41fa15d6d059",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "clear",
+      "case": "counterexample",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 231,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference; clause-02-counterexample\nParties: Example Company 02 and Demo Partner 02.\nPayment is due within ninety days of receipt.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-counterexample-irregular",
+      "sha256": "4779367b05a79ac53c2c3a9dde8938fb41ded49ed93ea6ccf4644746b7524117",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "counterexample",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 231,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-counterexample\nParties: Example Company 02 and Demo Partner 02.\nPayment is due within ninety days of receipt.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-counterexample-difficult",
+      "sha256": "1341c295d39b574543c408e9026832ee2ce798d48d5c1926a51947d9dc30e599",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "counterexample",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 231,
+      "edit_distance": 5,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT -\nFONT SIMULATION\nReference: clause-02\n~counterexample\nParties; Example Company 02 and Demo Partner 02.\nPayment is due within ninety days of receipt.\nThis fictional short a9\nreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-unrelated-clear",
+      "sha256": "b360546338123cd8b0e993cf722e8e6f2bb541ddf95b857f550dd5c29308dca1",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "clear",
+      "case": "unrelated",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-unrelated\nParties: Example Company 02 and Demo Partner 02.\nRoutine correspondence is sent to the registered office\naddress.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-unrelated-irregular",
+      "sha256": "bb3052f01ffedbbe895486d5e941376ff66607cbc98023e90c7c0e2a7ee4ea51",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "unrelated",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-unrelated\nParties: Example Company 02 and Demo Partner 02.\nRoutine correspondence is sent to the registered office\naddress.\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-02-unrelated-difficult",
+      "sha256": "1557c35071bbe15e00da21a1d2683d282120415fee7571d1209727c24db09504",
+      "font": "kalam/Kalam-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "unrelated",
+      "group_id": "clause-02",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-unrelated\nParties: Example Company 02 and Demo Partner 02.\nRoutine correspondence is sent to the registered office\naddress,\nThis fictional short agreement is for software evaluation\nonly."
+    },
+    {
+      "id": "clause-03-exact-clear",
+      "sha256": "7733d3afc306fa0306789f700c0bafda3a51eb852856bd324c7db2a81d3a801d",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "clear",
+      "case": "exact",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 214,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-exact\nParties: Example Company 03 and Demo Partner 03.\nLiability is Limited to 50,000 euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-exact-irregular",
+      "sha256": "a537db66fd8570f7296f8d4e7cf548e7322a948bf3dc571ecdbd5f12450059c8",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "exact",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 214,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-exact\nParties: Example Company 03 and Demo Partner 03.\nLiability is Limited to 50,000 euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-exact-difficult",
+      "sha256": "51ad9b625de068dd33060a52df3fdced4419610b66504f2c84413cfd302ca553",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "exact",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": true,
+      "reference_characters": 214,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "found",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-exact\nParties: Example Company 03 and Demo Partner 03.\nLiability is Limited to 50,000 euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-formatting-clear",
+      "sha256": "cf9c76782b17686971d6057fd98dab0bb3364736f704a116fb179f6c92f18e67",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "clear",
+      "case": "formatting",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": false,
+      "reference_characters": 219,
+      "edit_distance": 2,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-formatting\nParties: Example Company 03 and Demo Partner 03.\nABILITY IS LIMITED TO 50,000 EUROS.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-formatting-irregular",
+      "sha256": "88c8b66ad36b628d3e7005d62f004a012f77eb93cb629e5ed3f5f248fb5585f0",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "formatting",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": false,
+      "reference_characters": 219,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-formatting\nParties: Example Company 03 and Demo Partner 03.\nLABILITY IS LIMITED TO 50,000 EUROS.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-formatting-difficult",
+      "sha256": "9c1f4e67918290a20dd0fbdc8394e0ce74d8ca71991d2bac3f56f66d47e3e91c",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "formatting",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": true,
+      "observed_literal": false,
+      "reference_characters": 219,
+      "edit_distance": 3,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONT; RACT - FONT SIMULATION\nReference: clause-03-formatting\nParties: Example Company 03 and Demo Partner 03.\nLABILITY IS LIMITED TO 50,000 EUROS.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-paraphrase-clear",
+      "sha256": "c7c7968d6b295600e78fd19479d718141cdf08c4f4247dd222a39a2ff2bf8d97",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "clear",
+      "case": "paraphrase",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 249,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-paraphrase\nParties: Example Company 03 and Demo Partner 03.\nThe maximum Liability under this agreement is fifty thousand euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-paraphrase-irregular",
+      "sha256": "ac6014156579b3e3d84c28a9faa48bb906e83b66584c5dfb0b037b459b300571",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "paraphrase",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 249,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-paraphrase\nParties: Example Company 03 and Demo Partner 03.\nThe maximum Liability under this agreement is fifty thousand euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-paraphrase-difficult",
+      "sha256": "e548b9f7ef4a33dc8ec18a97705fd9952945d849e15fd64d8dc9069000c42c8a",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "paraphrase",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 249,
+      "edit_distance": 2,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONT; RACT - FONT SIMULATION\nReference: clause-03-paraphrase\nParties: Example Company 03 and Demo Partner 03.\nThe maximum liability under this agreement is fifty thousand euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-counterexample-clear",
+      "sha256": "61d7c5823b7a86bd1908edea48c9a67a47707c2458d5793de971d401fe1058cd",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "clear",
+      "case": "counterexample",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 224,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-counterexample\nParties: Example Company 03 and Demo Partner 03.\nLiability is limited to 500,000 euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-counterexample-irregular",
+      "sha256": "e4319f0d9440cdf163e1f33dfe00ea2808d2d3319ef62d0625054139181498d4",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "counterexample",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 224,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-counterexample\nParties: Example Company 03 and Demo Partner 03.\nLiability is Limited to 500,000 euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-counterexample-difficult",
+      "sha256": "0f426e03078f9d7b8bc32cd3e570985228cb293f3a8d6a2d2af7338867324fe8",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "counterexample",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 224,
+      "edit_distance": 1,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-counterexample\nParties: Example Company 03 and Demo Partner 03,\nLiability is limited to 500,000 euros.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-unrelated-clear",
+      "sha256": "5e576faaa616e08b79bf8dc206b596b8832b577efacb40caa3bea4c3263df345",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "clear",
+      "case": "unrelated",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-unrelated\nParties: Example Company 03 and Demo Partner 03.\nRoutine correspondence is sent to the registered office address.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-unrelated-irregular",
+      "sha256": "348f92e166c98c3c6c844892e141d6fdc59a28f724d2fe1bd4c5b97a9823be67",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "irregular",
+      "case": "unrelated",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 0,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-unrelated\nParties: Example Company 03 and Demo Partner 03.\nRoutine correspondence is sent to the registered office address.\nThis fictional short agreement is for software evaluation only."
+    },
+    {
+      "id": "clause-03-unrelated-difficult",
+      "sha256": "039927dc0ca23d440f5015bbf9e8779ac53585df9880247df0b821944d860b1d",
+      "font": "patrickhand/PatrickHand-Regular.ttf",
+      "difficulty": "difficult",
+      "case": "unrelated",
+      "group_id": "clause-03",
+      "split": "train",
+      "expected_literal": false,
+      "observed_literal": false,
+      "reference_characters": 245,
+      "edit_distance": 2,
+      "coverage": "complete",
+      "quality": "needs_review",
+      "warnings": [
+        "manual_review_requested"
+      ],
+      "api_classification": "unverifiable",
+      "actual_ocr_text": "SYNTHETIC CONT! RACT - FONT SIMULATION\nReference: clause-03-unrelated\nParties: Example Company 03 and Demo Partner 03.\nRoutine correspondence is sent to the registered office address.\nThis fictional short agreement is for software evaluation only."
+    }
+  ]
+}
