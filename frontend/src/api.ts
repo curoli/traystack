@@ -39,16 +39,29 @@ interface DocumentList {
   offset: number;
 }
 
+async function fetchFromServer(
+  url: string,
+  init?: RequestInit,
+): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch {
+    throw new Error(
+      "Unable to reach the server. Please check your connection and try again.",
+    );
+  }
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await fetchFromServer(url, init);
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
-    let message = `Anfrage fehlgeschlagen (${response.status}).`;
+    let message = `Request failed (${response.status}).`;
     if (body && typeof body === "object" && "detail" in body) {
       message =
         typeof body.detail === "string"
           ? body.detail
-          : "Bitte Eingaben und Dateiformat prüfen.";
+          : "Please check your input and file format.";
     }
     throw new Error(message);
   }
@@ -129,9 +142,8 @@ export const retryJob = (id: string) =>
 export const getText = (revisionId: string) =>
   request<TextContent>(`/api/revisions/${revisionId}/text`);
 export async function getArtifactText(id: string): Promise<string> {
-  const response = await fetch(artifactUrl(id));
-  if (!response.ok)
-    throw new Error(`Datei nicht verfügbar (${response.status}).`);
+  const response = await fetchFromServer(artifactUrl(id));
+  if (!response.ok) throw new Error(`File unavailable (${response.status}).`);
   return response.text();
 }
 

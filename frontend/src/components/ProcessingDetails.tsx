@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { formatDate } from "../format";
 import {
   getText,
   retryJob,
@@ -58,7 +59,7 @@ export default function ProcessingDetails({
     if (index?.processing_job_id !== requestedPage.processingJobId) {
       setTextBusy(false);
       setError(
-        "Der ausgewählte Text hat sich seit der Suche geändert. Bitte die Suche erneut ausführen.",
+        "The selected text has changed since the search. Please run the search again.",
       );
       return;
     }
@@ -70,7 +71,7 @@ export default function ProcessingDetails({
         if (!active) return;
         if (content.processing_job_id !== requestedPage.processingJobId) {
           setError(
-            "Der Text wurde inzwischen neu verarbeitet. Bitte die Suche erneut ausführen.",
+            "The text has been reprocessed. Please run the search again.",
           );
         } else {
           setText(content);
@@ -81,7 +82,7 @@ export default function ProcessingDetails({
       .catch((error) => {
         if (active)
           setError(
-            error instanceof Error ? error.message : "Text nicht verfügbar.",
+            error instanceof Error ? error.message : "Text unavailable.",
           );
       })
       .finally(() => {
@@ -119,9 +120,7 @@ export default function ProcessingDetails({
       await onUpdated();
     } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Verarbeitung konnte nicht gestartet werden.",
+        error instanceof Error ? error.message : "Could not start processing.",
       );
     } finally {
       setBusy(false);
@@ -133,9 +132,7 @@ export default function ProcessingDetails({
     try {
       setText(await getText(revision.id));
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Text nicht verfügbar.",
-      );
+      setError(error instanceof Error ? error.message : "Text unavailable.");
     } finally {
       setTextBusy(false);
     }
@@ -144,9 +141,7 @@ export default function ProcessingDetails({
     <div className="processing">
       <div className="processing-controls">
         <div>
-          <label htmlFor={`source-${revision.id}`}>
-            Quelle für die Verarbeitung
-          </label>
+          <label htmlFor={`source-${revision.id}`}>Processing source</label>
           <select
             id={`source-${revision.id}`}
             value={sourceId}
@@ -154,7 +149,7 @@ export default function ProcessingDetails({
             disabled={pending || busy}
           >
             <option value="" disabled>
-              Original auswählen
+              Select an original
             </option>
             {originals.map((artifact) => (
               <option key={artifact.id} value={artifact.id}>
@@ -171,10 +166,10 @@ export default function ProcessingDetails({
           {pending
             ? statusLabel[revision.processing_status]
             : busy
-              ? "Wird angefordert …"
+              ? "Submitting …"
               : index
-                ? "Erneut verarbeiten"
-                : "Verarbeitung starten"}
+                ? "Reprocess"
+                : "Start processing"}
         </button>
       </div>
       <label className="checkbox">
@@ -185,9 +180,9 @@ export default function ProcessingDetails({
           disabled={pending || busy}
         />
         <span>
-          Diesen Lauf manuell prüfen
+          Flag this run for manual review
           <small>
-            Eine bestehende Prüfvormerkung des Originals wird immer übernommen.
+            An existing review flag on the original is always retained.
           </small>
         </span>
       </label>
@@ -198,17 +193,17 @@ export default function ProcessingDetails({
       )}
       {pending && (
         <p role="status" className="job-progress">
-          {statusLabel[revision.processing_status]} – der Status wird
-          automatisch aktualisiert.
+          {statusLabel[revision.processing_status]} – status updates
+          automatically.
         </p>
       )}
       {latest?.status === "failed" && (
         <div role="alert" className="message error">
-          <strong>Neuester Lauf fehlgeschlagen.</strong> Fehlercode:{" "}
-          {latest.error_message}.{" "}
+          <strong>Latest run failed.</strong> Error code: {latest.error_message}
+          .{" "}
           {index
-            ? "Der bisher ausgewählte Text und seine Herkunft bleiben erhalten."
-            : "Für diese Revision ist noch kein ausgewählter Text verfügbar."}
+            ? "The previously selected text and its source information are preserved."
+            : "No selected text is available for this revision yet."}
         </div>
       )}
       {index && (
@@ -217,13 +212,13 @@ export default function ProcessingDetails({
         >
           <h3>{coverageLabel[index.status]}</h3>
           <p>
-            {index.pages_processed} von {index.pages_total} Seiten verarbeitet ·{" "}
-            {index.pages_failed} ohne vollständigen Text
+            {index.pages_processed} of {index.pages_total} pages processed ·{" "}
+            {index.pages_failed} without complete text
           </p>
           <strong>{qualityLabel[index.quality_status]}</strong>
           <p className="fineprint">
-            Vollständige Verarbeitung ist keine Garantie für korrekt erkannte
-            Wörter. Die Bewertung betrifft den extrahierten Text.
+            Complete processing does not guarantee correctly recognized words.
+            The assessment applies to the extracted text.
           </p>
           {index.quality_warnings.length > 0 && (
             <ul>
@@ -233,14 +228,14 @@ export default function ProcessingDetails({
             </ul>
           )}
           <p className="identifier">
-            Ausgewählter Lauf: {index.processing_job_id}
+            Selected run: {index.processing_job_id}
             <br />
-            Quelle: {index.source_artifact_id}
+            Source: {index.source_artifact_id}
             <br />
-            Normalisierung: {index.normalization_version}
+            Normalization: {index.normalization_version}
           </p>
           <button className="secondary" disabled={textBusy} onClick={showText}>
-            {textBusy ? "Text wird geladen …" : "Seitentext ansehen"}
+            {textBusy ? "Loading text …" : "View page text"}
           </button>
         </div>
       )}
@@ -249,10 +244,10 @@ export default function ProcessingDetails({
           ref={viewerRef}
           tabIndex={-1}
           className="page-viewer"
-          aria-label="Extrahierter Seitentext"
+          aria-label="Extracted page text"
         >
           <div className="section-heading">
-            <label htmlFor={`page-${revision.id}`}>Seite</label>
+            <label htmlFor={`page-${revision.id}`}>Page</label>
             <select
               id={`page-${revision.id}`}
               value={pageNumber}
@@ -260,12 +255,12 @@ export default function ProcessingDetails({
             >
               {text.pages.map((page) => (
                 <option value={page.page_number} key={page.page_number}>
-                  Seite {page.page_number}
+                  Page {page.page_number}
                 </option>
               ))}
             </select>
             <button className="secondary" onClick={() => setText(null)}>
-              Text schließen
+              Close text
             </button>
           </div>
           {page && (
@@ -274,13 +269,13 @@ export default function ProcessingDetails({
                 {page.extraction_method === "ocr"
                   ? "Tesseract OCR"
                   : page.extraction_method === "embedded_pdf_text"
-                    ? "PDF-Textschicht"
-                    : "Extraktion nicht verfügbar"}
+                    ? "Embedded PDF text"
+                    : "Extraction unavailable"}
                 {page.confidence !== null &&
-                  ` · Mittlerer OCR-Wortscore: ${page.confidence.toFixed(1)}/100 (keine Wahrscheinlichkeit)`}
+                  ` · Mean OCR word score: ${page.confidence.toFixed(1)}/100 (not a probability)`}
               </p>
               <pre className="text-preview">
-                {page.text || "Für diese Seite wurde kein Text erkannt."}
+                {page.text || "No text was detected on this page."}
               </pre>
             </>
           )}
@@ -288,7 +283,7 @@ export default function ProcessingDetails({
       )}
       {revision.jobs.length > 0 && (
         <details className="job-history">
-          <summary>Verarbeitungsläufe ({revision.jobs.length})</summary>
+          <summary>Processing runs ({revision.jobs.length})</summary>
           <ol>
             {revision.jobs.map((job) => (
               <li key={job.id}>
@@ -300,24 +295,24 @@ export default function ProcessingDetails({
                       onClick={() => submit(job.id)}
                       disabled={busy || pending}
                     >
-                      Als neuen Lauf wiederholen
+                      Retry as a new run
                     </button>
                   )}
                 </div>
                 <p className="identifier">
-                  {job.id} · {new Date(job.created_at).toLocaleString("de-DE")}
+                  {job.id} · {formatDate(job.created_at)}
                   {job.retry_of_job_id && (
                     <>
                       <br />
-                      Wiederholung von {job.retry_of_job_id}
+                      Retry of {job.retry_of_job_id}
                     </>
                   )}
                 </p>
                 {job.error_message && (
-                  <p className="job-error">Fehlercode: {job.error_message}</p>
+                  <p className="job-error">Error code: {job.error_message}</p>
                 )}
                 <details>
-                  <summary>Verfahren und Parameter</summary>
+                  <summary>Methods and parameters</summary>
                   <pre className="text-preview">
                     {JSON.stringify(
                       {

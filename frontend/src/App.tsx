@@ -8,18 +8,15 @@ import {
   type SearchPageLocation,
 } from "./api";
 
+import { formatDate } from "./format";
+
 import SearchPanel from "./components/SearchPanel";
 import ArtifactCard from "./components/ArtifactCard";
 import ProcessingDetails from "./components/ProcessingDetails";
 import { needsReview, statusLabel } from "./components/processingLabels";
 
-const date = (value: string) =>
-  new Date(value).toLocaleString("de-DE", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 const errorText = (error: unknown) =>
-  error instanceof Error ? error.message : "Anfrage fehlgeschlagen.";
+  error instanceof Error ? error.message : "Request failed.";
 
 export default function App() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -130,7 +127,7 @@ export default function App() {
       setOffset(0);
       setGeneration((value) => value + 1);
       setNotice(
-        `„${document.title}“ wurde gespeichert. Das Original ist zum Download bereit.`,
+        `“${document.title}” was saved. The original is ready to download.`,
       );
       form.reset();
     } catch (error) {
@@ -172,31 +169,31 @@ export default function App() {
   return (
     <>
       <header className="topbar">
-        <a className="brand" href="/" aria-label="TrayStack Startseite">
+        <a className="brand" href="/" aria-label="TrayStack home">
           <span className="brand-mark">T</span>TrayStack
         </a>
-        <span className="environment">Lokale Demo</span>
+        <span className="environment">Local demo</span>
         <a className="api-link" href="/docs" target="_blank" rel="noreferrer">
-          API-Dokumentation ↗
+          API documentation ↗
         </a>
       </header>
       <main>
         <div className="intro">
-          <p className="eyebrow">VERTRAGSBIBLIOTHEK</p>
+          <p className="eyebrow">CONTRACT LIBRARY</p>
           <h1>
-            Originale sicher ablegen.
+            Keep your originals.
             <br />
-            Herkunft im Blick behalten.
+            Trace every result.
           </h1>
           <p className="lead">
-            PDFs und Scans an einem Ort – mit unveränderten Originaldateien und
-            nachvollziehbaren Dateiinformationen.
+            PDFs and scans in one place, with unchanged original files and
+            traceable file information.
           </p>
         </div>
         <div className="scope-note">
-          <strong>Volltextsuche für deine Verträge.</strong> Lade Dokumente hoch
-          und starte die Verarbeitung in den Details. Suche anschließend über
-          die neueste Revision und prüfe Fundstellen und Qualitätswarnungen.
+          <strong>Full-text search for your contracts.</strong> Upload documents
+          and start processing in the details. Then search the latest revision
+          of each document and inspect matches and quality warnings.
         </div>
         {notice && (
           <div role="status" className="message success">
@@ -215,19 +212,19 @@ export default function App() {
         />
         <div className="workspace">
           <aside className="panel upload-panel">
-            <p className="eyebrow">NEUES DOKUMENT</p>
-            <h2>Vertrag hinzufügen</h2>
+            <p className="eyebrow">NEW DOCUMENT</p>
+            <h2>Add a contract</h2>
             <form onSubmit={upload}>
-              <label htmlFor="title">Titel</label>
+              <label htmlFor="title">Title</label>
               <input
                 id="title"
                 name="title"
                 type="text"
                 required
                 maxLength={300}
-                placeholder="z. B. Vertraulichkeitsvereinbarung"
+                placeholder="e.g. Confidentiality agreement"
               />
-              <label htmlFor="file">Originaldatei</label>
+              <label htmlFor="file">Original file</label>
               <div className="file-field">
                 <input
                   id="file"
@@ -237,8 +234,7 @@ export default function App() {
                   required
                 />
                 <small>
-                  PDF, JPEG oder PNG · maximal 25 MB in der
-                  Standardkonfiguration
+                  PDF, JPEG or PNG · up to 25 MiB with the default configuration
                 </small>
               </div>
               <label className="checkbox">
@@ -248,29 +244,29 @@ export default function App() {
                   value="true"
                 />
                 <span>
-                  Manuelle Prüfung erforderlich
+                  Manual review required
                   <small>
-                    Für Handschrift und schwer lesbare Scans. Bleibt auch nach
-                    erfolgreicher OCR als Prüfbedarf sichtbar.
+                    For handwriting and hard-to-read scans. Remains flagged for
+                    review even after successful OCR.
                   </small>
                 </span>
               </label>
               <button className="primary" disabled={uploading}>
-                {uploading ? "Wird gespeichert …" : "Dokument speichern"}
+                {uploading ? "Saving …" : "Save document"}
                 <span aria-hidden="true">↑</span>
               </button>
             </form>
             <p className="fineprint">
-              Bitte synthetische Testverträge verwenden. Das Original wird
-              bytegetreu gespeichert.
+              Please use synthetic test contracts. The original is stored byte
+              for byte.
             </p>
           </aside>
           <section className="panel library" aria-labelledby="library-heading">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">DEINE ABLAGE</p>
+                <p className="eyebrow">YOUR LIBRARY</p>
                 <h2 id="library-heading">
-                  Dokumente <span className="count">{total}</span>
+                  Documents <span className="count">{total}</span>
                 </h2>
               </div>
               <button
@@ -278,7 +274,7 @@ export default function App() {
                 onClick={() => setGeneration((value) => value + 1)}
                 disabled={loading}
               >
-                Aktualisieren
+                Refresh
               </button>
             </div>
             {listError ? (
@@ -287,18 +283,18 @@ export default function App() {
               </div>
             ) : loading ? (
               <p role="status" className="empty">
-                Dokumente werden geladen …
+                Loading documents …
               </p>
             ) : documents.length === 0 ? (
               <div className="empty">
                 <div className="empty-icon" aria-hidden="true">
                   ▤
                 </div>
-                <h3>Platz für deinen ersten Vertrag.</h3>
+                <h3>Room for your first contract.</h3>
                 <p>
-                  Lade links eine Demo-Datei hoch.
+                  Upload a demo file using the form.
                   <br />
-                  Hier erscheinen die tatsächlich gespeicherten Dokumente.
+                  Your stored documents will appear here.
                 </p>
               </div>
             ) : (
@@ -317,13 +313,16 @@ export default function App() {
                       <span className="document-info">
                         <strong>{document.title}</strong>
                         <small>
-                          {date(document.created_at)} ·{" "}
-                          {document.revisions.length} Revision(en)
+                          {formatDate(document.created_at)} ·{" "}
+                          {document.revisions.length}{" "}
+                          {document.revisions.length === 1
+                            ? "revision"
+                            : "revisions"}
                         </small>
                       </span>
                       <span className="badge">
                         {openingDocumentId === document.id
-                          ? "Wird geöffnet …"
+                          ? "Opening …"
                           : statusLabel[
                               document.revisions.at(-1)?.processing_status ||
                                 "not_processed"
@@ -335,21 +334,21 @@ export default function App() {
                 ))}
               </ul>
             )}
-            <nav className="pagination" aria-label="Dokumentseiten">
+            <nav className="pagination" aria-label="Document pages">
               <button
                 className="secondary"
                 disabled={offset === 0 || loading}
                 onClick={() => setOffset((value) => Math.max(0, value - 20))}
               >
-                ← Zurück
+                ← Previous
               </button>
-              <span>Seite {Math.floor(offset / 20) + 1}</span>
+              <span>Page {Math.floor(offset / 20) + 1}</span>
               <button
                 className="secondary"
                 disabled={offset + 20 >= total || loading}
                 onClick={() => setOffset((value) => value + 20)}
               >
-                Weiter →
+                Next →
               </button>
             </nav>
           </section>
@@ -359,12 +358,11 @@ export default function App() {
             className="panel review-group"
             aria-labelledby="review-heading"
           >
-            <p className="eyebrow">MANUELLE PRÜFUNG · AKTUELLE LISTENSEITE</p>
-            <h2 id="review-heading">Original prüfen</h2>
+            <p className="eyebrow">MANUAL REVIEW · CURRENT LIST PAGE</p>
+            <h2 id="review-heading">Review originals</h2>
             <p>
-              Diese Dokumente haben eine Prüfvormerkung oder auffällige
-              Extraktionsqualität. Öffne das Original und verifiziere den
-              Inhalt.
+              These documents are flagged for review or have extraction quality
+              issues. Open the original and verify the content.
             </p>
             <ul>
               {documents
@@ -390,7 +388,7 @@ export default function App() {
           >
             <div className="section-heading">
               <div>
-                <p className="eyebrow">DOKUMENTDETAILS</p>
+                <p className="eyebrow">DOCUMENT DETAILS</p>
                 <h2 id="detail-heading" ref={detailHeadingRef} tabIndex={-1}>
                   {selected.title}
                 </h2>
@@ -403,13 +401,13 @@ export default function App() {
                   setSelected(null);
                 }}
               >
-                Schließen
+                Close
               </button>
             </div>
-            <p className="identifier">Dokument-ID: {selected.id}</p>
+            <p className="identifier">Document ID: {selected.id}</p>
             {Object.keys(selected.metadata).length > 0 && (
               <details>
-                <summary>Metadaten</summary>
+                <summary>Metadata</summary>
                 <pre>{JSON.stringify(selected.metadata, null, 2)}</pre>
               </details>
             )}
@@ -418,7 +416,7 @@ export default function App() {
                 <h3>
                   Revision {revision.revision_number} {revision.label}
                 </h3>
-                <p className="identifier">Revision-ID: {revision.id}</p>
+                <p className="identifier">Revision ID: {revision.id}</p>
                 <ProcessingDetails
                   revision={revision}
                   requestedPage={
@@ -441,8 +439,8 @@ export default function App() {
         )}
       </main>
       <footer>
-        TrayStack · Nachvollziehbare Dokumentablage
-        <span>Lokaler Prototyp für die Riverty Case Study</span>
+        TrayStack · Traceable document storage
+        <span>Local prototype for the Riverty case study</span>
       </footer>
     </>
   );

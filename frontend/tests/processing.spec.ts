@@ -9,49 +9,45 @@ for (const fixture of [
   test(`worker processes ${fixture.file} with honest quality and downloadable derivatives`, async ({
     page,
   }) => {
-    const title = `Verarbeitungsdemo ${fixture.file} ${Date.now()}`;
+    const title = `Processing demo ${fixture.file} ${Date.now()}`;
     await page.goto("/");
-    await page.getByLabel("Titel", { exact: true }).fill(title);
+    await page.getByLabel("Title", { exact: true }).fill(title);
     await page
-      .getByLabel("Originaldatei", { exact: true })
+      .getByLabel("Original file", { exact: true })
       .setInputFiles(
         path.resolve("../examples/synthetic-contracts", fixture.file),
       );
     if (fixture.review)
       await page
-        .getByRole("checkbox", { name: /Manuelle Prüfung erforderlich/ })
+        .getByRole("checkbox", { name: /Manual review required/ })
         .check();
     const uploaded = page.waitForResponse(
       (response) =>
         response.url().endsWith("/api/documents/upload") &&
         response.request().method() === "POST",
     );
-    await page.getByRole("button", { name: "Dokument speichern" }).click();
+    await page.getByRole("button", { name: "Save document" }).click();
     const document = await (await uploaded).json();
     const revisionId = document.revisions[0].id;
     const queued = page.waitForResponse((response) =>
       response.url().endsWith(`/api/revisions/${revisionId}/process`),
     );
-    await page.getByRole("button", { name: "Verarbeitung starten" }).click();
+    await page.getByRole("button", { name: "Start processing" }).click();
     const response = await queued;
     expect(response.status()).toBe(202);
     const job = await response.json();
     const quality = page.locator(".quality-panel");
     await expect(quality).toContainText(job.id, { timeout: 60_000 });
     if (fixture.complete)
-      await expect(quality.getByRole("heading")).toHaveText(
-        "Vollständig verarbeitet",
-      );
+      await expect(quality.getByRole("heading")).toHaveText("Fully processed");
     await expect(quality.locator("strong")).toHaveText(
-      fixture.review
-        ? "Manuelle Prüfung erforderlich"
-        : "Keine Auffälligkeit erkannt",
+      fixture.review ? "Manual review required" : "No known quality issue",
     );
     if (fixture.review)
       await expect(page.locator(".review-group")).toContainText(title);
-    await page.getByRole("button", { name: "Seitentext ansehen" }).click();
+    await page.getByRole("button", { name: "View page text" }).click();
     const viewer = page.getByRole("region", {
-      name: "Extrahierter Seitentext",
+      name: "Extracted page text",
     });
     await expect(viewer).toBeVisible();
     if (fixture.complete) {
@@ -62,19 +58,19 @@ for (const fixture of [
     }
     const structured = page
       .locator(".artifact")
-      .filter({ hasText: "Strukturierte Extraktion · JSON" });
+      .filter({ hasText: "Structured extraction · JSON" });
     await structured
-      .getByRole("button", { name: "Textvorschau", exact: true })
+      .getByRole("button", { name: "Text preview", exact: true })
       .click();
     await expect(structured.locator("pre")).toContainText(job.id);
-    await expect(
-      page.getByRole("link", { name: "Datei herunterladen" }),
-    ).toHaveCount(2);
+    await expect(page.getByRole("link", { name: "Download file" })).toHaveCount(
+      2,
+    );
     if (!fixture.review) {
       const requeued = page.waitForResponse((response) =>
         response.url().endsWith(`/api/revisions/${revisionId}/process`),
       );
-      await page.getByRole("button", { name: "Erneut verarbeiten" }).click();
+      await page.getByRole("button", { name: "Reprocess" }).click();
       const nextJob = await (await requeued).json();
       expect(nextJob.id).not.toBe(job.id);
       await expect(quality).toContainText(nextJob.id, { timeout: 60_000 });

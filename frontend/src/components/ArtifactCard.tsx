@@ -9,8 +9,8 @@ import { statusLabel } from "./processingLabels";
 
 const labels: Record<string, string> = {
   original: "Original",
-  structured_json: "Strukturierte Extraktion · JSON",
-  extracted_markdown: "Extrahierter Text · Markdown",
+  structured_json: "Structured extraction · JSON",
+  extracted_markdown: "Extracted text · Markdown",
 };
 export default function ArtifactCard({
   artifact,
@@ -36,9 +36,7 @@ export default function ArtifactCard({
     try {
       setPreview(await getArtifactText(artifact.id));
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Vorschau fehlgeschlagen.",
-      );
+      setError(error instanceof Error ? error.message : "Preview failed.");
     } finally {
       setBusy(false);
     }
@@ -60,43 +58,43 @@ export default function ArtifactCard({
               disabled={busy}
             >
               {busy
-                ? "Wird geladen …"
+                ? "Loading …"
                 : preview !== null
-                  ? "Vorschau schließen"
-                  : "Textvorschau"}
+                  ? "Close preview"
+                  : "Text preview"}
             </button>
           )}
           <a className="download" href={artifactUrl(artifact.id)}>
-            {original ? "Original herunterladen" : "Datei herunterladen"} ↓
+            {original ? "Download original" : "Download file"} ↓
           </a>
         </div>
       </div>
       <dl>
         <div>
-          <dt>Dateityp / Größe</dt>
+          <dt>File type / size</dt>
           <dd>
             {artifact.mime_type} · {(artifact.size_bytes / 1024).toFixed(1)} KB
           </dd>
         </div>
         {original && (
           <div>
-            <dt>Verarbeitung</dt>
+            <dt>Processing</dt>
             <dd>
               {revision.processing_status === "not_processed"
-                ? "Noch nicht verarbeitet"
+                ? "Not processed yet"
                 : statusLabel[revision.processing_status]}
               {artifact.parameters.requires_manual_review === true &&
-                " · Manuelle Prüfung vorgemerkt"}
+                " · Flagged for manual review"}
             </dd>
           </div>
         )}
         <div>
-          <dt>Artefakt-ID</dt>
+          <dt>Artifact ID</dt>
           <dd>{artifact.id}</dd>
         </div>
         {artifact.source_artifact_id && (
           <div>
-            <dt>Quelle / Verfahren</dt>
+            <dt>Source / method</dt>
             <dd>
               {artifact.source_artifact_id}
               <br />

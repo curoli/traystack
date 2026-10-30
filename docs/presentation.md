@@ -46,7 +46,7 @@ der Präsentation installieren. Keine Echtverträge verwenden.
 | 3:00–4:00 | A hochladen, Original herunterladen, Verarbeitung starten | Dokument, Revision und Artefakt bleiben verschieden; Originalbytes bleiben erhalten. |
 | 4:00–5:00 | Seitentext, JSON/Markdown und Laufhistorie öffnen | Text stammt aus tatsächlicher Verarbeitung; Quelle, Parameter und Versionen sind sichtbar. |
 | 5:00–6:15 | Normalisiert nach `The receiving party shall not disclose confidential information` suchen | A und der vorab verarbeitete Druckscan P liefern Treffer. Fundstelle öffnen, zum Original zurückgehen. |
-| 6:15–7:30 | Auf „Nicht im extrahierten Text gefunden“ wechseln | D ist negativ; der schwierige, vorgemerkte Scan E bleibt separat unverifizierbar. |
+| 6:15–7:30 | Auf „Not found in extracted text“ wechseln | D ist negativ; der schwierige, vorgemerkte Scan E bleibt separat unverifizierbar. |
 | 7:30–8:15 | Prüfgruppe und Qualität von E öffnen | Vollständige Seitenabdeckung kann mit Prüfbedarf zusammenfallen. E ist degradierter Druck, keine Handschrift-Evaluation. |
 | 8:15–9:00 | Erneute Verarbeitung und Herkunft erklären | Neuer Lauf erzeugt neue Artefakte. Fehlgeschlagene Läufe erhalten den bisherigen ausgewählten Text und zeigen den Fehler. |
 

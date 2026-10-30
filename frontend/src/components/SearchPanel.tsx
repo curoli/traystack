@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
+import { formatDate } from "../format";
 import {
   artifactUrl,
   searchDocuments,
@@ -9,25 +10,22 @@ import {
 import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
 
 const searchWarnings: Record<string, string> = {
-  no_revision: "Noch keine Revision vorhanden.",
-  no_selected_text:
-    "Noch kein ausgewählter Text vorhanden; Verarbeitung erforderlich.",
-  processing_failed:
-    "Die Verarbeitung ist fehlgeschlagen; es ist noch kein ausgewählter Text verfügbar.",
+  no_revision: "No revision available yet.",
+  no_selected_text: "No selected text yet; processing is required.",
+  processing_failed: "Processing failed; no selected text is available yet.",
   processing_pending:
-    "Die Verarbeitung ist noch nicht abgeschlossen; es ist noch kein ausgewählter Text verfügbar.",
-  incomplete_extraction:
-    "Mindestens eine Seite wurde nicht vollständig ausgelesen.",
-  extraction_needs_review: "Die Extraktion muss manuell geprüft werden.",
-  quality_unassessed: "Die Erkennungsqualität wurde nicht bewertet.",
+    "Processing is not finished; no selected text is available yet.",
+  incomplete_extraction: "At least one page was not fully extracted.",
+  extraction_needs_review: "The extraction requires manual review.",
+  quality_unassessed: "Recognition quality has not been assessed.",
   unsupported_normalization_version:
-    "Die gespeicherten Normalisierungsregeln werden nicht unterstützt; Neuverarbeitung erforderlich.",
+    "The stored normalization rules are not supported; reprocessing is required.",
   newer_run_failed:
-    "Ein neuerer Verarbeitungslauf ist fehlgeschlagen. Die Suche verwendet den weiterhin ausgewählten früheren Text.",
+    "A newer processing run failed. Search uses the previously selected text.",
   newer_run_pending:
-    "Eine neuere Verarbeitung ist noch nicht abgeschlossen. Die Suche verwendet den ausgewählten früheren Text.",
+    "A newer processing run is not finished. Search uses the previously selected text.",
   page_location_unavailable:
-    "Für diesen Treffer ist keine zuverlässige Seitenzuordnung verfügbar.",
+    "No reliable page location is available for this match.",
 };
 
 function ResultCard({
@@ -53,7 +51,7 @@ function ResultCard({
         <span className="badge">
           {result.revision_number
             ? `Revision ${result.revision_number}`
-            : "Keine Revision"}
+            : "No revision"}
         </span>
       </div>
       {result.snippet !== null && (
@@ -66,14 +64,14 @@ function ResultCard({
       )}
       {result.page_number !== null && (
         <p className="fineprint">
-          Seite {result.page_number}
+          Page {result.page_number}
           {result.end_page_number !== result.page_number &&
             `–${result.end_page_number}`}{" "}
-          · Erste Fundstelle im{" "}
+          · First occurrence in{" "}
           {result.offset_basis === "normalized_text"
-            ? "normalisierten"
-            : "extrahierten"}{" "}
-          Text
+            ? "normalized"
+            : "extracted"}{" "}
+          text
         </p>
       )}
       {result.warnings.length > 0 && (
@@ -88,43 +86,39 @@ function ResultCard({
       <div className="artifact-actions">
         <button className="secondary" onClick={() => onOpen(result)}>
           {result.page_number !== null
-            ? `Seite ${result.page_number} ansehen`
-            : "Dokument öffnen"}
+            ? `View page ${result.page_number}`
+            : "Open document"}
         </button>
         {result.artifact_id && (
           <a className="download" href={artifactUrl(result.artifact_id)}>
-            Original herunterladen ↓
+            Download original ↓
           </a>
         )}
       </div>
       <details className="search-provenance">
-        <summary>Herkunft und Verarbeitungsstand</summary>
+        <summary>Source and processing status</summary>
         <p>
-          {result.coverage
-            ? coverageLabel[result.coverage]
-            : "Nicht verarbeitet"}{" "}
-          ·{" "}
+          {result.coverage ? coverageLabel[result.coverage] : "Not processed"} ·{" "}
           {result.quality_status
             ? qualityLabel[result.quality_status]
-            : "Qualität nicht bewertet"}
+            : "Quality not assessed"}
         </p>
         {result.pages_total !== null && (
           <p>
-            {result.pages_processed} von {result.pages_total} Seiten vollständig
-            verarbeitet
+            {result.pages_processed} of {result.pages_total} pages fully
+            processed
           </p>
         )}
         <p className="identifier">
-          Ausgewählter Lauf: {result.processing_job_id || "Keiner"}
+          Selected run: {result.processing_job_id || "None"}
           <br />
-          Quelle: {result.artifact_id || "Keine ausgewählte Quelle"}
+          Source: {result.artifact_id || "No selected source"}
           <br />
-          Normalisierung:{" "}
-          {result.normalization_version || "Noch nicht verfügbar"}
+          Normalization: {result.normalization_version || "Not available yet"}
         </p>
         {result.latest_job?.error_message && (
           <p className="job-error">
-            Neuester Lauf: {result.latest_job.error_message}
+            Latest run: {result.latest_job.error_message}
           </p>
         )}
       </details>
@@ -155,9 +149,7 @@ export default function SearchPanel({
       if (id === requestId.current) setResponse(result);
     } catch (error) {
       if (id === requestId.current)
-        setError(
-          error instanceof Error ? error.message : "Suche fehlgeschlagen.",
-        );
+        setError(error instanceof Error ? error.message : "Search failed.");
     } finally {
       if (id === requestId.current) setBusy(false);
     }
@@ -194,14 +186,14 @@ export default function SearchPanel({
     <section className="panel search-panel" aria-labelledby="search-heading">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">VOLLSTÄNDIGER REVISIONSTEXT</p>
-          <h2 id="search-heading">Textpassagen suchen</h2>
+          <p className="eyebrow">FULL REVISION TEXT</p>
+          <h2 id="search-heading">Search text passages</h2>
         </div>
-        <span className="scope-tag">Neueste Revision je Dokument</span>
+        <span className="scope-tag">Latest revision per document</span>
       </div>
       <form onSubmit={submit} className="search-form">
         <div className="search-query">
-          <label htmlFor="search-query">Textpassage</label>
+          <label htmlFor="search-query">Text passage</label>
           <textarea
             id="search-query"
             value={query}
@@ -209,11 +201,11 @@ export default function SearchPanel({
             required
             maxLength={2000}
             rows={2}
-            placeholder="z. B. The receiving party shall not disclose confidential information"
+            placeholder="e.g. The receiving party shall not disclose confidential information"
           />
         </div>
         <div>
-          <label htmlFor="search-mode">Suchmodus</label>
+          <label htmlFor="search-mode">Search mode</label>
           <select
             id="search-mode"
             value={mode}
@@ -221,12 +213,12 @@ export default function SearchPanel({
               setMode(event.target.value as SearchRequest["mode"])
             }
           >
-            <option value="normalized">Normalisiert</option>
-            <option value="exact">Exakt</option>
+            <option value="normalized">Normalized</option>
+            <option value="exact">Exact</option>
           </select>
         </div>
         <div>
-          <label htmlFor="search-relation">Gesuchte Dokumente</label>
+          <label htmlFor="search-relation">Find documents</label>
           <select
             id="search-relation"
             value={relation}
@@ -234,27 +226,27 @@ export default function SearchPanel({
               setRelation(event.target.value as SearchRequest["relation"])
             }
           >
-            <option value="contains">Enthält die Passage</option>
-            <option value="lacks">Nicht im extrahierten Text gefunden</option>
+            <option value="contains">Contains the passage</option>
+            <option value="lacks">Not found in extracted text</option>
           </select>
         </div>
         <button className="primary" disabled={busy || !query.trim()}>
-          {busy ? "Suche läuft …" : "Suche ausführen"}
+          {busy ? "Searching …" : "Run search"}
         </button>
       </form>
       <p className="fineprint">
         {mode === "normalized"
-          ? "Normalisiert gleicht Groß-/Kleinschreibung, Leerzeichen und Zeilenumbrüche an. Zahlen, Negationen, Satzzeichen und Bindestriche bleiben erhalten."
-          : "Exakt berücksichtigt Groß-/Kleinschreibung, Leerzeichen und Zeilenumbrüche im extrahierten Text."}
+          ? "Normalized search ignores case and whitespace differences, including line breaks. Numbers, negations, punctuation and hyphens are preserved."
+          : "Exact search preserves case, spaces and line breaks in the extracted text."}
       </p>
       <p className="search-notice">
-        „Nicht gefunden“ bezieht sich auf den ausgewählten extrahierten Text.
-        Unvollständige oder auffällige Extraktionen sind unverifizierbar; ein
-        Suchergebnis ist keine rechtliche Bewertung.
+        “Not found” refers to the selected extracted text. Incomplete
+        extractions or those with known quality issues are unverifiable; a
+        search result is not a legal assessment.
       </p>
       {busy && (
         <p role="status" className="job-progress">
-          Der gesamte ausgewählte Text wird geprüft …
+          Checking the entire selected text …
         </p>
       )}
       {error && (
@@ -265,29 +257,27 @@ export default function SearchPanel({
       {response && (
         <div className="search-response" aria-busy={busy}>
           <p className="search-query-summary">
-            Ergebnisse für <strong>„{response.query}“</strong> ·{" "}
-            {response.mode === "exact" ? "Exakt" : "Normalisiert"} ·{" "}
+            Results for <strong>“{response.query}”</strong> ·{" "}
+            {response.mode === "exact" ? "Exact" : "Normalized"} ·{" "}
             {response.relation === "contains"
-              ? "Enthält"
-              : "Nicht gefunden im extrahierten Text"}
+              ? "Contains"
+              : "Not found in extracted text"}
           </p>
           <p className="fineprint">
-            {response.summary.documents_total} Dokumente im Suchumfang ·{" "}
-            {response.summary.found} gefunden ·{" "}
-            {response.summary.not_found_in_processed_text} nicht im
-            verarbeiteten Text gefunden · {response.summary.unverifiable}{" "}
-            unverifizierbar
+            {response.summary.documents_total} documents in scope ·{" "}
+            {response.summary.found} found ·{" "}
+            {response.summary.not_found_in_processed_text} not found in
+            processed text · {response.summary.unverifiable} unverifiable
           </p>
           <p className="fineprint">
-            Momentaufnahme vom{" "}
-            {new Date(response.searched_at).toLocaleString("de-DE")}. Nach neuer
-            Verarbeitung die Suche erneut ausführen.
+            Snapshot taken at {formatDate(response.searched_at)}. Run the search
+            again after reprocessing.
           </p>
-          <section aria-label="Suchtreffer">
+          <section aria-label="Search results">
             <h3>
               {response.relation === "contains"
-                ? "Gefundene Dokumente"
-                : "Nicht im extrahierten Text gefunden"}{" "}
+                ? "Documents found"
+                : "Not found in extracted text"}{" "}
               ({response.total})
             </h3>
             {response.results.length ? (
@@ -301,26 +291,26 @@ export default function SearchPanel({
             ) : (
               <p className="search-empty">
                 {response.summary.documents_total === 0
-                  ? "Noch keine Dokumente vorhanden. Lade einen Demo-Vertrag hoch."
+                  ? "No documents yet. Upload a demo contract."
                   : response.total > 0
-                    ? "Diese Ergebnisseite ist nach einer Aktualisierung leer. Bitte zurückblättern oder erneut suchen."
-                    : "Keine Ergebnisse für diese Auswahl."}
+                    ? "This results page is empty after an update. Go back a page or run the search again."
+                    : "No results for this selection."}
               </p>
             )}
-            <nav className="pagination" aria-label="Trefferseiten">
+            <nav className="pagination" aria-label="Search result pages">
               <button
                 className="secondary"
                 disabled={busy || response.offset === 0}
                 onClick={() => paginate("results", -response.limit)}
               >
-                Treffer zurück
+                Previous results
               </button>
               <span>
                 {response.results.length ? response.offset + 1 : 0}–
                 {response.results.length
                   ? response.offset + response.results.length
                   : 0}{" "}
-                von {response.total}
+                of {response.total}
               </span>
               <button
                 className="secondary"
@@ -329,15 +319,15 @@ export default function SearchPanel({
                 }
                 onClick={() => paginate("results", response.limit)}
               >
-                Treffer weiter
+                Next results
               </button>
             </nav>
           </section>
           <section
             className="search-unknown"
-            aria-label="Unverifizierbare Dokumente"
+            aria-label="Unverifiable documents"
           >
-            <h3>Unverifizierbar ({response.unverifiable_total})</h3>
+            <h3>Unverifiable ({response.unverifiable_total})</h3>
             {response.unverifiable.length ? (
               response.unverifiable.map((result) => (
                 <ResultCard
@@ -349,11 +339,11 @@ export default function SearchPanel({
             ) : (
               <p className="search-empty">
                 {response.unverifiable_total > 0
-                  ? "Diese Ergebnisseite ist nach einer Aktualisierung leer. Bitte zurückblättern oder erneut suchen."
-                  : "Keine unverifizierbaren Dokumente in diesem Suchumfang."}
+                  ? "This results page is empty after an update. Go back a page or run the search again."
+                  : "No unverifiable documents in this search scope."}
               </p>
             )}
-            <nav className="pagination" aria-label="Unverifizierbare Seiten">
+            <nav className="pagination" aria-label="Unverifiable pages">
               <button
                 className="secondary"
                 disabled={busy || response.unverifiable_offset === 0}
@@ -361,7 +351,7 @@ export default function SearchPanel({
                   paginate("unverifiable", -response.unverifiable_limit)
                 }
               >
-                Unverifizierbare zurück
+                Previous unverifiable
               </button>
               <span>
                 {response.unverifiable.length
@@ -371,7 +361,7 @@ export default function SearchPanel({
                 {response.unverifiable.length
                   ? response.unverifiable_offset + response.unverifiable.length
                   : 0}{" "}
-                von {response.unverifiable_total}
+                of {response.unverifiable_total}
               </span>
               <button
                 className="secondary"
@@ -384,7 +374,7 @@ export default function SearchPanel({
                   paginate("unverifiable", response.unverifiable_limit)
                 }
               >
-                Unverifizierbare weiter
+                Next unverifiable
               </button>
             </nav>
           </section>
