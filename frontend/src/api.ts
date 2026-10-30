@@ -39,6 +39,27 @@ interface DocumentList {
   offset: number;
 }
 
+export interface SearchAbortDetails {
+  code: "textual_search_aborted";
+  reason: string;
+  message: string;
+  resource: string;
+  limit: number;
+  observed_at_least: number;
+  documents_inspected: number;
+  results_complete: false;
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public details: SearchAbortDetails | null = null,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 async function fetchFromServer(
   url: string,
   init?: RequestInit,
@@ -58,6 +79,17 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     const body: unknown = await response.json().catch(() => null);
     let message = `Request failed (${response.status}).`;
     if (body && typeof body === "object" && "detail" in body) {
+      const detail = body.detail;
+      if (
+        detail &&
+        typeof detail === "object" &&
+        "code" in detail &&
+        detail.code === "textual_search_aborted" &&
+        "message" in detail &&
+        typeof detail.message === "string"
+      ) {
+        throw new ApiError(detail.message, detail as SearchAbortDetails);
+      }
       message =
         typeof body.detail === "string"
           ? body.detail
@@ -289,12 +321,15 @@ export interface TextualSearchResponse {
   effective_query: string;
   mode: "exact" | "normalized";
   minimum_score: number;
+  document_id: string | null;
   searched_at: string;
   scorer_version: string;
   scorer_library_version: string;
   candidate_policy: string;
   offset_basis: "plain_text" | "normalized_text";
   warnings: string[];
+  assessment: TextualAssessment;
+  result_warnings: QueryNotice[];
   summary: {
     documents_total: number;
     documents_searched: number;
@@ -317,4 +352,28 @@ export const searchTextual = (payload: TextualSearchRequest) =>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+  });
+
+export interface QueryNotice {
+  code: string;
+  message: string;
+}
+export interface TextualAssessment {
+  policy_version: string;
+  effective_query: string;
+  comparison_characters: number;
+  content_characters: number;
+  word_count: number;
+  equal_length_edit_budget: number;
+  warnings: QueryNotice[];
+}
+export const assessTextual = (
+  payload: Pick<TextualSearchRequest, "query" | "mode" | "minimum_score">,
+  signal?: AbortSignal,
+) =>
+  request<TextualAssessment>("/api/search/textual/assess", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal,
   });

@@ -7,16 +7,20 @@ from sqlalchemy.orm import Session
 
 from traystack.models import Document, PageText, RevisionText
 from traystack.search_schemas import SearchRequest
-from traystack.services.normalization import NORMALIZATION_VERSION, normalize_for_search
+from traystack.services.normalization import NORMALIZATION_VERSION
+from traystack.services.query_guidance import assess_query
 from traystack.services.search import classify, selected_scope
 from traystack.services.textual_matching import (
     CANDIDATE_POLICY,
     SCORER_VERSION,
+    PassageBudget,
+    SearchTooBroad,
     WorkBudget,
     find_passages,
     text_differences,
 )
 from traystack.textual_schemas import (
+    QueryNotice,
     TextualDocument,
     TextualGroup,
     TextualOccurrence,
@@ -30,7 +34,8 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
     session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
     session.execute(text("SET TRANSACTION READ ONLY"))
     searched_at = datetime.now(UTC)
-    phrase = normalize_for_search(request.query) if request.mode == "normalized" else request.query
+    assessment = assess_query(request)
+    phrase = assessment.effective_query
     column = (
         RevisionText.normalized_text if request.mode == "normalized" else RevisionText.plain_text
     )
@@ -39,6 +44,7 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
         statement = statement.where(Document.id == request.document_id)
     legacy_request = SearchRequest(query=request.query, mode=request.mode)
     budget = WorkBudget()
+    passage_budget = PassageBudget()
     matches, unsearchable = [], []
     documents_total = searched = 0
     for row in session.execute(statement.execution_options(yield_per=10)).mappings():
@@ -51,7 +57,11 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
             unsearchable.append(document)
             continue
         searched += 1
-        passages = find_passages(content, phrase, request.minimum_score, budget)
+        try:
+            passages = find_passages(content, phrase, request.minimum_score, budget, passage_budget)
+        except SearchTooBroad as error:
+            error.documents_inspected = documents_total
+            raise
         if passages:
             matches.append((document, content, passages))
     # Stable ties retain the scope's document recency/ID ordering.
@@ -109,24 +119,32 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
                 occurrence_offset=request.occurrence_offset,
             )
         )
-    warnings = []
-    if request.minimum_score == 0:
-        warnings.append("text_filter_disabled")
-    elif request.minimum_score < 70:
-        warnings.append("low_text_threshold")
-    if len(phrase) < 8:
-        warnings.append("short_query")
+    result_warnings = []
+    if passage_budget.total >= 500 or passage_budget.peak_document_count >= 50:
+        result_warnings.append(
+            QueryNotice(
+                code="many_passages",
+                message=(
+                    f"This completed search returned {passage_budget.total} candidate passages. "
+                    "Consider a higher threshold or a narrower selection to reduce review work."
+                ),
+            )
+        )
+    warnings = [notice.code for notice in [*assessment.warnings, *result_warnings]]
     return TextualSearchResponse(
         query=request.query,
         effective_query=phrase,
         mode=request.mode,
         minimum_score=request.minimum_score,
+        document_id=request.document_id,
         searched_at=searched_at,
         scorer_version=SCORER_VERSION,
         scorer_library_version=version("rapidfuzz"),
         candidate_policy=CANDIDATE_POLICY,
         offset_basis="normalized_text" if request.mode == "normalized" else "plain_text",
         warnings=warnings,
+        assessment=assessment,
+        result_warnings=result_warnings,
         summary=TextualSummary(
             documents_total=documents_total,
             documents_searched=searched,

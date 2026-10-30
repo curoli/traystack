@@ -17,9 +17,11 @@ Importwerkzeuge und 300 reproduzierbare Handschrift-Simulationen mit Ground Trut
 Die [drei Bildbeispiele](examples/synthetic-handwriting/samples/manifest.json)
 können direkt in der App geprüft werden; das vollständige Bildset wird lokal erzeugt.
 Unter **Similar passages** gibt es zusätzlich eine textuelle Ähnlichkeitssuche:
-Schwelle von 0 bis 100, mehrere Fundstellen je Dokument, Kontext und markierte
+Positive Schwelle bis 100, mehrere Fundstellen je Dokument, Kontext und markierte
 Textunterschiede. Die [Score- und Fundstellenregeln](docs/textual-search.md) erklären
-auch die Trainingsmessung mit echten OCR-Ausgaben. Semantische Scores und
+auch die Trainingsmessung mit echten OCR-Ausgaben. Suchausdruckabhängige Hinweise,
+Edit-Budgets und kontrollierte Abbrüche begrenzen zu breite Suchen; 0 ist nicht
+zulässig. Mit **Search only the open document** lässt sich die Auswahl eingrenzen. Semantische Scores und
 **Keep / Dismiss / Decide later** folgen in späteren Schritten.
 
 ## Start

@@ -110,11 +110,11 @@ test("textual matches show differences, page through occurrences and retain subm
   );
 });
 
-test("zero threshold warns and includes unrelated searchable text while 100 preserves exact mode", async ({
+test("zero is blocked, scope can be narrowed, and exact mode is preserved", async ({
   page,
 }) => {
   const title = `Unrelated text ${Date.now()}`;
-  const document = await uploadAndProcess(
+  await uploadAndProcess(
     page,
     title,
     "An unrelated shipping note is stored here.",
@@ -127,16 +127,15 @@ test("zero threshold warns and includes unrelated searchable text while 100 pres
     .getByLabel("Text passage", { exact: true })
     .fill("Completely different target wording");
   await page.getByLabel("Minimum textual match").fill("0");
+  await expect(page.getByRole("alert")).toContainText("greater than 0");
   await expect(
-    page.getByRole("status").filter({ hasText: "textual filter is off" }),
-  ).toBeVisible();
-  // Scope the request for determinism when earlier tests have populated a larger library.
-  await page.route("**/api/search/textual", async (route) => {
-    const data = route.request().postDataJSON();
-    await route.continue({
-      postData: JSON.stringify({ ...data, document_id: document.id }),
-    });
-  });
+    page.getByRole("button", { name: "Find passages", exact: true }),
+  ).toBeDisabled();
+  await page.locator(".document-row").filter({ hasText: title }).click();
+  await page
+    .getByRole("checkbox", { name: "Search only the open document" })
+    .check();
+  await page.getByLabel("Minimum textual match").fill("1");
   await page
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
@@ -168,6 +167,186 @@ test("zero threshold warns and includes unrelated searchable text while 100 pres
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
   await expect(
-    page.locator(".textual-response .message.warning"),
-  ).toContainText("Short queries");
+    page.getByRole("region", {
+      name: "Submitted search guidance",
+      exact: true,
+    }),
+  ).toContainText("very few letters or digits");
+});
+
+test("too many real passages abort without partial results and can be refined", async ({
+  page,
+}) => {
+  const token = `ControlProbe${Date.now()}`;
+  const ending = "end of synthetic control contract.";
+  await uploadAndProcess(
+    page,
+    `Dense controls ${Date.now()}`,
+    `${(token + " ").repeat(251)}${ending}`,
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Similar passages", exact: true })
+    .click();
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".search-stopped")).toContainText(
+    "Too many candidate passages in one document",
+  );
+  await expect(page.locator(".search-stopped")).toContainText("251");
+  await expect(page.locator(".textual-response")).toHaveCount(0);
+  await expect(page.getByLabel("Minimum textual match")).toHaveValue("100");
+  await expect(
+    page.getByRole("button", { name: "Find passages", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByLabel("Text passage", { exact: true })
+    .fill(`${token} ${ending}`);
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
+  await expect(page.locator(".search-stopped")).toHaveCount(0);
+});
+
+test("an occurrence-pagination abort clears the old complete snapshot", async ({
+  page,
+}) => {
+  const token = `PagingProbe${Date.now()}`;
+  await uploadAndProcess(
+    page,
+    `Paging controls ${Date.now()}`,
+    `${token} separate paragraph. `.repeat(7),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Similar passages", exact: true })
+    .click();
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(5);
+  // Isolated error-rendering contract; successful search above uses the real API.
+  await page.route("**/api/search/textual", async (route) => {
+    if (route.request().postDataJSON().occurrence_offset > 0) {
+      await route.fulfill({
+        status: 422,
+        json: {
+          detail: {
+            code: "textual_search_aborted",
+            reason: "document_passage_limit",
+            message:
+              "Too many candidate passages in one document. Increase textual similarity.",
+            resource: "retained_passages_in_document",
+            limit: 250,
+            observed_at_least: 251,
+            documents_inspected: 1,
+            results_complete: false,
+          },
+        },
+      });
+    } else await route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Next passages", exact: true })
+    .click();
+  await expect(page.locator(".search-stopped")).toContainText(
+    "Search stopped — no results returned",
+  );
+  await expect(page.locator(".textual-response")).toHaveCount(0);
+  await expect(page.getByLabel("Minimum textual match")).toHaveValue("100");
+  await expect(
+    page.getByRole("button", { name: "Find passages", exact: true }),
+  ).toBeEnabled();
+});
+
+test("a delayed pagination abort cannot clear a newer search", async ({
+  page,
+}) => {
+  const token = `ObsoletePaging${Date.now()}`;
+  const replacement = `ReplacementSearch${Date.now()}`;
+  await uploadAndProcess(
+    page,
+    `Delayed paging controls ${Date.now()}`,
+    `${token} separate paragraph. `.repeat(7) + replacement,
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Similar passages", exact: true })
+    .click();
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(5);
+
+  let releaseAbort!: () => void;
+  const delayedAbort = new Promise<void>((resolve) => {
+    releaseAbort = resolve;
+  });
+  let notifyPaging!: () => void;
+  const pagingStarted = new Promise<void>((resolve) => {
+    notifyPaging = resolve;
+  });
+  await page.route("**/api/search/textual", async (route) => {
+    if (route.request().postDataJSON().occurrence_offset > 0) {
+      notifyPaging();
+      await delayedAbort;
+      await route.fulfill({
+        status: 422,
+        json: {
+          detail: {
+            code: "textual_search_aborted",
+            reason: "document_passage_limit",
+            message: "Too many candidate passages in one document.",
+            resource: "retained_passages_in_document",
+            limit: 250,
+            observed_at_least: 251,
+            documents_inspected: 1,
+            results_complete: false,
+          },
+        },
+      });
+    } else await route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Next passages", exact: true })
+    .click();
+  await pagingStarted;
+  await page.getByLabel("Text passage", { exact: true }).fill(replacement);
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
+  await expect(page.locator(".search-query-summary")).toContainText(
+    replacement,
+  );
+
+  const oldResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/search/textual") &&
+      response.status() === 422,
+  );
+  releaseAbort();
+  await (await oldResponse).finished();
+  // Let the old fetch rejection and React's resulting render finish before
+  // checking that the new successful snapshot survived.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  await expect(page.locator(".textual-response")).toBeVisible();
+  await expect(page.locator(".search-query-summary")).toContainText(
+    replacement,
+  );
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
+  await expect(page.locator(".search-stopped")).toHaveCount(0);
 });

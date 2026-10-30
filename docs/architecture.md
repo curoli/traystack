@@ -135,3 +135,10 @@ demselben Snapshot. Es gibt kein zusätzliches Indexschema oder stilles Top-k-Li
 Die [Kandidatenregeln](textual-search.md) und vollständige Ressourcenfehler machen
 die Grenzen des aktuellen Vollscans sichtbar. Dieser Ablauf liefert mögliche
 positive Treffer; er darf keine juristische Äquivalenz oder Abwesenheit feststellen.
+
+Ein datenbankfreier Vorab-Endpunkt bewertet den Suchausdruck und die Schwelle;
+Suchlauf und Oberfläche verwenden dieselben serverseitigen Hinweise. Zusätzlich
+zu Rechenbudgets gelten Grenzen für konsolidierte Fundstellen je Dokument, im
+Gesamtbestand und für dichte approximative Treffer. Ein Abbruch liefert eine
+strukturierte Fehlerantwort mit Teilbeobachtungen, aber ohne erfolgreiche
+Ergebnisliste. Die Einzelheiten stehen in der [Suchsteuerung](textual-search.md).

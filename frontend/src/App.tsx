@@ -237,6 +237,7 @@ export default function App() {
           />
         ) : (
           <TextualSearchPanel
+            openDocument={selected}
             onOpen={(result) => {
               void openDocument(result.document_id, result);
             }}
