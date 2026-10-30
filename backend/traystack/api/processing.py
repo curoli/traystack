@@ -61,7 +61,13 @@ def process(revision_id: UUID, payload: ProcessRequest, request: Request, sessio
         source = session.get(Artifact, payload.source_artifact_id)
     if source is None or source.revision_id != revision_id or source.kind != "original":
         raise HTTPException(422, "Source must be an original artifact of this revision")
-    if source.mime_type not in {"application/pdf", "image/jpeg", "image/png"}:
+    if source.mime_type not in {
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "text/plain",
+        "text/html",
+    }:
         raise HTTPException(422, "Unsupported source type")
     settings = request.app.state.settings
     parameters = {

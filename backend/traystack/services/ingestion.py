@@ -7,12 +7,14 @@ import pymupdf
 from PIL import Image, UnidentifiedImageError
 
 from traystack.services.storage import InvalidUpload
+from traystack.services.text_documents import TEXT_TYPES, decode_text
 
 TYPES = {
     ".pdf": "application/pdf",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".png": "image/png",
+    **TEXT_TYPES,
 }
 
 
@@ -27,12 +29,19 @@ def validate_file(stream: BinaryIO, filename: str) -> str:
     extension = PurePosixPath(filename).suffix.lower()
     expected = TYPES.get(extension)
     if not expected:
-        raise InvalidUpload("Supported file extensions: .pdf, .jpg, .jpeg, .png")
+        raise InvalidUpload("Supported file extensions: .pdf, .jpg, .jpeg, .png, .txt, .htm, .html")
     stream.seek(0)
     signature = stream.read(8)
     stream.seek(0)
     try:
-        if expected == "application/pdf":
+        if expected in TEXT_TYPES.values():
+            try:
+                decode_text(stream.read())
+            except (UnicodeDecodeError, ValueError):
+                raise InvalidUpload(
+                    "Text/HTML must be non-empty UTF-8 without binary control characters"
+                ) from None
+        elif expected == "application/pdf":
             if not signature.startswith(b"%PDF-"):
                 raise InvalidUpload("File content does not match PDF extension")
             # Bounded by the upload limit; extraction/rendering is deferred to a worker.
@@ -57,7 +66,7 @@ def validate_file(stream: BinaryIO, filename: str) -> str:
         Image.DecompressionBombError,
         Image.DecompressionBombWarning,
     ) as error:
-        raise InvalidUpload("File is not a readable PDF/JPEG/PNG") from error
+        raise InvalidUpload("File is not a readable PDF, image or UTF-8 text document") from error
     finally:
         stream.seek(0)
     return expected

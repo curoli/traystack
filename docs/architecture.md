@@ -91,6 +91,12 @@ auch in späteren Läufen beibehalten.
 
 ## Abdeckung, Qualität und Text
 
+TXT- und HTML-Originale nutzen dieselbe Pipeline, mit UTF-8-Validierung und einer
+logischen Seite. HTML wird ohne Skriptausführung oder Ressourcenabruf als Text
+gelesen und immer zur Prüfung markiert. Physische Seiten oder Layouttreue werden
+dabei nicht behauptet. [Import und Evaluation](data-evaluation.md) beschreibt
+Quelleninventar, die synthetischen Bilddaten und die gemessene OCR-Basis.
+
 Abdeckung (`complete`, `partial`, `unavailable`) und Qualität (`no_known_issue`,
 `needs_review`, `unassessed`) sind getrennte Felder. Eine Seite mit Text und
 manueller Prüfvormerkung ist beispielsweise vollständig verarbeitet und trotzdem

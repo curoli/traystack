@@ -1,0 +1,1906 @@
+{
+  "schema_version": 1,
+  "generator_version": "handwriting-simulation-v1",
+  "documents": [
+    {
+      "id": "clause-01-exact",
+      "group_id": "clause-01",
+      "split": "train",
+      "case": "exact",
+      "query": "The receiving party shall not disclose confidential information.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-exact\n\nParties: Example Company 01 and Demo Partner 01.\n\nThe receiving party shall not disclose confidential information.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 179
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-01-formatting",
+      "group_id": "clause-01",
+      "split": "train",
+      "case": "formatting",
+      "query": "The receiving party shall not disclose confidential information.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-formatting\n\nParties: Example Company 01 and Demo Partner 01.\n\ntHE RECEIVING PARTY SHALL NOT DISCLOSE\nCONFIDENTIAL INFORMATION.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 184
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-01-paraphrase",
+      "group_id": "clause-01",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The receiving party shall not disclose confidential information.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-paraphrase\n\nParties: Example Company 01 and Demo Partner 01.\n\nThe recipient must keep the confidential material secret.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 177
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-01-counterexample",
+      "group_id": "clause-01",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The receiving party shall not disclose confidential information.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-counterexample\n\nParties: Example Company 01 and Demo Partner 01.\n\nThe receiving party may disclose confidential information.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 182
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "negation",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-01-unrelated",
+      "group_id": "clause-01",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The receiving party shall not disclose confidential information.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-01-unrelated\n\nParties: Example Company 01 and Demo Partner 01.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-02-exact",
+      "group_id": "clause-02",
+      "split": "train",
+      "case": "exact",
+      "query": "Payment is due within thirty days of receipt.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-exact\n\nParties: Example Company 02 and Demo Partner 02.\n\nPayment is due within thirty days of receipt.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 160
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-02-formatting",
+      "group_id": "clause-02",
+      "split": "train",
+      "case": "formatting",
+      "query": "Payment is due within thirty days of receipt.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-formatting\n\nParties: Example Company 02 and Demo Partner 02.\n\npAYMENT IS DUE WITHIN THIRTY DAYS OF\nRECEIPT.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 165
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-02-paraphrase",
+      "group_id": "clause-02",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "Payment is due within thirty days of receipt.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-paraphrase\n\nParties: Example Company 02 and Demo Partner 02.\n\nThe invoice must be paid no later than thirty days after it is received.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 192
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-02-counterexample",
+      "group_id": "clause-02",
+      "split": "train",
+      "case": "counterexample",
+      "query": "Payment is due within thirty days of receipt.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-counterexample\n\nParties: Example Company 02 and Demo Partner 02.\n\nPayment is due within ninety days of receipt.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 169
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "deadline",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-02-unrelated",
+      "group_id": "clause-02",
+      "split": "train",
+      "case": "unrelated",
+      "query": "Payment is due within thirty days of receipt.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-02-unrelated\n\nParties: Example Company 02 and Demo Partner 02.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-03-exact",
+      "group_id": "clause-03",
+      "split": "train",
+      "case": "exact",
+      "query": "Liability is limited to 50,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-exact\n\nParties: Example Company 03 and Demo Partner 03.\n\nLiability is limited to 50,000 euros.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 152
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-03-formatting",
+      "group_id": "clause-03",
+      "split": "train",
+      "case": "formatting",
+      "query": "Liability is limited to 50,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-formatting\n\nParties: Example Company 03 and Demo Partner 03.\n\nlIABILITY IS LIMITED TO 50,000 EUROS.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 157
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-03-paraphrase",
+      "group_id": "clause-03",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "Liability is limited to 50,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-paraphrase\n\nParties: Example Company 03 and Demo Partner 03.\n\nThe maximum liability under this agreement is fifty thousand euros.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 187
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-03-counterexample",
+      "group_id": "clause-03",
+      "split": "train",
+      "case": "counterexample",
+      "query": "Liability is limited to 50,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-counterexample\n\nParties: Example Company 03 and Demo Partner 03.\n\nLiability is limited to 500,000 euros.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 162
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "amount",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-03-unrelated",
+      "group_id": "clause-03",
+      "split": "train",
+      "case": "unrelated",
+      "query": "Liability is limited to 50,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-03-unrelated\n\nParties: Example Company 03 and Demo Partner 03.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-04-exact",
+      "group_id": "clause-04",
+      "split": "train",
+      "case": "exact",
+      "query": "The supplier shall deliver the goods within fourteen days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-04-exact\n\nParties: Example Company 04 and Demo Partner 04.\n\nThe supplier shall deliver the goods within fourteen days.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 173
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-04-formatting",
+      "group_id": "clause-04",
+      "split": "train",
+      "case": "formatting",
+      "query": "The supplier shall deliver the goods within fourteen days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-04-formatting\n\nParties: Example Company 04 and Demo Partner 04.\n\ntHE SUPPLIER SHALL DELIVER THE GOODS\nWITHIN FOURTEEN DAYS.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 178
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-04-paraphrase",
+      "group_id": "clause-04",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The supplier shall deliver the goods within fourteen days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-04-paraphrase\n\nParties: Example Company 04 and Demo Partner 04.\n\nDelivery of the goods by the supplier is required within two weeks.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 187
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-04-counterexample",
+      "group_id": "clause-04",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The supplier shall deliver the goods within fourteen days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-04-counterexample\n\nParties: Example Company 04 and Demo Partner 04.\n\nThe supplier shall deliver the goods within forty days.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 179
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "deadline",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-04-unrelated",
+      "group_id": "clause-04",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The supplier shall deliver the goods within fourteen days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-04-unrelated\n\nParties: Example Company 04 and Demo Partner 04.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-05-exact",
+      "group_id": "clause-05",
+      "split": "train",
+      "case": "exact",
+      "query": "Either party may terminate this agreement with thirty days notice.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-05-exact\n\nParties: Example Company 05 and Demo Partner 05.\n\nEither party may terminate this agreement with thirty days notice.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 181
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-05-formatting",
+      "group_id": "clause-05",
+      "split": "train",
+      "case": "formatting",
+      "query": "Either party may terminate this agreement with thirty days notice.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-05-formatting\n\nParties: Example Company 05 and Demo Partner 05.\n\neITHER PARTY MAY TERMINATE THIS\nAGREEMENT WITH THIRTY DAYS NOTICE.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 186
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-05-paraphrase",
+      "group_id": "clause-05",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "Either party may terminate this agreement with thirty days notice.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-05-paraphrase\n\nParties: Example Company 05 and Demo Partner 05.\n\nEach party can end the agreement by giving thirty days of notice.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 185
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-05-counterexample",
+      "group_id": "clause-05",
+      "split": "train",
+      "case": "counterexample",
+      "query": "Either party may terminate this agreement with thirty days notice.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-05-counterexample\n\nParties: Example Company 05 and Demo Partner 05.\n\nOnly the supplier may terminate this agreement with thirty days notice.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 195
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "party_right",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-05-unrelated",
+      "group_id": "clause-05",
+      "split": "train",
+      "case": "unrelated",
+      "query": "Either party may terminate this agreement with thirty days notice.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-05-unrelated\n\nParties: Example Company 05 and Demo Partner 05.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-06-exact",
+      "group_id": "clause-06",
+      "split": "train",
+      "case": "exact",
+      "query": "The contractor shall delete personal data after termination.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-06-exact\n\nParties: Example Company 06 and Demo Partner 06.\n\nThe contractor shall delete personal data after termination.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 175
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-06-formatting",
+      "group_id": "clause-06",
+      "split": "train",
+      "case": "formatting",
+      "query": "The contractor shall delete personal data after termination.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-06-formatting\n\nParties: Example Company 06 and Demo Partner 06.\n\ntHE CONTRACTOR SHALL DELETE PERSONAL\nDATA AFTER TERMINATION.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 180
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-06-paraphrase",
+      "group_id": "clause-06",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The contractor shall delete personal data after termination.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-06-paraphrase\n\nParties: Example Company 06 and Demo Partner 06.\n\nWhen the contract ends, the contractor must erase personal information.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 191
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-06-counterexample",
+      "group_id": "clause-06",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The contractor shall delete personal data after termination.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-06-counterexample\n\nParties: Example Company 06 and Demo Partner 06.\n\nThe contractor shall retain personal data after termination.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 184
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "opposite_action",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-06-unrelated",
+      "group_id": "clause-06",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The contractor shall delete personal data after termination.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-06-unrelated\n\nParties: Example Company 06 and Demo Partner 06.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-07-exact",
+      "group_id": "clause-07",
+      "split": "train",
+      "case": "exact",
+      "query": "All intellectual property rights remain with the customer.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-07-exact\n\nParties: Example Company 07 and Demo Partner 07.\n\nAll intellectual property rights remain with the customer.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 173
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-07-formatting",
+      "group_id": "clause-07",
+      "split": "train",
+      "case": "formatting",
+      "query": "All intellectual property rights remain with the customer.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-07-formatting\n\nParties: Example Company 07 and Demo Partner 07.\n\naLL INTELLECTUAL PROPERTY RIGHTS\nREMAIN WITH THE CUSTOMER.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 178
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-07-paraphrase",
+      "group_id": "clause-07",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "All intellectual property rights remain with the customer.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-07-paraphrase\n\nParties: Example Company 07 and Demo Partner 07.\n\nThe customer continues to own all intellectual property rights.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-07-counterexample",
+      "group_id": "clause-07",
+      "split": "train",
+      "case": "counterexample",
+      "query": "All intellectual property rights remain with the customer.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-07-counterexample\n\nParties: Example Company 07 and Demo Partner 07.\n\nAll intellectual property rights transfer to the contractor.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 184
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "ownership",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-07-unrelated",
+      "group_id": "clause-07",
+      "split": "train",
+      "case": "unrelated",
+      "query": "All intellectual property rights remain with the customer.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-07-unrelated\n\nParties: Example Company 07 and Demo Partner 07.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-08-exact",
+      "group_id": "clause-08",
+      "split": "train",
+      "case": "exact",
+      "query": "The supplier must obtain consent before appointing a subcontractor.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-08-exact\n\nParties: Example Company 08 and Demo Partner 08.\n\nThe supplier must obtain consent before appointing a subcontractor.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 182
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-08-formatting",
+      "group_id": "clause-08",
+      "split": "train",
+      "case": "formatting",
+      "query": "The supplier must obtain consent before appointing a subcontractor.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-08-formatting\n\nParties: Example Company 08 and Demo Partner 08.\n\ntHE SUPPLIER MUST OBTAIN CONSENT\nBEFORE APPOINTING A SUBCONTRACTOR.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 187
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-08-paraphrase",
+      "group_id": "clause-08",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The supplier must obtain consent before appointing a subcontractor.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-08-paraphrase\n\nParties: Example Company 08 and Demo Partner 08.\n\nA subcontractor can only be appointed after the supplier receives approval.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 195
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-08-counterexample",
+      "group_id": "clause-08",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The supplier must obtain consent before appointing a subcontractor.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-08-counterexample\n\nParties: Example Company 08 and Demo Partner 08.\n\nThe supplier may appoint a subcontractor without consent.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 181
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "consent",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-08-unrelated",
+      "group_id": "clause-08",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The supplier must obtain consent before appointing a subcontractor.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-08-unrelated\n\nParties: Example Company 08 and Demo Partner 08.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-09-exact",
+      "group_id": "clause-09",
+      "split": "train",
+      "case": "exact",
+      "query": "The agreement is governed by the laws of England.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-09-exact\n\nParties: Example Company 09 and Demo Partner 09.\n\nThe agreement is governed by the laws of England.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 164
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-09-formatting",
+      "group_id": "clause-09",
+      "split": "train",
+      "case": "formatting",
+      "query": "The agreement is governed by the laws of England.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-09-formatting\n\nParties: Example Company 09 and Demo Partner 09.\n\ntHE AGREEMENT IS GOVERNED BY THE LAWS\nOF eNGLAND.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 169
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-09-paraphrase",
+      "group_id": "clause-09",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The agreement is governed by the laws of England.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-09-paraphrase\n\nParties: Example Company 09 and Demo Partner 09.\n\nEnglish law applies to this agreement.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 158
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-09-counterexample",
+      "group_id": "clause-09",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The agreement is governed by the laws of England.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-09-counterexample\n\nParties: Example Company 09 and Demo Partner 09.\n\nThe agreement is governed by the laws of Germany.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 173
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "jurisdiction",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-09-unrelated",
+      "group_id": "clause-09",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The agreement is governed by the laws of England.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-09-unrelated\n\nParties: Example Company 09 and Demo Partner 09.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-10-exact",
+      "group_id": "clause-10",
+      "split": "train",
+      "case": "exact",
+      "query": "The customer may audit the service once per year.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-10-exact\n\nParties: Example Company 10 and Demo Partner 10.\n\nThe customer may audit the service once per year.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 164
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-10-formatting",
+      "group_id": "clause-10",
+      "split": "train",
+      "case": "formatting",
+      "query": "The customer may audit the service once per year.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-10-formatting\n\nParties: Example Company 10 and Demo Partner 10.\n\ntHE CUSTOMER MAY AUDIT THE SERVICE\nONCE PER YEAR.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 169
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-10-paraphrase",
+      "group_id": "clause-10",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The customer may audit the service once per year.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-10-paraphrase\n\nParties: Example Company 10 and Demo Partner 10.\n\nAn annual audit of the service may be carried out by the customer.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 186
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-10-counterexample",
+      "group_id": "clause-10",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The customer may audit the service once per year.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-10-counterexample\n\nParties: Example Company 10 and Demo Partner 10.\n\nThe customer may not audit the service.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 163
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "negation",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-10-unrelated",
+      "group_id": "clause-10",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The customer may audit the service once per year.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-10-unrelated\n\nParties: Example Company 10 and Demo Partner 10.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-11-exact",
+      "group_id": "clause-11",
+      "split": "train",
+      "case": "exact",
+      "query": "The supplier shall notify the customer of a breach within 24 hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-11-exact\n\nParties: Example Company 11 and Demo Partner 11.\n\nThe supplier shall notify the customer of a breach within 24 hours.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 182
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-11-formatting",
+      "group_id": "clause-11",
+      "split": "train",
+      "case": "formatting",
+      "query": "The supplier shall notify the customer of a breach within 24 hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-11-formatting\n\nParties: Example Company 11 and Demo Partner 11.\n\ntHE SUPPLIER SHALL NOTIFY THE CUSTOMER\nOF A BREACH WITHIN 24 HOURS.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 187
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-11-paraphrase",
+      "group_id": "clause-11",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The supplier shall notify the customer of a breach within 24 hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-11-paraphrase\n\nParties: Example Company 11 and Demo Partner 11.\n\nThe customer must be told about a breach by the supplier within one day.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 192
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-11-counterexample",
+      "group_id": "clause-11",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The supplier shall notify the customer of a breach within 24 hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-11-counterexample\n\nParties: Example Company 11 and Demo Partner 11.\n\nThe supplier shall notify the customer of a breach within 72 hours.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 191
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "deadline",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-11-unrelated",
+      "group_id": "clause-11",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The supplier shall notify the customer of a breach within 24 hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-11-unrelated\n\nParties: Example Company 11 and Demo Partner 11.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-12-exact",
+      "group_id": "clause-12",
+      "split": "train",
+      "case": "exact",
+      "query": "Insurance coverage shall be at least 1,000,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-12-exact\n\nParties: Example Company 12 and Demo Partner 12.\n\nInsurance coverage shall be at least 1,000,000 euros.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 168
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-12-formatting",
+      "group_id": "clause-12",
+      "split": "train",
+      "case": "formatting",
+      "query": "Insurance coverage shall be at least 1,000,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-12-formatting\n\nParties: Example Company 12 and Demo Partner 12.\n\niNSURANCE COVERAGE SHALL BE AT LEAST\n1,000,000 EUROS.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 173
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-12-paraphrase",
+      "group_id": "clause-12",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "Insurance coverage shall be at least 1,000,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-12-paraphrase\n\nParties: Example Company 12 and Demo Partner 12.\n\nThe insured amount must be one million euros or more.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 173
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-12-counterexample",
+      "group_id": "clause-12",
+      "split": "train",
+      "case": "counterexample",
+      "query": "Insurance coverage shall be at least 1,000,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-12-counterexample\n\nParties: Example Company 12 and Demo Partner 12.\n\nInsurance coverage shall be at least 100,000 euros.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 175
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "amount",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-12-unrelated",
+      "group_id": "clause-12",
+      "split": "train",
+      "case": "unrelated",
+      "query": "Insurance coverage shall be at least 1,000,000 euros.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-12-unrelated\n\nParties: Example Company 12 and Demo Partner 12.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-13-exact",
+      "group_id": "clause-13",
+      "split": "train",
+      "case": "exact",
+      "query": "The warranty period is twelve months from delivery.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-13-exact\n\nParties: Example Company 13 and Demo Partner 13.\n\nThe warranty period is twelve months from delivery.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 166
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-13-formatting",
+      "group_id": "clause-13",
+      "split": "train",
+      "case": "formatting",
+      "query": "The warranty period is twelve months from delivery.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-13-formatting\n\nParties: Example Company 13 and Demo Partner 13.\n\ntHE WARRANTY PERIOD IS TWELVE MONTHS\nFROM DELIVERY.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 171
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-13-paraphrase",
+      "group_id": "clause-13",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "The warranty period is twelve months from delivery.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-13-paraphrase\n\nParties: Example Company 13 and Demo Partner 13.\n\nThe delivered goods carry a warranty lasting twelve months.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 179
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-13-counterexample",
+      "group_id": "clause-13",
+      "split": "train",
+      "case": "counterexample",
+      "query": "The warranty period is twelve months from delivery.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-13-counterexample\n\nParties: Example Company 13 and Demo Partner 13.\n\nThe warranty period is two months from delivery.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 172
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "duration",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-13-unrelated",
+      "group_id": "clause-13",
+      "split": "train",
+      "case": "unrelated",
+      "query": "The warranty period is twelve months from delivery.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-13-unrelated\n\nParties: Example Company 13 and Demo Partner 13.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-14-exact",
+      "group_id": "clause-14",
+      "split": "train",
+      "case": "exact",
+      "query": "Expenses require prior written approval.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-14-exact\n\nParties: Example Company 14 and Demo Partner 14.\n\nExpenses require prior written approval.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 155
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-14-formatting",
+      "group_id": "clause-14",
+      "split": "train",
+      "case": "formatting",
+      "query": "Expenses require prior written approval.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-14-formatting\n\nParties: Example Company 14 and Demo Partner 14.\n\neXPENSES REQUIRE PRIOR WRITTEN\nAPPROVAL.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 160
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-14-paraphrase",
+      "group_id": "clause-14",
+      "split": "train",
+      "case": "paraphrase",
+      "query": "Expenses require prior written approval.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-14-paraphrase\n\nParties: Example Company 14 and Demo Partner 14.\n\nWritten permission must be obtained before incurring expenses.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 182
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-14-counterexample",
+      "group_id": "clause-14",
+      "split": "train",
+      "case": "counterexample",
+      "query": "Expenses require prior written approval.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-14-counterexample\n\nParties: Example Company 14 and Demo Partner 14.\n\nExpenses do not require prior written approval.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 171
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "negation",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-14-unrelated",
+      "group_id": "clause-14",
+      "split": "train",
+      "case": "unrelated",
+      "query": "Expenses require prior written approval.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-14-unrelated\n\nParties: Example Company 14 and Demo Partner 14.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-15-exact",
+      "group_id": "clause-15",
+      "split": "dev",
+      "case": "exact",
+      "query": "Service credits are capped at ten percent of the monthly fee.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-15-exact\n\nParties: Example Company 15 and Demo Partner 15.\n\nService credits are capped at ten percent of the monthly fee.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 176
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-15-formatting",
+      "group_id": "clause-15",
+      "split": "dev",
+      "case": "formatting",
+      "query": "Service credits are capped at ten percent of the monthly fee.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-15-formatting\n\nParties: Example Company 15 and Demo Partner 15.\n\nsERVICE CREDITS ARE CAPPED AT TEN\nPERCENT OF THE MONTHLY FEE.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 181
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-15-paraphrase",
+      "group_id": "clause-15",
+      "split": "dev",
+      "case": "paraphrase",
+      "query": "Service credits are capped at ten percent of the monthly fee.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-15-paraphrase\n\nParties: Example Company 15 and Demo Partner 15.\n\nCredits for service failures cannot exceed a tenth of the monthly charge.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 193
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-15-counterexample",
+      "group_id": "clause-15",
+      "split": "dev",
+      "case": "counterexample",
+      "query": "Service credits are capped at ten percent of the monthly fee.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-15-counterexample\n\nParties: Example Company 15 and Demo Partner 15.\n\nService credits are capped at fifty percent of the monthly fee.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 187
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "amount",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-15-unrelated",
+      "group_id": "clause-15",
+      "split": "dev",
+      "case": "unrelated",
+      "query": "Service credits are capped at ten percent of the monthly fee.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-15-unrelated\n\nParties: Example Company 15 and Demo Partner 15.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-16-exact",
+      "group_id": "clause-16",
+      "split": "dev",
+      "case": "exact",
+      "query": "All disputes shall be resolved by arbitration.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-16-exact\n\nParties: Example Company 16 and Demo Partner 16.\n\nAll disputes shall be resolved by arbitration.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 161
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-16-formatting",
+      "group_id": "clause-16",
+      "split": "dev",
+      "case": "formatting",
+      "query": "All disputes shall be resolved by arbitration.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-16-formatting\n\nParties: Example Company 16 and Demo Partner 16.\n\naLL DISPUTES SHALL BE RESOLVED BY\nARBITRATION.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 166
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-16-paraphrase",
+      "group_id": "clause-16",
+      "split": "dev",
+      "case": "paraphrase",
+      "query": "All disputes shall be resolved by arbitration.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-16-paraphrase\n\nParties: Example Company 16 and Demo Partner 16.\n\nDisagreements under this contract must be settled through arbitration.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 190
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-16-counterexample",
+      "group_id": "clause-16",
+      "split": "dev",
+      "case": "counterexample",
+      "query": "All disputes shall be resolved by arbitration.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-16-counterexample\n\nParties: Example Company 16 and Demo Partner 16.\n\nAll disputes shall be resolved by the ordinary courts.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 178
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "procedure",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-16-unrelated",
+      "group_id": "clause-16",
+      "split": "dev",
+      "case": "unrelated",
+      "query": "All disputes shall be resolved by arbitration.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-16-unrelated\n\nParties: Example Company 16 and Demo Partner 16.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-17-exact",
+      "group_id": "clause-17",
+      "split": "dev",
+      "case": "exact",
+      "query": "The customer owns all equipment supplied under this agreement.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-17-exact\n\nParties: Example Company 17 and Demo Partner 17.\n\nThe customer owns all equipment supplied under this agreement.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 177
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-17-formatting",
+      "group_id": "clause-17",
+      "split": "dev",
+      "case": "formatting",
+      "query": "The customer owns all equipment supplied under this agreement.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-17-formatting\n\nParties: Example Company 17 and Demo Partner 17.\n\ntHE CUSTOMER OWNS ALL EQUIPMENT\nSUPPLIED UNDER THIS AGREEMENT.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 182
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-17-paraphrase",
+      "group_id": "clause-17",
+      "split": "dev",
+      "case": "paraphrase",
+      "query": "The customer owns all equipment supplied under this agreement.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-17-paraphrase\n\nParties: Example Company 17 and Demo Partner 17.\n\nOwnership of all equipment provided under the agreement belongs to the customer.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 200
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-17-counterexample",
+      "group_id": "clause-17",
+      "split": "dev",
+      "case": "counterexample",
+      "query": "The customer owns all equipment supplied under this agreement.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-17-counterexample\n\nParties: Example Company 17 and Demo Partner 17.\n\nThe supplier owns all equipment supplied under this agreement.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 186
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "ownership",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-17-unrelated",
+      "group_id": "clause-17",
+      "split": "dev",
+      "case": "unrelated",
+      "query": "The customer owns all equipment supplied under this agreement.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-17-unrelated\n\nParties: Example Company 17 and Demo Partner 17.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-18-exact",
+      "group_id": "clause-18",
+      "split": "dev",
+      "case": "exact",
+      "query": "Assignment of this agreement requires the other party's consent.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-18-exact\n\nParties: Example Company 18 and Demo Partner 18.\n\nAssignment of this agreement requires the other party's consent.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 179
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-18-formatting",
+      "group_id": "clause-18",
+      "split": "dev",
+      "case": "formatting",
+      "query": "Assignment of this agreement requires the other party's consent.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-18-formatting\n\nParties: Example Company 18 and Demo Partner 18.\n\naSSIGNMENT OF THIS AGREEMENT REQUIRES\nTHE OTHER PARTY'S CONSENT.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 184
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-18-paraphrase",
+      "group_id": "clause-18",
+      "split": "dev",
+      "case": "paraphrase",
+      "query": "Assignment of this agreement requires the other party's consent.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-18-paraphrase\n\nParties: Example Company 18 and Demo Partner 18.\n\nA party must obtain the other's permission before transferring the agreement.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 197
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-18-counterexample",
+      "group_id": "clause-18",
+      "split": "dev",
+      "case": "counterexample",
+      "query": "Assignment of this agreement requires the other party's consent.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-18-counterexample\n\nParties: Example Company 18 and Demo Partner 18.\n\nAssignment of this agreement does not require the other party's consent.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 196
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "negation",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-18-unrelated",
+      "group_id": "clause-18",
+      "split": "dev",
+      "case": "unrelated",
+      "query": "Assignment of this agreement requires the other party's consent.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-18-unrelated\n\nParties: Example Company 18 and Demo Partner 18.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 2
+    },
+    {
+      "id": "clause-19-exact",
+      "group_id": "clause-19",
+      "split": "test",
+      "case": "exact",
+      "query": "The contractor shall provide support during business hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-19-exact\n\nParties: Example Company 19 and Demo Partner 19.\n\nThe contractor shall provide support during business hours.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 174
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-19-formatting",
+      "group_id": "clause-19",
+      "split": "test",
+      "case": "formatting",
+      "query": "The contractor shall provide support during business hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-19-formatting\n\nParties: Example Company 19 and Demo Partner 19.\n\ntHE CONTRACTOR SHALL PROVIDE SUPPORT\nDURING BUSINESS HOURS.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 179
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-19-paraphrase",
+      "group_id": "clause-19",
+      "split": "test",
+      "case": "paraphrase",
+      "query": "The contractor shall provide support during business hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-19-paraphrase\n\nParties: Example Company 19 and Demo Partner 19.\n\nSupport from the contractor is available within normal working hours.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 189
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-19-counterexample",
+      "group_id": "clause-19",
+      "split": "test",
+      "case": "counterexample",
+      "query": "The contractor shall provide support during business hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-19-counterexample\n\nParties: Example Company 19 and Demo Partner 19.\n\nThe contractor shall provide support only outside business hours.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 189
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "time_scope",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-19-unrelated",
+      "group_id": "clause-19",
+      "split": "test",
+      "case": "unrelated",
+      "query": "The contractor shall provide support during business hours.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-19-unrelated\n\nParties: Example Company 19 and Demo Partner 19.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 0
+    },
+    {
+      "id": "clause-20-exact",
+      "group_id": "clause-20",
+      "split": "test",
+      "case": "exact",
+      "query": "The supplier shall maintain backups for thirty days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-20-exact\n\nParties: Example Company 20 and Demo Partner 20.\n\nThe supplier shall maintain backups for thirty days.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 115,
+        "end": 167
+      },
+      "expected_raw_literal": true,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-20-formatting",
+      "group_id": "clause-20",
+      "split": "test",
+      "case": "formatting",
+      "query": "The supplier shall maintain backups for thirty days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-20-formatting\n\nParties: Example Company 20 and Demo Partner 20.\n\ntHE SUPPLIER SHALL MAINTAIN BACKUPS\nFOR THIRTY DAYS.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 172
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": true,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-20-paraphrase",
+      "group_id": "clause-20",
+      "split": "test",
+      "case": "paraphrase",
+      "query": "The supplier shall maintain backups for thirty days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-20-paraphrase\n\nParties: Example Company 20 and Demo Partner 20.\n\nBackup copies must be kept by the supplier for thirty days.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 120,
+        "end": 179
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": true,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-20-counterexample",
+      "group_id": "clause-20",
+      "split": "test",
+      "case": "counterexample",
+      "query": "The supplier shall maintain backups for thirty days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-20-counterexample\n\nParties: Example Company 20 and Demo Partner 20.\n\nThe supplier shall maintain backups for three days.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 124,
+        "end": 175
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": "duration",
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    },
+    {
+      "id": "clause-20-unrelated",
+      "group_id": "clause-20",
+      "split": "test",
+      "case": "unrelated",
+      "query": "The supplier shall maintain backups for thirty days.",
+      "text": "SYNTHETIC CONTRACT - FONT SIMULATION\nReference: clause-20-unrelated\n\nParties: Example Company 20 and Demo Partner 20.\n\nRoutine correspondence is sent to the registered office address.\n\nThis fictional short agreement is for software evaluation only.",
+      "relevant_span": {
+        "start": 119,
+        "end": 183
+      },
+      "expected_raw_literal": false,
+      "expected_normalized_literal": false,
+      "intended_semantic_match": false,
+      "semantic_label_basis": "author-written test intent, not a legal equivalence ruling",
+      "difference": null,
+      "source": "original TrayStack evaluation clauses; no source corpus text copied",
+      "font_index": 1
+    }
+  ]
+}

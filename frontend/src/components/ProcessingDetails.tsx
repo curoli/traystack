@@ -270,7 +270,11 @@ export default function ProcessingDetails({
                   ? "Tesseract OCR"
                   : page.extraction_method === "embedded_pdf_text"
                     ? "Embedded PDF text"
-                    : "Extraction unavailable"}
+                    : page.extraction_method === "plain_text"
+                      ? "UTF-8 text · logical page, not a physical source page"
+                      : page.extraction_method === "html_text"
+                        ? "HTML text · logical page, not a physical source page"
+                        : "Extraction unavailable"}
                 {page.confidence !== null &&
                   ` · Mean OCR word score: ${page.confidence.toFixed(1)}/100 (not a probability)`}
               </p>
