@@ -96,6 +96,22 @@ test("real full-text search separates negative and unverifiable results and open
   await expect(viewer).toBeInViewport();
   await expect(viewer.locator("pre")).toContainText("shall not disclose");
 
+  // Reopening the same result must finish at the viewer even with text cached.
+  for (let reopen = 0; reopen < 2; reopen++) {
+    const textResponse = page.waitForResponse(
+      (response) =>
+        response
+          .url()
+          .includes(`/revisions/${positive.revisions[0].id}/text`) &&
+        response.status() === 200,
+    );
+    await card.getByRole("button", { name: "Seite 1 ansehen" }).click();
+    await textResponse;
+    await expect(viewer).toBeFocused();
+    await expect(viewer).toBeInViewport();
+    await expect(viewer.locator("pre")).toContainText("shall not disclose");
+  }
+
   await page.getByLabel("Gesuchte Dokumente").selectOption("lacks");
   await page.getByRole("button", { name: "Suche ausführen" }).click();
   await expect(hits).toContainText(negative.title);

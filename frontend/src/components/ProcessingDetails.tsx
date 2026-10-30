@@ -35,6 +35,9 @@ export default function ProcessingDetails({
   const [text, setText] = useState<TextContent | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [textBusy, setTextBusy] = useState(false);
+  const [loadedPageRequest, setLoadedPageRequest] = useState<number | null>(
+    null,
+  );
   const viewerRef = useRef<HTMLElement>(null);
   const index = revision.text_index;
   const latest = revision.jobs[0];
@@ -72,6 +75,7 @@ export default function ProcessingDetails({
         } else {
           setText(content);
           setPageNumber(requestedPage.pageNumber);
+          setLoadedPageRequest(requestedPage.requestId);
         }
       })
       .catch((error) => {
@@ -89,8 +93,11 @@ export default function ProcessingDetails({
   }, [requestedPage, revision.id, index?.processing_job_id]);
 
   useEffect(() => {
+    // App first navigates to the document heading. Only the completed page
+    // request may move focus onward, including when the same run is reopened.
     if (
       !requestedPage ||
+      loadedPageRequest !== requestedPage.requestId ||
       text?.processing_job_id !== requestedPage.processingJobId
     )
       return;
@@ -101,7 +108,7 @@ export default function ProcessingDetails({
         ? "auto"
         : "smooth",
     });
-  }, [requestedPage, text?.processing_job_id]);
+  }, [requestedPage, loadedPageRequest, text?.processing_job_id]);
 
   async function submit(retryId?: string) {
     setError("");
