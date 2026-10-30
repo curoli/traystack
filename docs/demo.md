@@ -1,4 +1,53 @@
-# Demo und Prüfstand — Meilenstein 3
+# Demo und Prüfstand — Meilenstein 4
+
+## Frischer Prüf-Stack
+
+Vom Repository-Stamm aus; Docker/Compose v2 und Python 3.12+ vorausgesetzt.
+Ein eigener Compose-Projektname und eigene Ports trennen die Demo vom normalen
+Stack. Beim ersten Aufruf entstehen neue Datenvolumes. Der Build braucht Zugriff
+auf Image-/Paketregistries, die laufende Anwendung keine externen Dienste.
+
+```sh
+WEB_PORT=18080 API_PORT=18000 docker compose -p traystack-m4-review up -d --build --wait
+python3 scripts/demo_smoke.py --base-url http://localhost:18080
+```
+
+<http://localhost:18080> öffnen. Das Skript zeigt einen Laufbezeichner wie
+`Demo 02aa7981`; die vier Dokumenttitel beginnen damit. Es prüft tatsächliche
+Uploads, bytegleiche Originaldownloads, Worker/OCR, JSON-/Markdown-Abruf sowie
+A/P als Treffer, D als negativ und E als unverifizierbar. Vorhandene Trefferlisten
+werden vollständig paginiert. Pro Aufruf entstehen vier weitere Dokumente.
+Die Skriptprüfung ersetzt nicht die Browserprüfungen für Fokus und Bedienung.
+
+Browserprüfungen gegen genau diesen Stack:
+
+```sh
+TRAYSTACK_BASE_URL=http://localhost:18080 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome npm run test:e2e --prefix frontend
+```
+
+Alternativ Playwright-Chromium wie in der README installieren und
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` weglassen. Die Browserprüfungen legen weitere
+synthetische Dokumente an. Für eine kurze Präsentation die Demo vor diesen Tests
+vorbereiten oder einen weiteren eigenen Compose-Projektnamen mit freien Ports
+verwenden. Den Prüf-Stack anschließend stoppen, Daten bleiben erhalten:
+
+```sh
+docker compose -p traystack-m4-review down
+```
+
+Kein `down -v` auf dem regulären Stack verwenden, um eine Demo aufzuräumen.
+Für einen weiteren Start aus leerem Zustand einen bisher unbenutzten Projektnamen
+wählen. Wiederverwendung desselben Projektnamens verwendet vorhandene Volumes.
+
+## Vorführung und Ersatzablauf
+
+Den [18-Minuten-Leitfaden](presentation.md) mit einer sechsminütigen Live-Demo
+verwenden. Die vier Beispiele vorher verarbeiten, eine Neuverarbeitung von A
+kann live gezeigt werden. Die Zielpassage steht unten und im Fixture-Manifest.
+Ist der Stack nicht verfügbar, anhand der Architektur und des dokumentierten
+Prüfstands erklären, was geprüft wurde; keine Screenshots als laufende Verarbeitung
+ausgeben. Bei Workerproblemen Jobstatus/Fehler und den Wiederherstellungsablauf
+der README zeigen. Fehlgeschlagene oder unsichere Dokumente bleiben prüfbedürftig.
 
 ## Reproduzierbarer Ablauf
 
@@ -99,21 +148,28 @@ Lease-Übernahmen implementiert. Mehrbild-/animierte Bilddateien werden bei der
 Verarbeitung explizit abgelehnt, statt nur das erste Bild als vollständigen Inhalt
 zu behandeln. Leere Seiten werden vorsichtshalber zur Prüfung markiert.
 
-## Tatsächlich geprüft am 29.10.2026
+## Tatsächlich geprüft am 30.10.2026
 
-- Beide Migrationen auf einer frischen PostgreSQL-17-Testdatenbank sowie Upgrade
-  des laufenden Meilenstein-1-Stacks mit erhaltenen Originalen: erfolgreich.
+- Getrennter Compose-Stack `traystack-m4-review` mit neuen PostgreSQL-/Blob-Volumes:
+  Build, beide Migrationen und gesunder Start erfolgreich. Der reguläre Datenbestand
+  wurde dafür nicht gelöscht. Zusätzlich alle Backendtests auf der separaten,
+  flüchtigen PostgreSQL-17-Testdatenbank ausgeführt.
+- `scripts/demo_smoke.py` gegen den frischen Stack: alle vier Uploads, Originalbytes,
+  reale Extraktion/OCR, Ableitungen und erwartete Suchklassifikation erfolgreich.
+  Kein Azure-/SharePoint-Aufruf und keine Handschriftevaluation durchgeführt.
 - 102 Backendtests: bestanden, keine übersprungenen Tests. Darunter echte OCR,
   gemischte/Inline-PDFs, Worker-Claims und atomare Veröffentlichung sowie Volltext-
   suche, neueste Revisionen, getrennte Negativ-/Unverifizierbar-Pagination,
   Unicode-Fundstellen und ein Snapshot-Test bei gleichzeitiger Neuverarbeitung.
 - Neun Chrome-/Playwright-Szenarien: Upload/Download, echte Verarbeitung, Navigation
   auf Desktop/Mobil, positive/negative Suche mit separaten unverifizierbaren
-  Dokumenten, Seitensprung, veraltete Fundstellen und API-Explorer ohne CDN.
+  Dokumenten, Seitensprung einschließlich wiederholtem Öffnen derselben Fundstelle,
+  veraltete Fundstellen und API-Explorer ohne CDN.
   Ein isolierter Renderer-Test prüft Unicode-Codepoint-Hervorhebung; die übrigen
   Abläufe verwenden den echten Compose-Stack.
 - TypeScript-Prüfung, Vite-Produktionsbuild, Ruff, Prettier und `git diff --check`:
-  bestanden. Der ORM-/Migrationsabgleich meldet keine Schemaabweichung.
+  bestanden. `docker compose -p traystack-m4-review exec -T api alembic check`
+  meldet keine Schemaabweichung. `pip check` meldet keine defekten Abhängigkeiten.
 
 Die installierte Starlette-Version meldet weiterhin eine Deprecation-Warnung für
 HTTPX im Testclient. Die Tests laufen erfolgreich; diese Warnung betrifft nicht

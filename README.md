@@ -1,12 +1,14 @@
 # TrayStack
 
-Lokaler Prototyp für nachvollziehbare Vertragsablage und spätere Textsuche.
-**Meilensteine 1–3 sind umgesetzt:** PDF/JPEG/PNG hochladen, Originalbytes
+Lokaler Prototyp für nachvollziehbare Vertragsablage und Volltextsuche.
+**Meilensteine 1–4 sind umgesetzt:** PDF/JPEG/PNG hochladen, Originalbytes
 herunterladen und Dokumente im Hintergrund auslesen. Ein eigener Worker erzeugt
 Seitentext, strukturierte JSON-Daten und Markdown. Oberfläche und API zeigen
 Jobstatus, Seitenabdeckung, Qualitätswarnungen und die Herkunft des ausgewählten
 Textes. Exakte und normalisierte Volltextsuche liefern Fundstellen, negative
 Ergebnisse im vollständig verarbeiteten Text und getrennte unverifizierbare Dokumente.
+Eine [18-Minuten-Präsentation](docs/presentation.md) mit Demo, vorgeschlagener
+Azure-Architektur, Microsoft-Vergleich und Nutzerpilot ergänzt den lokalen Core.
 
 ## Start
 
@@ -57,8 +59,22 @@ sind ausschließlich lokale Demo-Standardwerte.
     wechseln. Die Prüfgruppe der Suche bleibt separat; Treffer öffnen die Quellseite.
 
 Die [Demo-Dateien](examples/synthetic-contracts/README.md) sind synthetisch. Ihre
-Hashwerte und späteren Sucherwartungen stehen im Manifest. Es gibt keine
+Hashwerte und Sucherwartungen stehen im Manifest. Es gibt keine
 vorgetäuschten Extraktions- oder Suchergebnisse.
+
+Die vier Beispiele lassen sich auch automatisch über die echte API prüfen und
+für die Präsentation vorbereiten (Python 3.12+, keine zusätzlichen Pakete):
+
+```sh
+python3 scripts/demo_smoke.py
+```
+
+Das Skript legt pro Aufruf vier neue synthetische Dokumente an, prüft
+Originalbytes, echte Verarbeitung, Ableitungen und Suchergebnisse. Es löscht keine
+Daten. Es erwartet einen laufenden Worker und meldet bei Fehlern einen Exit-Code
+ungleich null. Bereits angelegte Dokumente bleiben bei Abbruch erhalten.
+Den [isolierten Demo-Aufbau](docs/demo.md#frischer-prüf-stack) verwenden, um
+Präsentation und Tests vom bisherigen Datenbestand zu trennen.
 
 ## Entwicklung und Checks
 
@@ -132,9 +148,12 @@ React/TypeScript zeigt ausschließlich Daten der API; Nginx liefert den gebauten
 Client und leitet API-Aufrufe weiter.
 
 [Architektur](docs/architecture.md), [Entscheidungen](docs/decisions.md) und
-[Demo/Prüfstand](docs/demo.md) beschreiben den aktuellen Stand. Die
-[Implementierungsanleitung](TrayStack_Codex_Instructions.md) enthält den weiteren
-Plan: Demo/Präsentation; Fuzzy-Suche bleibt eine spätere Erweiterung.
+[Demo/Prüfstand](docs/demo.md) beschreiben den aktuellen Stand.
+[Präsentation](docs/presentation.md) und [Produktionskonzept](docs/production.md)
+trennen gelieferte Funktionen von Azure-Vorschlag, Technologieevaluation und Pilot.
+Die [Implementierungsanleitung](TrayStack_Codex_Instructions.md) enthält den
+weiteren Plan: Fuzzy-Suche und komfortable Revisionsverwaltung sind optionale
+Erweiterungen nach dem abgeschlossenen Core.
 Der [Suchvertrag](docs/search.md) erklärt Literalität, Qualität, Pagination,
 Seitenoffsets und konsistente Momentaufnahmen.
 
