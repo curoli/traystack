@@ -1,4 +1,7 @@
-# Architektur — Meilensteine 1–3
+# Architektur — lokaler Core (Meilensteine 1–4)
+
+Dies ist die implementierte lokale Architektur. Die vorgeschlagene Azure-Zuordnung,
+Rechteübernahme und Microsoft-Alternativen stehen im [Produktionskonzept](production.md).
 
 ```mermaid
 flowchart LR

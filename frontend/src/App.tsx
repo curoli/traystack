@@ -175,7 +175,7 @@ export default function App() {
         <a className="brand" href="/" aria-label="TrayStack Startseite">
           <span className="brand-mark">T</span>TrayStack
         </a>
-        <span className="environment">Lokale Demo · Meilenstein 3</span>
+        <span className="environment">Lokale Demo</span>
         <a className="api-link" href="/docs" target="_blank" rel="noreferrer">
           API-Dokumentation ↗
         </a>

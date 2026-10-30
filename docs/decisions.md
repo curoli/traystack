@@ -1,5 +1,10 @@
 # Entscheidungen
 
+- **Abgeschlossener lokaler Core:** Meilenstein 4 ergänzt eine ausführbare
+  Demo-Prüfung und einen Präsentations-/Einführungsplan. Azure, SharePoint,
+  Handschriftevaluation und Nutzerpilot bleiben ausgewiesene Vorschläge.
+  Der [Produktionsentwurf](production.md) vergleicht Microsoft-Alternativen;
+  weder ein Suchcluster noch ein Cloud-/LLM-Dienst wird dafür zur Laufzeit eingeführt.
 - **Schmaler erster Durchstich:** Ein kombinierter Upload legt Dokument, Revision 1
   und Original an. Weitere Revisionen und Repräsentationen bleiben im Datenmodell
   möglich; ihre Schreib-APIs und komfortable Verwaltung folgen später.
