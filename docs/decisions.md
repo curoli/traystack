@@ -62,3 +62,10 @@
   kein Ranking über Textsegmente. Alle Offsets nennen ihren Roh-/Normaltextbezug
   und sind Unicode-Codepoints. Seiten und Originale sind aufrufbar; geänderte
   ausgewählte Läufe lösen einen Hinweis zur erneuten Suche aus.
+
+- **Suchsteuerung vor Semantik:** Textuelle Schwelle 0 wird abgelehnt. Ein gemeinsam
+  verwendetes Query-Assessment erklärt längenabhängige Edit-Budgets und einfache
+  Risikohinweise, ohne einen statistisch sicheren Mindestwert zu behaupten.
+  Fundstellenanzahl/-dichte und Ressourcenbudgets können einen Lauf abbrechen;
+  dann wird keine Teilmenge als fertiges Suchergebnis ausgegeben. Die Oberfläche
+  verändert keine Schwelle automatisch und kann auf das offene Dokument eingrenzen.

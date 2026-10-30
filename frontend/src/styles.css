@@ -790,3 +790,8 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+.textual-search-panel .checkbox > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

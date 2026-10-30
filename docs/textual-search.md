@@ -8,7 +8,10 @@ scores, embeddings or review decisions yet. It never establishes clause absence.
 
 1. Choose **Similar passages**, enter a text passage and select **Normalized** or
    **Exact** comparison mode.
-2. Set **Minimum textual match**, from 0 to 100, and choose **Find passages**.
+2. Set **Minimum textual match** to a value greater than 0 and at most 100.
+   Inspect the expression-specific guidance, then choose **Find passages**.
+   To narrow the scope, open a document in the library and enable
+   **Search only the open document**.
 3. Inspect results grouped by document, ordered by each document's best score.
    Each occurrence shows its score, surrounding text, page references, original
    download and a side-by-side comparison with changed words/punctuation marked.
@@ -40,10 +43,11 @@ implements the distance locally; there is no network model call.
   Exact mode preserves the source string; normalized mode uses the same versioned
   NFC/whitespace/casefold rules as the existing literal search. It preserves
   digits, punctuation, hyphens and negations.
-- **0** disables the score filter: every nonempty supported selected text has a
-  candidate, even when it is unrelated. Documents without searchable text still
-  cannot produce an invented passage.
-- **1–99** is a minimum character-similarity score, not confidence, a probability,
+- **0 is rejected**, in both the UI and API. The textual filter cannot be disabled.
+  Positive fractional scores are supported; there is no claimed universal safe
+  lower percentage. Query-dependent warnings and runtime limits constrain broad searches.
+- **Values greater than 0 and below 100** are minimum character-similarity scores,
+  not confidence, a probability,
   or semantic/legal equivalence. Identical phrases can also occur in negated or
   otherwise different surrounding contexts, so context and original remain relevant.
 - Filtering and ranking use the unrounded score. The API returns four decimal
@@ -53,12 +57,46 @@ implements the distance locally; there is no network model call.
   normalized comparison may differ in spelling/case from the original page view;
   no guessed normalized-to-raw character mapping is used.
 
+## Expression-specific guidance
+
 The initial input value 85 is a demonstration starting value, not an approved
-threshold. Inputs below 70 warn about unrelated candidates, 0 explicitly warns
-that filtering is disabled, and effective queries shorter than eight characters
-warn about limited context. These are usability heuristics, not calibrated error
-rates. Each approximate match also cautions that names, amounts, deadlines or
-negations may have changed even at a high score.
+threshold. A debounced `POST /api/search/textual/assess` call evaluates the current
+query, mode and positive threshold without searching the collection or writing
+anything. The actual search repeats exactly the same assessment; submitted
+criteria have their own immutable guidance in the result snapshot. Old assessment
+requests are discarded when the expression changes.
+
+The versioned `query-risk-v1` assessment reports the effective comparison string,
+comparison length, alphanumeric content length, word-chunk count and an
+**equal-length edit illustration**:
+
+```text
+floor(comparison length × (100 − minimum score) / 100)
+```
+
+For example, 80% permits two edits in a ten-character equal-length passage and
+twenty in a hundred-character passage. This is not a universal edit limit:
+longer/shorter candidate passages can permit a different number of edits. Decimal
+arithmetic keeps the illustration accurate, including very small positive scores.
+
+The heuristics warn about:
+
+- Fewer than eight alphanumeric characters, including at exact score 100.
+- Short expressions with fewer than twelve letters/digits when the threshold
+  permits an equal-length edit or a one-character insertion into a longer passage.
+- Expressions composed entirely of a small English/German common-word list;
+  none of those words is removed from matching.
+- Punctuation-only and predominantly numeric expressions (digits are at least
+  half the alphanumeric content).
+- Large illustrative edit budgets: at least three edits and either a threshold
+  below 75 or at least twenty permitted equal-length edits.
+- One-/two-word expressions with at least eight letters/digits and a score below 85.
+
+These are explicit usability heuristics, **not calibrated false-positive rates,
+a learned minimum threshold, or a guarantee of readable/legal matches**. Matching
+still uses every character under the selected mode. The app never silently raises
+the user's threshold. Each approximate match continues to caution about changed
+names, amounts, deadlines and negations even at high scores.
 
 ## Candidate and overlap policy
 
@@ -102,7 +140,7 @@ curl --fail http://localhost:8000/api/search/textual \
 |---|---|
 | `query` | 1–500 characters, nonblank, valid Unicode, no NUL |
 | `mode` | `exact` or `normalized` |
-| `minimum_score` | Finite number, inclusive range 0–100; default 85 |
+| `minimum_score` | Finite number, greater than 0 and at most 100; default 85 |
 | `scope` | `latest` only |
 | `document_id` | Optional UUID to search one document |
 | `limit`, `offset` | Document pagination, limit 1–25, default 10 |
@@ -110,11 +148,13 @@ curl --fail http://localhost:8000/api/search/textual \
 | `occurrence_offset` | Nonnegative; nonzero requires `document_id` |
 | `unsearchable_limit`, `unsearchable_offset` | Separate unavailable-document pagination, default limit 10, max 100 |
 
-Unknown fields, unsupported modes, negative/nonfinite thresholds and invalid
+Unknown fields, unsupported modes, zero/negative/nonfinite thresholds and invalid
 pagination return 422. There is no `lacks` relation here: use the unchanged
 `POST /api/search` contract for literal absence.
 
-The response reports global scope counts before pagination, documents with
+The response echoes `document_id` (or null for the whole collection), includes
+`assessment` and complete-result `result_warnings`, and reports global scope counts
+before pagination, documents with
 candidate occurrences and independently paged unsearchable documents. Each group
 contains source/revision/selected-job identity, coverage, quality/warnings, and
 its own occurrence count/offset/limit. Each occurrence includes:
@@ -143,18 +183,62 @@ All selected text is scanned in this prototype; it is streamed in small document
 batches, but retained matching text/candidates remain in memory for grouping and
 pagination. It has not been benchmarked as a production-scale search service.
 
-A request may inspect up to 20 million text code points, two million candidate
-windows and 100,000 retained per-start/literal candidate intervals (before overlap consolidation). If any
-work budget is exceeded, the **whole request fails with 422** and a visible error;
-there are no quietly truncated results or absence claims. Raising the threshold
-or using `document_id` can reduce work. Threshold 100 skips approximate windows.
-For larger imported collections, measure end-to-end latency and memory before
-choosing an index or further optimization. There is no database migration.
+There are separate **processing** and **review-breadth** limits. Processing limits
+remain 20 million text code points, two million candidate windows and 100,000
+per-start/literal intervals before overlap consolidation. Review-breadth limits
+count actual retained, non-overlapping passages:
 
-A one-shot local smoke check on 136 stored documents (75 searchable) measured
-about 84 ms at threshold 100, 240 ms at 85 and 473 ms at 0, including HTTP/JSON via
-Nginx. At 0, all 75 searchable documents qualified. This mixed demo/test collection
-is not a production benchmark and gives no percentile, concurrency or scale guarantee.
+| Condition | Prototype limit / behavior |
+|---|---|
+| Passages in one document | Stop when more than 250 qualify |
+| Passages across the selected documents | Stop when more than 2,500 qualify |
+| Dense approximate results | Below threshold 100, stop at 100 or more retained passages with density at least 20 per 1,000 full comparison-text characters |
+| Broad completed results | Warn at 500 total passages or 50 in one document; the result is complete if no stop limit was reached |
+
+These are review/workload policies for this prototype, not empirically calibrated
+legal-risk boundaries. Density is measured against the document's whole selected
+comparison text, not a local sliding window. Exact score 100 is exempt from density
+alone, but count and processing limits still apply. Pagination does not bypass limits.
+
+During literal scanning, non-overlapping exact occurrences already establish a
+lower bound on retained hits, so overflow stops before approximate comparisons.
+For approximate windows, the retained count is checked while overlap consolidation
+progresses, and against the completed counts from previous documents. Raw overlapping
+windows alone do not trigger the review-breadth limits; independent processing
+budgets still protect candidate generation.
+
+Every stop rejects the **whole request with HTTP 422**. It returns no successful
+summary, snippets or partial result list:
+
+```json
+{
+  "detail": {
+    "code": "textual_search_aborted",
+    "reason": "document_passage_limit",
+    "message": "Too many candidate passages in one document. Increase textual similarity or use a more specific expression.",
+    "resource": "retained_passages_in_document",
+    "limit": 250,
+    "observed_at_least": 251,
+    "documents_inspected": 1,
+    "results_complete": false
+  }
+}
+```
+
+Other reasons are `total_passage_limit`, `dense_passages` and `work_limit`.
+`observed_at_least` and `documents_inspected` are partial observations at stopping,
+not collection totals. The UI explains the reason/action, clears earlier search
+results even if stopping occurred during pagination, and preserves the entered
+threshold. Users can add context, raise the threshold themselves, or narrow to
+the open document. Submitted document scope is preserved during pagination even
+if the live form or open document changes.
+
+A stop is automatic server-side budget enforcement, **not a user-cancellable
+background-job system**. Successful searches still use the declared candidate
+policy rather than exhaustive approximate character-substring enumeration.
+The earlier filter-off/0 performance experiment is historical: 0 is no longer a
+supported API or UI value. Measure larger collections before adding an index;
+no database migration or runtime dependency was needed for these controls.
 
 ## Measured training evaluation
 
@@ -168,7 +252,7 @@ Add `--include-details` for every evaluated pair; the committed
 [training report](../examples/synthetic-handwriting/textual-evaluation-train.json)
 keeps aggregate counts plus missed-positive IDs and representative nonliteral
 candidates. It records the source-corpus and OCR-report hashes, RapidFuzz version,
-scorer and candidate policy. It compares 70 original training texts and the 45
+scorer and candidate policy. It now evaluates only positive thresholds. It compares 70 original training texts and the 45
 **actual OCR outputs already measured** in the earlier image evaluation. It does
 not rerun OCR or insert transcriptions into application text. Dev/test remain untouched.
 
@@ -188,15 +272,16 @@ a legal benchmark or a universal threshold recommendation.
 
 ## Verification
 
-On 30 October 2026, all 149 backend tests passed with PostgreSQL and real OCR,
-including upload → OCR → textual search, multiple occurrences, Unicode/empty-page
-spans, independent pagination, budget rejection, latest-revision/quality behavior,
-and concurrent publication during a consistent search snapshot. All 15 existing
-and new Playwright/Chrome scenarios passed; after the final candidate-memory
-optimization the two new textual workflows were rerun successfully. They cover
-context/diffs, submitted criteria, repeated page navigation, source-run changes,
-zero/exact thresholds, server warnings and mobile overflow.
+On 30 October 2026, all **164 backend tests** passed against isolated PostgreSQL
+with real OCR. New controls checks cover exact edit arithmetic, short/common/numeric
+expressions, normalization, positive fractional scores and rejection of 0,
+assessment/search agreement, early literal overflow, non-overlap counting, density,
+global overflow, narrow-scope echo and complete-result warnings. Aborts have no
+partial success fields and do not change the literal absence workflow.
 
-TypeScript/Vite, Ruff, Prettier, dependency consistency, local Markdown links and
-`git diff --check` were checked. The ORM/migration check found no schema changes.
-The known Starlette/HTTPX TestClient deprecation warning remains.
+All **17 Playwright/Chrome scenarios** passed, including real overflow at 251
+passages, refinement after an abort, blocked zero, real UI document scoping and
+exact mode. An isolated pagination-error test checks that an aborted occurrence
+request clears the old result snapshot. Successful workflows use the real stack.
+TypeScript/Vite, Ruff, Prettier, dependency consistency, Markdown links and
+`git diff --check` are checked. The known Starlette/HTTPX TestClient warning remains.

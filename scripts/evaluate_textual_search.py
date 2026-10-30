@@ -94,7 +94,7 @@ def main():
     measured = json.loads(args.ocr_report.read_text())
     if measured["split"] != "train":
         raise ValueError("This development evaluation uses training data only")
-    thresholds = [0, 50, 70, 80, 85, 90, 95, 100]
+    thresholds = [50, 70, 80, 85, 90, 95, 100]
     clean = [
         {
             "id": row["id"],

@@ -29,9 +29,14 @@ def test_character_score_and_full_text_literal_search():
     assert find_passages("prefixNEEDLEsuffix", "NEEDLE", 100, WorkBudget())[0].start == 6
 
 
-def test_zero_disables_filter_even_for_short_documents():
-    passages = find_passages("x", "A much longer query with many words", 0, WorkBudget())
-    assert len(passages) == 1 and passages[0].score < 10
+@pytest.mark.parametrize("minimum", [0, -1, float("nan"), float("inf")])
+def test_matcher_rejects_disabled_or_invalid_thresholds(minimum):
+    with pytest.raises(ValueError):
+        find_passages("x", "target", minimum, WorkBudget())
+
+
+def test_short_documents_can_still_match_at_a_positive_threshold():
+    assert find_passages("short", "short phrase", 30, WorkBudget())
     assert find_passages("x", "A much longer query with many words", 99, WorkBudget()) == []
 
 
@@ -134,6 +139,7 @@ def test_global_counts_independent_document_and_unsearchable_paging(client):
     "options",
     [
         {"minimum_score": -1},
+        {"minimum_score": 0},
         {"minimum_score": 101},
         {"minimum_score": "NaN"},
         {"minimum_score": "Infinity"},
@@ -154,12 +160,10 @@ def test_invalid_textual_requests(client, options):
 
 
 @pytest.mark.integration
-def test_zero_filter_unknown_scope_empty_library_and_low_threshold_warnings(client):
+def test_query_dependent_warnings_and_empty_library(client):
     assert search(client)["summary"]["documents_total"] == 0
-    indexed(client, "Unrelated", ["tiny"])
-    result = search(client, "A much longer query with several words", minimum_score=0)
-    assert result["total"] == 1 and "text_filter_disabled" in result["warnings"]
-    assert "low_text_threshold" in search(client, minimum_score=50)["warnings"]
+    result = search(client, "A much longer query with several words", minimum_score=50)
+    assert "large_edit_budget" in result["warnings"]
     assert "short_query" in search(client, "abc")["warnings"]
 
 
@@ -168,7 +172,9 @@ def test_work_budget_rejects_entire_search_instead_of_truncating(client, monkeyp
     indexed(client, "Target", ["confidential information"])
     monkeypatch.setattr(textual_search, "WorkBudget", lambda: WorkBudget(characters=1))
     result = client.post("/api/search/textual", json={"query": "confidential information"})
-    assert result.status_code == 422 and "too broad" in result.json()["detail"]
+    assert result.status_code == 422
+    assert result.json()["detail"]["reason"] == "work_limit"
+    assert result.json()["detail"]["results_complete"] is False
 
 
 @pytest.mark.integration
@@ -318,13 +324,13 @@ def test_real_image_ocr_is_used_for_textual_candidates_without_transcription(cli
     assert occurrence["page_numbers"] == [1]
 
 
-def test_zero_threshold_does_not_store_every_redundant_window():
+def test_permissive_threshold_does_not_store_every_redundant_window():
     content = " ".join(f"background{index}" for index in range(50))
     # Hundreds of overlapping windows, but only one best window per word start.
     passages = find_passages(
         content,
         "a query with several entirely different target words",
-        0,
+        1,
         WorkBudget(matches=100),
     )
     assert passages and all(0 <= item.score <= 100 for item in passages)

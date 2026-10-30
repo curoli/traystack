@@ -7,12 +7,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from traystack.search_schemas import SearchJobOut, SearchRequest
 
 
-class TextualSearchRequest(BaseModel):
+class TextualAssessmentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     query: str = Field(min_length=1, max_length=500)
     mode: Literal["exact", "normalized"] = "normalized"
-    minimum_score: float = Field(default=85, ge=0, le=100, allow_inf_nan=False)
+    minimum_score: float = Field(default=85, gt=0, le=100, allow_inf_nan=False)
+
+    @field_validator("query")
+    @classmethod
+    def valid_query(cls, value):
+        return SearchRequest.valid_query(value)
+
+
+class TextualSearchRequest(TextualAssessmentRequest):
     scope: Literal["latest"] = "latest"
     document_id: UUID | None = None
     limit: int = Field(default=10, ge=1, le=25)
@@ -21,11 +29,6 @@ class TextualSearchRequest(BaseModel):
     occurrence_offset: int = Field(default=0, ge=0)
     unsearchable_limit: int = Field(default=10, ge=1, le=100)
     unsearchable_offset: int = Field(default=0, ge=0)
-
-    @field_validator("query")
-    @classmethod
-    def valid_query(cls, value):
-        return SearchRequest.valid_query(value)
 
     @model_validator(mode="after")
     def occurrence_paging(self):
@@ -88,18 +91,36 @@ class TextualSummary(BaseModel):
     occurrences_total: int
 
 
+class QueryNotice(BaseModel):
+    code: str
+    message: str
+
+
+class TextualAssessment(BaseModel):
+    policy_version: str
+    effective_query: str
+    comparison_characters: int
+    content_characters: int
+    word_count: int
+    equal_length_edit_budget: int
+    warnings: list[QueryNotice]
+
+
 class TextualSearchResponse(BaseModel):
     query: str
     effective_query: str
     mode: Literal["exact", "normalized"]
     minimum_score: float
     scope: Literal["latest"] = "latest"
+    document_id: UUID | None = None
     searched_at: datetime
     scorer_version: str
     scorer_library_version: str
     candidate_policy: str
     offset_basis: Literal["plain_text", "normalized_text"]
     warnings: list[str]
+    assessment: TextualAssessment
+    result_warnings: list[QueryNotice]
     summary: TextualSummary
     results: list[TextualGroup]
     total: int

@@ -1,6 +1,11 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  ApiError,
+  assessTextual,
   artifactUrl,
+  type Document,
+  type SearchAbortDetails,
+  type TextualAssessment,
   searchTextual,
   type SearchTarget,
   type TextualDocument,
@@ -12,23 +17,63 @@ import { formatDate } from "../format";
 import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
 import { searchWarnings } from "./SearchPanel";
 
-const riskWarnings: Record<string, string> = {
-  text_filter_disabled:
-    "The textual filter is off. Every document with searchable text qualifies; many passages may be irrelevant.",
-  low_text_threshold:
-    "A low textual threshold may return many unrelated passages. This is a caution, not a calibrated accuracy estimate.",
-  short_query:
-    "Short queries provide little context and may return many unrelated passages.",
-};
+function QueryGuidance({
+  assessment,
+  title,
+}: {
+  assessment: TextualAssessment;
+  title: string;
+}) {
+  return (
+    <section className="query-guidance" aria-label={title}>
+      <p className="fineprint">
+        {title}: {assessment.comparison_characters} comparison characters ·{" "}
+        {assessment.word_count} {assessment.word_count === 1 ? "word" : "words"}
+        . For an equal-length passage, the threshold permits up to{" "}
+        {assessment.equal_length_edit_budget} character edits. Different-length
+        passages can allow a different number of edits.
+      </p>
+      {assessment.warnings.length > 0 && (
+        <ul className="message warning">
+          {assessment.warnings.map((notice) => (
+            <li key={notice.code}>{notice.message}</li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
-const riskMessage = (score: number, query: string) =>
-  score === 0
-    ? riskWarnings.text_filter_disabled
-    : score < 70
-      ? riskWarnings.low_text_threshold
-      : query.trim().length > 0 && query.trim().length < 8
-        ? riskWarnings.short_query
-        : "";
+function SearchStopped({ details }: { details: SearchAbortDetails }) {
+  const resources: Record<string, string> = {
+    retained_passages_in_document: "passages in one document",
+    retained_passages_total: "passages across inspected documents",
+    passages_per_1000_characters: "passages per 1,000 characters",
+    characters: "source characters",
+    windows: "candidate comparisons",
+    matches: "candidate intervals",
+  };
+  const count = (value: number) =>
+    new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 }).format(value);
+  return (
+    <section role="alert" className="message error search-stopped">
+      <h3>Search stopped — no results returned</h3>
+      <p>{details.message}</p>
+      <p>
+        Observed at least{" "}
+        {count(Math.floor(details.observed_at_least * 10) / 10)}{" "}
+        {resources[details.resource] || "processing units"} (limit{" "}
+        {count(details.limit)}). Inspected {details.documents_inspected}{" "}
+        documents before stopping.
+      </p>
+      <p>
+        The search did not complete. These are partial observations, not totals
+        for the selection. No partial result list is shown, and your threshold
+        was not changed.
+      </p>
+    </section>
+  );
+}
 
 function Provenance({ document }: { document: TextualDocument }) {
   return (
@@ -148,7 +193,9 @@ function DocumentMatches({
   initial,
   response,
   onOpen,
+  onAbort,
 }: {
+  onAbort: (details: SearchAbortDetails) => void;
   initial: TextualGroup;
   response: TextualSearchResponse;
   onOpen: (target: SearchTarget) => void;
@@ -180,6 +227,10 @@ function DocumentMatches({
         );
       } else setGroup(next);
     } catch (error) {
+      if (error instanceof ApiError && error.details) {
+        onAbort(error.details);
+        return;
+      }
       setError(
         error instanceof Error ? error.message : "Could not load passages.",
       );
@@ -262,8 +313,10 @@ function DocumentMatches({
 
 export default function TextualSearchPanel({
   onOpen,
+  openDocument,
 }: {
   onOpen: (target: SearchTarget) => void;
+  openDocument: Pick<Document, "id" | "title"> | null;
 }) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"exact" | "normalized">("normalized");
@@ -271,32 +324,76 @@ export default function TextualSearchPanel({
   const [response, setResponse] = useState<TextualSearchResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [aborted, setAborted] = useState<SearchAbortDetails | null>(null);
+  const [assessment, setAssessment] = useState<TextualAssessment | null>(null);
+  const [assessmentError, setAssessmentError] = useState("");
+  const [onlyOpenDocument, setOnlyOpenDocument] = useState(false);
   const requestId = useRef(0);
   const minimum = Number(threshold);
   const validThreshold =
     threshold.trim() !== "" &&
     Number.isFinite(minimum) &&
-    minimum >= 0 &&
+    minimum > 0 &&
     minimum <= 100;
+  useEffect(() => {
+    setAssessment(null);
+    setAssessmentError("");
+    if (!validThreshold || !query.trim()) return;
+    let active = true;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      assessTextual({ query, mode, minimum_score: minimum }, controller.signal)
+        .then((result) => {
+          if (active) setAssessment(result);
+        })
+        .catch(() => {
+          if (active)
+            setAssessmentError(
+              "Guidance is unavailable. The search will assess the expression again when submitted.",
+            );
+        });
+    }, 300);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, mode, minimum, validThreshold]);
+  function stop(details: SearchAbortDetails) {
+    requestId.current++;
+    setResponse(null);
+    setAborted(details);
+    setBusy(false);
+    setError("");
+  }
   async function run(payload: Parameters<typeof searchTextual>[0]) {
     const id = ++requestId.current;
     setBusy(true);
     setError("");
+    setAborted(null);
     try {
       const next = await searchTextual(payload);
       if (id === requestId.current) setResponse(next);
     } catch (error) {
-      if (id === requestId.current)
-        setError(error instanceof Error ? error.message : "Search failed.");
+      if (id === requestId.current) {
+        if (error instanceof ApiError && error.details) stop(error.details);
+        else
+          setError(error instanceof Error ? error.message : "Search failed.");
+      }
     } finally {
       if (id === requestId.current) setBusy(false);
     }
   }
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!validThreshold) return;
+    if (!validThreshold || (onlyOpenDocument && !openDocument)) return;
     setResponse(null);
-    void run({ query, mode, minimum_score: minimum });
+    void run({
+      query,
+      mode,
+      minimum_score: minimum,
+      document_id: onlyOpenDocument ? openDocument!.id : undefined,
+    });
   }
   function paginate(group: "results" | "unsearchable", delta: number) {
     if (!response) return;
@@ -304,6 +401,7 @@ export default function TextualSearchPanel({
       query: response.query,
       mode: response.mode,
       minimum_score: response.minimum_score,
+      document_id: response.document_id ?? undefined,
       limit: response.limit,
       offset: response.offset + (group === "results" ? delta : 0),
       unsearchable_limit: response.unsearchable_limit,
@@ -313,7 +411,7 @@ export default function TextualSearchPanel({
   }
   return (
     <section
-      className="panel textual-search-panel"
+      className="panel search-panel textual-search-panel"
       aria-labelledby="textual-search-heading"
     >
       <div className="section-heading">
@@ -363,19 +461,52 @@ export default function TextualSearchPanel({
         </div>
         <button
           className="primary"
-          disabled={busy || !query.trim() || !validThreshold}
+          disabled={
+            busy ||
+            !query.trim() ||
+            !validThreshold ||
+            (onlyOpenDocument && !openDocument)
+          }
         >
           {busy ? "Searching …" : "Find passages"}
         </button>
       </form>
+      <label className="checkbox">
+        <input
+          type="checkbox"
+          checked={onlyOpenDocument}
+          onChange={(event) => setOnlyOpenDocument(event.target.checked)}
+        />
+        <span>
+          Search only the open document
+          <small>
+            {openDocument
+              ? openDocument.title
+              : "Open a document in the library to narrow the selection."}
+          </small>
+        </span>
+      </label>
       <p id="textual-threshold-help" className="fineprint">
-        0 disables the text filter. 100 requires identical text in the selected
-        mode. Normalized mode ignores case and whitespace differences. Scores
-        measure character edits, not confidence or legal equivalence.
+        Choose a threshold greater than 0 and at most 100. 100 requires
+        identical text in the selected mode. Normalized mode ignores case and
+        whitespace differences. Scores measure character edits, not confidence
+        or legal equivalence.
       </p>
-      {validThreshold && riskMessage(minimum, query) && (
-        <p role="status" className="message warning">
-          {riskMessage(minimum, query)}
+      {!validThreshold && (
+        <p role="alert" className="message error">
+          Enter a threshold greater than 0 and no more than 100. The text filter
+          cannot be disabled.
+        </p>
+      )}
+      {assessment && (
+        <QueryGuidance
+          assessment={assessment}
+          title="Current expression guidance"
+        />
+      )}
+      {assessmentError && (
+        <p role="status" className="fineprint">
+          {assessmentError}
         </p>
       )}
       <p className="search-notice">
@@ -384,6 +515,7 @@ export default function TextualSearchPanel({
         Literal search for the separate exact absence workflow. Semantic scoring
         is not available yet.
       </p>
+      {aborted && <SearchStopped details={aborted} />}
       {error && (
         <p role="alert" className="message error">
           {error}
@@ -396,15 +528,19 @@ export default function TextualSearchPanel({
             Results for <strong>“{response.query}”</strong> · {response.mode} ·
             minimum {response.minimum_score}%
           </p>
-          {response.warnings.length > 0 && (
-            <p className="message warning">
-              Search snapshot:{" "}
-              {response.warnings
-                .map((reason) => riskWarnings[reason] || reason)
-                .join(" ")}
-            </p>
+          <QueryGuidance
+            assessment={response.assessment}
+            title="Submitted search guidance"
+          />
+          {response.result_warnings.length > 0 && (
+            <ul className="message warning">
+              {response.result_warnings.map((notice) => (
+                <li key={notice.code}>{notice.message}</li>
+              ))}
+            </ul>
           )}
           <p className="fineprint">
+            Scope: {response.document_id ? "one document" : "all documents"} ·{" "}
             {response.summary.documents_searched} documents searched ·{" "}
             {response.total} with candidate passages ·{" "}
             {response.summary.occurrences_total} passages ·{" "}
@@ -421,6 +557,7 @@ export default function TextualSearchPanel({
                 <DocumentMatches
                   key={`${response.searched_at}:${group.document.document_id}`}
                   initial={group}
+                  onAbort={stop}
                   response={response}
                   onOpen={onOpen}
                 />

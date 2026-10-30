@@ -9,44 +9,6 @@
   "scope": "Training development sample only. Actual OCR reused from the measured report; no new OCR or semantic model run. Literal precision is only a proxy: candidate similarity does not establish equivalent meaning.",
   "source_text": [
     {
-      "threshold": 0,
-      "pairs": 70,
-      "source_literal_recovered": 28,
-      "source_literal_missed": 0,
-      "nonliteral_candidates": 42,
-      "literal_precision_proxy": 0.4,
-      "literal_recall": 1.0,
-      "material_counterexamples_returned": 14,
-      "material_counterexamples_total": 14,
-      "missed_literal_ids": [],
-      "nonliteral_examples": [
-        {
-          "id": "clause-01-paraphrase",
-          "case": "paraphrase",
-          "source_literal": false,
-          "candidate_found": true,
-          "best_score": 48.4375,
-          "best_passage": "the recipient must keep the confidential material"
-        },
-        {
-          "id": "clause-01-counterexample",
-          "case": "counterexample",
-          "source_literal": false,
-          "candidate_found": true,
-          "best_score": 87.5,
-          "best_passage": "the receiving party may disclose confidential information."
-        },
-        {
-          "id": "clause-01-unrelated",
-          "case": "unrelated",
-          "source_literal": false,
-          "candidate_found": true,
-          "best_score": 34.375,
-          "best_passage": "this fictional short agreement is for software evaluation"
-        }
-      ]
-    },
-    {
       "threshold": 50,
       "pairs": 70,
       "source_literal_recovered": 28,
@@ -289,44 +251,6 @@
     }
   ],
   "measured_ocr": [
-    {
-      "threshold": 0,
-      "pairs": 45,
-      "source_literal_recovered": 18,
-      "source_literal_missed": 0,
-      "nonliteral_candidates": 27,
-      "literal_precision_proxy": 0.4,
-      "literal_recall": 1.0,
-      "material_counterexamples_returned": 9,
-      "material_counterexamples_total": 9,
-      "missed_literal_ids": [],
-      "nonliteral_examples": [
-        {
-          "id": "clause-01-paraphrase-clear",
-          "case": "paraphrase",
-          "source_literal": false,
-          "candidate_found": true,
-          "best_score": 48.4375,
-          "best_passage": "the recipient must keep the confidential material"
-        },
-        {
-          "id": "clause-01-paraphrase-irregular",
-          "case": "paraphrase",
-          "source_literal": false,
-          "candidate_found": true,
-          "best_score": 48.4375,
-          "best_passage": "the recipient must keep the confidential material"
-        },
-        {
-          "id": "clause-01-paraphrase-difficult",
-          "case": "paraphrase",
-          "source_literal": false,
-          "candidate_found": true,
-          "best_score": 48.4375,
-          "best_passage": "the recipient must keep the confidential material"
-        }
-      ]
-    },
     {
       "threshold": 50,
       "pairs": 45,

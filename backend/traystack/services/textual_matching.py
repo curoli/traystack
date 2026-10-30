@@ -1,8 +1,9 @@
 """Positive candidate search; no match here never establishes clause absence."""
 
+import math
 import re
 from bisect import bisect_left
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
 from rapidfuzz.distance import Levenshtein
@@ -14,7 +15,23 @@ CANDIDATE_POLICY = "literal-and-best-word-window-per-start-v1-nonoverlap"
 
 
 class SearchTooBroad(ValueError):
-    pass
+    def __init__(self, message, *, reason, resource, limit, observed):
+        super().__init__(message)
+        self.reason, self.resource = reason, resource
+        self.limit, self.observed = limit, observed
+        self.documents_inspected = 0
+
+    def detail(self):
+        return {
+            "code": "textual_search_aborted",
+            "reason": self.reason,
+            "message": str(self),
+            "resource": self.resource,
+            "limit": self.limit,
+            "observed_at_least": self.observed,
+            "documents_inspected": self.documents_inspected,
+            "results_complete": False,
+        }
 
 
 @dataclass
@@ -23,14 +40,67 @@ class WorkBudget:
     characters: int = 20_000_000
     windows: int = 2_000_000
     matches: int = 100_000
+    _initial: dict = field(init=False, repr=False)
+
+    def __post_init__(self):
+        self._initial = {kind: getattr(self, kind) for kind in ("characters", "windows", "matches")}
 
     def consume(self, kind, amount=1):
         remaining = getattr(self, kind) - amount
         if remaining < 0:
             raise SearchTooBroad(
-                "Textual search is too broad. Use a higher threshold or a single document."
+                "The search exceeded its processing limit. Increase textual similarity or "
+                "narrow the document selection.",
+                reason="work_limit",
+                resource=kind,
+                limit=self._initial[kind],
+                observed=self._initial[kind] - remaining,
             )
         setattr(self, kind, remaining)
+
+
+@dataclass
+class PassageBudget:
+    total_limit: int = 2500
+    document_limit: int = 250
+    density_minimum: int = 100
+    density_limit: float = 20  # Retained passages per 1,000 source characters.
+    total: int = 0
+    peak_document_count: int = 0
+
+    def check(self, count, text_length, minimum):
+        if count > self.document_limit:
+            raise SearchTooBroad(
+                "Too many candidate passages in one document. Increase textual similarity or "
+                "use a more specific expression.",
+                reason="document_passage_limit",
+                resource="retained_passages_in_document",
+                limit=self.document_limit,
+                observed=count,
+            )
+        if self.total + count > self.total_limit:
+            raise SearchTooBroad(
+                "Too many candidate passages across the selection. Increase textual "
+                "similarity or narrow the document selection.",
+                reason="total_passage_limit",
+                resource="retained_passages_total",
+                limit=self.total_limit,
+                observed=self.total + count,
+            )
+        density = count * 1000 / max(1, text_length)
+        if minimum < 100 and count >= self.density_minimum and density >= self.density_limit:
+            raise SearchTooBroad(
+                "Candidate passages are too dense to review meaningfully. Increase textual "
+                "similarity or add more context to the expression.",
+                reason="dense_passages",
+                resource="passages_per_1000_characters",
+                limit=self.density_limit,
+                observed=density,
+            )
+
+    def finish(self, count):
+        self.total += count
+        self.peak_document_count = max(self.peak_document_count, count)
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,7 +110,19 @@ class Candidate:
     score: float
 
 
-def find_passages(text: str, query: str, minimum: float, budget: WorkBudget) -> list[Candidate]:
+def find_passages(
+    text: str,
+    query: str,
+    minimum: float,
+    budget: WorkBudget,
+    passage_budget: PassageBudget | None = None,
+) -> list[Candidate]:
+    if not query or not math.isfinite(minimum) or not 0 < minimum <= 100:
+        raise ValueError(
+            "Textual matching requires a nonempty query and a threshold greater than 0 "
+            "and at most 100"
+        )
+    passage_budget = passage_budget if passage_budget is not None else PassageBudget()
     budget.consume("characters", len(text))
     candidates = {}
     position = 0
@@ -52,6 +134,9 @@ def find_passages(text: str, query: str, minimum: float, budget: WorkBudget) -> 
         end = start + len(query)
         budget.consume("matches")
         candidates[start, end] = Candidate(start, end, 100.0)
+        # Non-overlapping literal hits cannot be removed by approximate windows:
+        # they already establish a lower bound on the final passage count.
+        passage_budget.check(len(candidates), len(text), minimum)
         position = end  # Explicitly return non-overlapping literal occurrences.
     if minimum < 100:
         words = list(re.finditer(r"\S+", text))
@@ -89,6 +174,8 @@ def find_passages(text: str, query: str, minimum: float, budget: WorkBudget) -> 
             continue
         starts.insert(index, candidate.start)
         accepted.insert(index, candidate)
+        passage_budget.check(len(accepted), len(text), minimum)
+    passage_budget.finish(len(accepted))
     return sorted(accepted, key=lambda item: (-item.score, item.start, item.end))
 
 

@@ -5,10 +5,16 @@ from sqlalchemy.orm import Session
 
 from traystack.db import get_session
 from traystack.search_schemas import SearchRequest, SearchResponse
+from traystack.services.query_guidance import assess_query
 from traystack.services.search import search_snapshot
 from traystack.services.textual_matching import SearchTooBroad
 from traystack.services.textual_search import textual_snapshot
-from traystack.textual_schemas import TextualSearchRequest, TextualSearchResponse
+from traystack.textual_schemas import (
+    TextualAssessment,
+    TextualAssessmentRequest,
+    TextualSearchRequest,
+    TextualSearchResponse,
+)
 
 router = APIRouter(prefix="/api", tags=["search"])
 
@@ -25,4 +31,9 @@ def textual_search(
     try:
         return textual_snapshot(session, payload)
     except SearchTooBroad as error:
-        raise HTTPException(422, str(error)) from None
+        raise HTTPException(422, error.detail()) from None
+
+
+@router.post("/search/textual/assess", response_model=TextualAssessment)
+def assess_textual_query(payload: TextualAssessmentRequest):
+    return assess_query(payload)
