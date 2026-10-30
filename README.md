@@ -1,11 +1,12 @@
 # TrayStack
 
 Lokaler Prototyp für nachvollziehbare Vertragsablage und spätere Textsuche.
-**Meilensteine 1–2 sind umgesetzt:** PDF/JPEG/PNG hochladen, Originalbytes
+**Meilensteine 1–3 sind umgesetzt:** PDF/JPEG/PNG hochladen, Originalbytes
 herunterladen und Dokumente im Hintergrund auslesen. Ein eigener Worker erzeugt
 Seitentext, strukturierte JSON-Daten und Markdown. Oberfläche und API zeigen
 Jobstatus, Seitenabdeckung, Qualitätswarnungen und die Herkunft des ausgewählten
-Textes. Die Suche folgt in Meilenstein 3.
+Textes. Exakte und normalisierte Volltextsuche liefern Fundstellen, negative
+Ergebnisse im vollständig verarbeiteten Text und getrennte unverifizierbare Dokumente.
 
 ## Start
 
@@ -43,12 +44,17 @@ sind ausschließlich lokale Demo-Standardwerte.
 5. In den Dokumentdetails **Verarbeitung starten** wählen. Der Jobstatus aktualisiert sich automatisch.
 6. Seitenabdeckung und Qualität getrennt ansehen; **Seitentext ansehen** öffnen.
 7. JSON-/Markdown-Artefakte in der Textvorschau ansehen oder herunterladen.
-8. `P-printed-scan.jpg` hochladen und echte OCR durchführen. Bei `E-difficult-scan.jpg`
+8. `D-delivery.pdf` als Beispiel ohne Zielpassage verarbeiten. `P-printed-scan.jpg`
+   hochladen und echte OCR durchführen. Bei `E-difficult-scan.jpg`
    **Manuelle Prüfung erforderlich** setzen: Der Eintrag bleibt auch nach Verarbeitung
    in der Prüfgruppe. Die Vormerkung lässt sich nicht durch Neuverarbeitung beseitigen.
 9. **Erneut verarbeiten** erzeugt neue Artefakte und wählt deren Textbestand aus.
    Frühere Artefakte bleiben erhalten. Fehlgeschlagene Läufe lassen sich als neue
    Läufe wiederholen; der bisher ausgewählte Text bleibt bei Fehlschlag unverändert.
+
+10. Oben die Vertraulichkeitspassage eingeben und **Suche ausführen** wählen.
+    Zwischen **Enthält die Passage** und **Nicht im extrahierten Text gefunden**
+    wechseln. Die Prüfgruppe der Suche bleibt separat; Treffer öffnen die Quellseite.
 
 Die [Demo-Dateien](examples/synthetic-contracts/README.md) sind synthetisch. Ihre
 Hashwerte und späteren Sucherwartungen stehen im Manifest. Es gibt keine
@@ -128,14 +134,17 @@ Client und leitet API-Aufrufe weiter.
 [Architektur](docs/architecture.md), [Entscheidungen](docs/decisions.md) und
 [Demo/Prüfstand](docs/demo.md) beschreiben den aktuellen Stand. Die
 [Implementierungsanleitung](TrayStack_Codex_Instructions.md) enthält den weiteren
-Plan: Volltextsuche und Präsentation; Fuzzy-Suche bleibt eine spätere Erweiterung.
+Plan: Demo/Präsentation; Fuzzy-Suche bleibt eine spätere Erweiterung.
+Der [Suchvertrag](docs/search.md) erklärt Literalität, Qualität, Pagination,
+Seitenoffsets und konsistente Momentaufnahmen.
 
 Dieser lokale Prototyp hat noch keine Anmeldung, Mandantentrennung oder
 Vertragsprüfung. Für die Demo synthetische Daten verwenden. Ein vorgemerkter
 Prüfbedarf ist keine abgeschlossene manuelle Prüfung. Vollständige Verarbeitung
 und hohe OCR-Wortscores garantieren keine korrekte Erkennung. Handschrift muss
 am Original geprüft werden. Leere oder fehlerhafte Seiten gelten konservativ als
-nicht vollständig ausgelesen; dieser Prototyp behauptet keine Klauselabwesenheit.
+nicht vollständig ausgelesen. „Nicht gefunden“ ist ausdrücklich eine Aussage
+über den ausgewählten extrahierten Text, keine juristische Klauselbewertung.
 
 ## Worker nach einem Abbruch wieder freigeben
 

@@ -4,8 +4,11 @@ import {
   listDocuments,
   uploadDocument,
   type Document,
+  type SearchResult,
+  type SearchPageLocation,
 } from "./api";
 
+import SearchPanel from "./components/SearchPanel";
 import ArtifactCard from "./components/ArtifactCard";
 import ProcessingDetails from "./components/ProcessingDetails";
 import { needsReview, statusLabel } from "./components/processingLabels";
@@ -33,6 +36,8 @@ export default function App() {
     null,
   );
   const [detailNavigation, setDetailNavigation] = useState(0);
+  const [searchLocation, setSearchLocation] =
+    useState<SearchPageLocation | null>(null);
   const detailRequest = useRef(0);
   const detailsRef = useRef<HTMLElement>(null);
   const detailHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -119,6 +124,7 @@ export default function App() {
       const document = await uploadDocument(new FormData(form));
       detailRequest.current++;
       setOpeningDocumentId(null);
+      setSearchLocation(null);
       setSelected(document);
       setDetailNavigation((value) => value + 1);
       setOffset(0);
@@ -134,7 +140,7 @@ export default function App() {
     }
   }
 
-  async function openDocument(id: string) {
+  async function openDocument(id: string, result?: SearchResult) {
     const requestId = ++detailRequest.current;
     setError("");
     setOpeningDocumentId(id);
@@ -142,6 +148,18 @@ export default function App() {
       const document = await getDocument(id);
       if (requestId === detailRequest.current) {
         setSelected(document);
+        setSearchLocation(
+          result?.revision_id &&
+            result.processing_job_id &&
+            result.page_number !== null
+            ? {
+                revisionId: result.revision_id,
+                processingJobId: result.processing_job_id,
+                pageNumber: result.page_number,
+                requestId,
+              }
+            : null,
+        );
         setDetailNavigation((value) => value + 1);
       }
     } catch (error) {
@@ -157,7 +175,7 @@ export default function App() {
         <a className="brand" href="/" aria-label="TrayStack Startseite">
           <span className="brand-mark">T</span>TrayStack
         </a>
-        <span className="environment">Lokale Demo · Meilenstein 2</span>
+        <span className="environment">Lokale Demo · Meilenstein 3</span>
         <a className="api-link" href="/docs" target="_blank" rel="noreferrer">
           API-Dokumentation ↗
         </a>
@@ -176,10 +194,9 @@ export default function App() {
           </p>
         </div>
         <div className="scope-note">
-          <strong>Textextraktion und OCR sind verfügbar.</strong> Starte die
-          Verarbeitung in den Dokumentdetails. Seitenabdeckung und
-          Erkennungsqualität werden getrennt angezeigt. Die Suche folgt im
-          nächsten Meilenstein.
+          <strong>Volltextsuche für deine Verträge.</strong> Lade Dokumente hoch
+          und starte die Verarbeitung in den Details. Suche anschließend über
+          die neueste Revision und prüfe Fundstellen und Qualitätswarnungen.
         </div>
         {notice && (
           <div role="status" className="message success">
@@ -191,6 +208,11 @@ export default function App() {
             {error}
           </div>
         )}
+        <SearchPanel
+          onOpen={(result) => {
+            void openDocument(result.document_id, result);
+          }}
+        />
         <div className="workspace">
           <aside className="panel upload-panel">
             <p className="eyebrow">NEUES DOKUMENT</p>
@@ -399,6 +421,11 @@ export default function App() {
                 <p className="identifier">Revision-ID: {revision.id}</p>
                 <ProcessingDetails
                   revision={revision}
+                  requestedPage={
+                    searchLocation?.revisionId === revision.id
+                      ? searchLocation
+                      : undefined
+                  }
                   onUpdated={() => refreshDocument(selected.id)}
                 />
                 {revision.artifacts.map((artifact) => (

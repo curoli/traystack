@@ -134,3 +134,80 @@ export async function getArtifactText(id: string): Promise<string> {
     throw new Error(`Datei nicht verfügbar (${response.status}).`);
   return response.text();
 }
+
+export interface SearchRequest {
+  query: string;
+  mode: "exact" | "normalized";
+  relation: "contains" | "lacks";
+  scope: "latest";
+  limit?: number;
+  offset?: number;
+  unverifiable_limit?: number;
+  unverifiable_offset?: number;
+}
+export interface SearchResult {
+  document_id: string;
+  title: string;
+  revision_id: string | null;
+  revision_number: number | null;
+  artifact_id: string | null;
+  processing_job_id: string | null;
+  normalization_version: string | null;
+  processor_versions: Record<string, unknown> | null;
+  mode: "exact" | "normalized";
+  status: "found" | "not_found_in_processed_text" | "unverifiable";
+  coverage: "complete" | "partial" | "unavailable" | null;
+  quality_status: "no_known_issue" | "needs_review" | "unassessed" | null;
+  pages_total: number | null;
+  pages_processed: number | null;
+  pages_failed: number | null;
+  warnings: string[];
+  latest_job: {
+    id: string;
+    status: string;
+    error_message: string | null;
+  } | null;
+  matched_text: string | null;
+  snippet: string | null;
+  snippet_start_offset: number | null;
+  page_number: number | null;
+  end_page_number: number | null;
+  page_numbers: number[];
+  start_offset: number | null;
+  end_offset: number | null;
+  offset_basis: "plain_text" | "normalized_text";
+}
+export interface SearchResponse {
+  query: string;
+  effective_query: string;
+  mode: "exact" | "normalized";
+  relation: "contains" | "lacks";
+  scope: "latest";
+  searched_at: string;
+  summary: {
+    documents_total: number;
+    found: number;
+    not_found_in_processed_text: number;
+    unverifiable: number;
+  };
+  results: SearchResult[];
+  total: number;
+  limit: number;
+  offset: number;
+  unverifiable: SearchResult[];
+  unverifiable_total: number;
+  unverifiable_limit: number;
+  unverifiable_offset: number;
+}
+export interface SearchPageLocation {
+  revisionId: string;
+  processingJobId: string;
+  pageNumber: number;
+  requestId: number;
+}
+export const searchDocuments = (payload: SearchRequest) =>
+  request<SearchResponse>("/api/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });

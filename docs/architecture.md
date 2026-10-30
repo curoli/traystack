@@ -1,4 +1,4 @@
-# Architektur — Meilensteine 1–2
+# Architektur — Meilensteine 1–3
 
 ```mermaid
 flowchart LR
@@ -104,8 +104,11 @@ normalisierter Text verbindet nichtleere Seiten mit einem Leerzeichen. Die
 Seitenoffsets beziehen sich exakt auf diesen gespeicherten normalisierten String.
 
 Ein Job kann technisch abgeschlossen sein, obwohl einzelne Seiten unverfügbar
-oder prüfbedürftig sind. Erst Meilenstein 3 ergänzt die Suche und entscheidet
-anhand dieser Qualitätsdaten über die Zulässigkeit negativer Suchergebnisse.
+oder prüfbedürftig sind. Die [Volltextsuche](search.md) prüft die ganze neueste
+Revision. Negative Ergebnisse erfordern vollständige Abdeckung, keine bekannte
+Qualitätsauffälligkeit und keine manuelle Prüfvormerkung für die Quelle. Positive
+Treffer auf unsicheren Extraktionen behalten ihre Warnungen. Ein Read-only-Snapshot
+verbindet die globale Klassifikation mit Ausschnitten und Seitenpositionen.
 Automatische Wiederholung, Heartbeats und sichere Lease-Übernahme sind noch nicht
 implementiert; die README beschreibt den expliziten Wiederherstellungsablauf nach
 Worker-Abbruch. Während der Extraktion bleiben keine Datenbank-Rowlocks offen.

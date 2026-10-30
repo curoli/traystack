@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getText,
   retryJob,
   startProcessing,
   type Revision,
   type TextContent,
+  type SearchPageLocation,
 } from "../api";
 import {
   coverageLabel,
@@ -16,8 +17,10 @@ import {
 export default function ProcessingDetails({
   revision,
   onUpdated,
+  requestedPage,
 }: {
   revision: Revision;
+  requestedPage?: SearchPageLocation;
   onUpdated: () => Promise<void>;
 }) {
   const originals = revision.artifacts.filter(
@@ -32,6 +35,10 @@ export default function ProcessingDetails({
   const [text, setText] = useState<TextContent | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [textBusy, setTextBusy] = useState(false);
+  const [loadedPageRequest, setLoadedPageRequest] = useState<number | null>(
+    null,
+  );
+  const viewerRef = useRef<HTMLElement>(null);
   const index = revision.text_index;
   const latest = revision.jobs[0];
   const pending = revision.jobs.some((job) =>
@@ -43,6 +50,66 @@ export default function ProcessingDetails({
     setText(null);
     setPageNumber(1);
   }, [index?.processing_job_id]);
+  useEffect(() => {
+    if (!requestedPage) {
+      setTextBusy(false);
+      return;
+    }
+    if (index?.processing_job_id !== requestedPage.processingJobId) {
+      setTextBusy(false);
+      setError(
+        "Der ausgewählte Text hat sich seit der Suche geändert. Bitte die Suche erneut ausführen.",
+      );
+      return;
+    }
+    let active = true;
+    setTextBusy(true);
+    setError("");
+    getText(revision.id)
+      .then((content) => {
+        if (!active) return;
+        if (content.processing_job_id !== requestedPage.processingJobId) {
+          setError(
+            "Der Text wurde inzwischen neu verarbeitet. Bitte die Suche erneut ausführen.",
+          );
+        } else {
+          setText(content);
+          setPageNumber(requestedPage.pageNumber);
+          setLoadedPageRequest(requestedPage.requestId);
+        }
+      })
+      .catch((error) => {
+        if (active)
+          setError(
+            error instanceof Error ? error.message : "Text nicht verfügbar.",
+          );
+      })
+      .finally(() => {
+        if (active) setTextBusy(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [requestedPage, revision.id, index?.processing_job_id]);
+
+  useEffect(() => {
+    // App first navigates to the document heading. Only the completed page
+    // request may move focus onward, including when the same run is reopened.
+    if (
+      !requestedPage ||
+      loadedPageRequest !== requestedPage.requestId ||
+      text?.processing_job_id !== requestedPage.processingJobId
+    )
+      return;
+    viewerRef.current?.focus({ preventScroll: true });
+    viewerRef.current?.scrollIntoView({
+      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, [requestedPage, loadedPageRequest, text?.processing_job_id]);
+
   async function submit(retryId?: string) {
     setError("");
     setBusy(true);
@@ -178,7 +245,12 @@ export default function ProcessingDetails({
         </div>
       )}
       {text && (
-        <section className="page-viewer" aria-label="Extrahierter Seitentext">
+        <section
+          ref={viewerRef}
+          tabIndex={-1}
+          className="page-viewer"
+          aria-label="Extrahierter Seitentext"
+        >
           <div className="section-heading">
             <label htmlFor={`page-${revision.id}`}>Seite</label>
             <select
