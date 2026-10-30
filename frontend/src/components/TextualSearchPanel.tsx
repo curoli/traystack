@@ -322,6 +322,7 @@ export default function TextualSearchPanel({
   const [mode, setMode] = useState<"exact" | "normalized">("normalized");
   const [threshold, setThreshold] = useState("85");
   const [response, setResponse] = useState<TextualSearchResponse | null>(null);
+  const [responseRequestId, setResponseRequestId] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [aborted, setAborted] = useState<SearchAbortDetails | null>(null);
@@ -359,7 +360,10 @@ export default function TextualSearchPanel({
       controller.abort();
     };
   }, [query, mode, minimum, validThreshold]);
-  function stop(details: SearchAbortDetails) {
+  function stop(details: SearchAbortDetails, originRequestId: number) {
+    // Passage pagination belongs to the search that produced its result card.
+    // A superseded card must not clear a newer pending or completed search.
+    if (originRequestId !== requestId.current) return;
     requestId.current++;
     setResponse(null);
     setAborted(details);
@@ -373,10 +377,13 @@ export default function TextualSearchPanel({
     setAborted(null);
     try {
       const next = await searchTextual(payload);
-      if (id === requestId.current) setResponse(next);
+      if (id === requestId.current) {
+        setResponseRequestId(id);
+        setResponse(next);
+      }
     } catch (error) {
       if (id === requestId.current) {
-        if (error instanceof ApiError && error.details) stop(error.details);
+        if (error instanceof ApiError && error.details) stop(error.details, id);
         else
           setError(error instanceof Error ? error.message : "Search failed.");
       }
@@ -557,7 +564,7 @@ export default function TextualSearchPanel({
                 <DocumentMatches
                   key={`${response.searched_at}:${group.document.document_id}`}
                   initial={group}
-                  onAbort={stop}
+                  onAbort={(details) => stop(details, responseRequestId)}
                   response={response}
                   onOpen={onOpen}
                 />

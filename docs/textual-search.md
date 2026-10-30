@@ -279,9 +279,12 @@ assessment/search agreement, early literal overflow, non-overlap counting, densi
 global overflow, narrow-scope echo and complete-result warnings. Aborts have no
 partial success fields and do not change the literal absence workflow.
 
-All **17 Playwright/Chrome scenarios** passed, including real overflow at 251
+All **18 Playwright/Chrome scenarios** passed, including real overflow at 251
 passages, refinement after an abort, blocked zero, real UI document scoping and
 exact mode. An isolated pagination-error test checks that an aborted occurrence
-request clears the old result snapshot. Successful workflows use the real stack.
+request clears the old result snapshot. A delayed-error regression also verifies
+that a superseded pagination request cannot clear a newer search's results;
+abort callbacks are bound to the originating search request ID. Successful
+workflows use the real stack.
 TypeScript/Vite, Ruff, Prettier, dependency consistency, Markdown links and
 `git diff --check` are checked. The known Starlette/HTTPX TestClient warning remains.

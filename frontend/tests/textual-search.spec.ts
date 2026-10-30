@@ -264,3 +264,89 @@ test("an occurrence-pagination abort clears the old complete snapshot", async ({
     page.getByRole("button", { name: "Find passages", exact: true }),
   ).toBeEnabled();
 });
+
+test("a delayed pagination abort cannot clear a newer search", async ({
+  page,
+}) => {
+  const token = `ObsoletePaging${Date.now()}`;
+  const replacement = `ReplacementSearch${Date.now()}`;
+  await uploadAndProcess(
+    page,
+    `Delayed paging controls ${Date.now()}`,
+    `${token} separate paragraph. `.repeat(7) + replacement,
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Similar passages", exact: true })
+    .click();
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(5);
+
+  let releaseAbort!: () => void;
+  const delayedAbort = new Promise<void>((resolve) => {
+    releaseAbort = resolve;
+  });
+  let notifyPaging!: () => void;
+  const pagingStarted = new Promise<void>((resolve) => {
+    notifyPaging = resolve;
+  });
+  await page.route("**/api/search/textual", async (route) => {
+    if (route.request().postDataJSON().occurrence_offset > 0) {
+      notifyPaging();
+      await delayedAbort;
+      await route.fulfill({
+        status: 422,
+        json: {
+          detail: {
+            code: "textual_search_aborted",
+            reason: "document_passage_limit",
+            message: "Too many candidate passages in one document.",
+            resource: "retained_passages_in_document",
+            limit: 250,
+            observed_at_least: 251,
+            documents_inspected: 1,
+            results_complete: false,
+          },
+        },
+      });
+    } else await route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Next passages", exact: true })
+    .click();
+  await pagingStarted;
+  await page.getByLabel("Text passage", { exact: true }).fill(replacement);
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
+  await expect(page.locator(".search-query-summary")).toContainText(
+    replacement,
+  );
+
+  const oldResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/search/textual") &&
+      response.status() === 422,
+  );
+  releaseAbort();
+  await (await oldResponse).finished();
+  // Let the old fetch rejection and React's resulting render finish before
+  // checking that the new successful snapshot survived.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  await expect(page.locator(".textual-response")).toBeVisible();
+  await expect(page.locator(".search-query-summary")).toContainText(
+    replacement,
+  );
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
+  await expect(page.locator(".search-stopped")).toHaveCount(0);
+});
