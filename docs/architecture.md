@@ -142,3 +142,11 @@ zu Rechenbudgets gelten Grenzen für konsolidierte Fundstellen je Dokument, im
 Gesamtbestand und für dichte approximative Treffer. Ein Abbruch liefert eine
 strukturierte Fehlerantwort mit Teilbeobachtungen, aber ohne erfolgreiche
 Ergebnisliste. Die Einzelheiten stehen in der [Suchsteuerung](textual-search.md).
+
+Die optionale [semantische Stufe](semantic-search.md) bewertet erst die vollständig
+ermittelten textuellen Fundstellen. Ein fest versioniertes, beim Build geladenes
+ONNX-Modell läuft lokal auf CPU. Der Cache adressiert den konkreten Text samt
+Modell-/Pipeline-Version, ohne einen vorab berechneten Dokumentindex einzuführen.
+Semantische Filterung erfolgt vor Zählung und Pagination; Rangfolge, Textbezug und
+Quellennachweis bleiben erhalten. Modellfehler und zusätzliche Ressourcenbudgets
+liefern keine erfolgreiche Teilmenge. Die exakte Abwesenheitssuche ist unverändert.

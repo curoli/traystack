@@ -1,0 +1,92 @@
+{
+  "description": "Synthetic diagnostic pairs, not held-out evaluation or legal equivalence labels. Pair scores alone do not assert candidate retrieval.",
+  "comparison_mode": "normalized",
+  "provenance": {
+    "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+    "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+    "score_version": "positive-cosine-exact-100-v1",
+    "max_tokens": 128
+  },
+  "cases": [
+    {
+      "case": "identity",
+      "query": "The buyer shall pay EUR 500 within thirty days.",
+      "passage": "The buyer shall pay EUR 500 within thirty days.",
+      "textual_score": 100.0,
+      "semantic_score": 100.0,
+      "cosine": 1.0
+    },
+    {
+      "case": "paraphrase",
+      "query": "The receiving party shall not disclose confidential information.",
+      "passage": "The receiving party shall not share confidential information.",
+      "textual_score": 90.625,
+      "semantic_score": 97.63473272323608,
+      "cosine": 0.9763473272323608
+    },
+    {
+      "case": "changed_negation",
+      "query": "The receiving party shall not disclose confidential information.",
+      "passage": "The receiving party shall disclose confidential information.",
+      "textual_score": 93.75,
+      "semantic_score": 56.161653995513916,
+      "cosine": 0.5616165399551392
+    },
+    {
+      "case": "changed_amount",
+      "query": "The buyer shall pay EUR 500 within thirty days.",
+      "passage": "The buyer shall pay EUR 5000 within thirty days.",
+      "textual_score": 97.91666666666666,
+      "semantic_score": 89.40793871879578,
+      "cosine": 0.8940793871879578
+    },
+    {
+      "case": "changed_name",
+      "query": "Acme Limited shall deliver the goods.",
+      "passage": "Beta Limited shall deliver the goods.",
+      "textual_score": 89.1891891891892,
+      "semantic_score": 66.30613803863525,
+      "cosine": 0.6630613803863525
+    },
+    {
+      "case": "changed_deadline",
+      "query": "The buyer shall pay within thirty days.",
+      "passage": "The buyer shall pay within three days.",
+      "textual_score": 92.3076923076923,
+      "semantic_score": 71.34321928024292,
+      "cosine": 0.7134321928024292
+    },
+    {
+      "case": "unrelated",
+      "query": "The receiving party shall not disclose confidential information.",
+      "passage": "The warehouse opens at nine in the morning.",
+      "textual_score": 31.25,
+      "semantic_score": 1.2283074669539928,
+      "cosine": 0.012283074669539928
+    },
+    {
+      "case": "german_paraphrase",
+      "query": "Der Empfänger darf vertrauliche Informationen nicht weitergeben.",
+      "passage": "Der Empfänger darf vertrauliche Informationen nicht offenlegen.",
+      "textual_score": 89.0625,
+      "semantic_score": 97.73818254470825,
+      "cosine": 0.9773818254470825
+    },
+    {
+      "case": "german_changed_negation",
+      "query": "Der Käufer muss die Rechnung bezahlen.",
+      "passage": "Der Käufer muss die Rechnung nicht bezahlen.",
+      "textual_score": 86.36363636363636,
+      "semantic_score": 49.885186553001404,
+      "cosine": 0.49885186553001404
+    },
+    {
+      "case": "german_changed_amount",
+      "query": "Der Käufer zahlt 500 Euro.",
+      "passage": "Der Käufer zahlt 5000 Euro.",
+      "textual_score": 96.2962962962963,
+      "semantic_score": 83.61990451812744,
+      "cosine": 0.8361990451812744
+    }
+  ]
+}

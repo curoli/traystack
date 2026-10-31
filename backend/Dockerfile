@@ -8,7 +8,7 @@ RUN pip install -r requirements.lock
 COPY pyproject.toml alembic.ini ./
 COPY traystack ./traystack
 COPY alembic ./alembic
-RUN pip install --no-deps . && useradd --uid 10001 --create-home app && mkdir -p /data/blobs && chown -R app:app /data
+RUN pip install --no-deps . && python -m traystack.prepare_semantic_model /opt/traystack/semantic-model && useradd --uid 10001 --create-home app && mkdir -p /data/blobs && chown -R app:app /data
 USER app
 EXPOSE 8000
 CMD ["uvicorn", "traystack.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -52,6 +52,9 @@ function SearchStopped({ details }: { details: SearchAbortDetails }) {
     characters: "source characters",
     windows: "candidate comparisons",
     matches: "candidate intervals",
+    semantic_passages: "passages for semantic comparison",
+    semantic_tokens: "model tokens",
+    semantic_seconds: "seconds in semantic comparison",
   };
   const count = (value: number) =>
     new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 }).format(value);
@@ -128,6 +131,11 @@ function Occurrence({
         <strong className="textual-score">
           Textual match: {occurrence.score.toFixed(2)}%
         </strong>
+        {occurrence.semantic_score != null && (
+          <strong className="semantic-score">
+            Semantic match: {occurrence.semantic_score.toFixed(2)}%
+          </strong>
+        )}
         <span className="fineprint">
           {occurrence.score === 100
             ? `Identical ${mode} text`
@@ -212,6 +220,7 @@ function DocumentMatches({
         query: response.query,
         mode: response.mode,
         minimum_score: response.minimum_score,
+        minimum_semantic_score: response.minimum_semantic_score,
         document_id: initial.document.document_id,
         occurrence_limit: group.occurrence_limit,
         occurrence_offset: group.occurrence_offset + delta,
@@ -219,11 +228,17 @@ function DocumentMatches({
       const next = result.results[0];
       if (
         !next ||
-        next.document.processing_job_id !== initial.document.processing_job_id
+        next.document.processing_job_id !==
+          initial.document.processing_job_id ||
+        result.semantic?.pipeline !== response.semantic?.pipeline ||
+        result.semantic?.score_version !== response.semantic?.score_version ||
+        result.scorer_version !== response.scorer_version ||
+        result.scorer_library_version !== response.scorer_library_version ||
+        result.candidate_policy !== response.candidate_policy
       ) {
         setStale(true);
         setError(
-          "The selected text or result set has changed. Please run the search again.",
+          "The selected text, comparison method or result set has changed. Please run the search again.",
         );
       } else setGroup(next);
     } catch (error) {
@@ -320,6 +335,8 @@ export default function TextualSearchPanel({
 }) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"exact" | "normalized">("normalized");
+  const [semanticEnabled, setSemanticEnabled] = useState(false);
+  const [semanticThreshold, setSemanticThreshold] = useState("0");
   const [threshold, setThreshold] = useState("85");
   const [response, setResponse] = useState<TextualSearchResponse | null>(null);
   const [responseRequestId, setResponseRequestId] = useState(0);
@@ -336,6 +353,13 @@ export default function TextualSearchPanel({
     Number.isFinite(minimum) &&
     minimum > 0 &&
     minimum <= 100;
+  const semanticMinimum = Number(semanticThreshold);
+  const validSemanticThreshold =
+    !semanticEnabled ||
+    (semanticThreshold.trim() !== "" &&
+      Number.isFinite(semanticMinimum) &&
+      semanticMinimum >= 0 &&
+      semanticMinimum <= 100);
   useEffect(() => {
     setAssessment(null);
     setAssessmentError("");
@@ -393,12 +417,18 @@ export default function TextualSearchPanel({
   }
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!validThreshold || (onlyOpenDocument && !openDocument)) return;
+    if (
+      !validThreshold ||
+      !validSemanticThreshold ||
+      (onlyOpenDocument && !openDocument)
+    )
+      return;
     setResponse(null);
     void run({
       query,
       mode,
       minimum_score: minimum,
+      minimum_semantic_score: semanticEnabled ? semanticMinimum : null,
       document_id: onlyOpenDocument ? openDocument!.id : undefined,
     });
   }
@@ -408,6 +438,7 @@ export default function TextualSearchPanel({
       query: response.query,
       mode: response.mode,
       minimum_score: response.minimum_score,
+      minimum_semantic_score: response.minimum_semantic_score,
       document_id: response.document_id ?? undefined,
       limit: response.limit,
       offset: response.offset + (group === "results" ? delta : 0),
@@ -466,18 +497,64 @@ export default function TextualSearchPanel({
             aria-describedby="textual-threshold-help"
           />
         </div>
+        <div>
+          <label htmlFor="semantic-threshold">Minimum semantic match</label>
+          <input
+            id="semantic-threshold"
+            type="number"
+            min={0}
+            max={100}
+            step="any"
+            value={semanticThreshold}
+            disabled={!semanticEnabled}
+            onChange={(event) => setSemanticThreshold(event.target.value)}
+            aria-describedby="semantic-threshold-help"
+          />
+        </div>
         <button
           className="primary"
           disabled={
             busy ||
             !query.trim() ||
             !validThreshold ||
+            !validSemanticThreshold ||
             (onlyOpenDocument && !openDocument)
           }
         >
           {busy ? "Searching …" : "Find passages"}
         </button>
       </form>
+      <label className="checkbox">
+        <input
+          type="checkbox"
+          checked={semanticEnabled}
+          onChange={(event) => setSemanticEnabled(event.target.checked)}
+        />
+        <span>Compare meaning with local embeddings</span>
+      </label>
+      <p id="semantic-threshold-help" className="fineprint">
+        Semantic comparison scores only the passages found by the textual
+        filter. 0 retains all textual candidates; 100 requires identical
+        comparison text. Intermediate scores measure model similarity, not
+        confidence or legal equivalence.
+      </p>
+      {!validSemanticThreshold && (
+        <p role="alert" className="message error">
+          Enter a semantic threshold from 0 to 100.
+        </p>
+      )}
+      {semanticEnabled && semanticMinimum < 50 && (
+        <p className="message warning">
+          This semantic threshold is permissive and may retain unrelated
+          wording. Zero applies no semantic filter.
+        </p>
+      )}
+      {semanticEnabled && semanticMinimum === 100 && minimum < 100 && (
+        <p className="message warning">
+          Semantic 100 retains only identical comparison text. A textual
+          threshold of 100 is sufficient for this purpose.
+        </p>
+      )}
       <label className="checkbox">
         <input
           type="checkbox"
@@ -519,8 +596,8 @@ export default function TextualSearchPanel({
       <p className="search-notice">
         Candidate passages are word windows; overlapping candidates are
         consolidated. Missing candidates do not establish clause absence. Use
-        Literal search for the separate exact absence workflow. Semantic scoring
-        is not available yet.
+        Literal search for the separate exact absence workflow. Semantic scores
+        do not verify clause absence.
       </p>
       {aborted && <SearchStopped details={aborted} />}
       {error && (
@@ -533,7 +610,9 @@ export default function TextualSearchPanel({
         <div className="textual-response" aria-busy={busy}>
           <p className="search-query-summary">
             Results for <strong>“{response.query}”</strong> · {response.mode} ·
-            minimum {response.minimum_score}%
+            minimum {response.minimum_score}% textual
+            {response.minimum_semantic_score != null &&
+              ` · minimum semantic ${response.minimum_semantic_score}%`}
           </p>
           <QueryGuidance
             assessment={response.assessment}
@@ -554,6 +633,24 @@ export default function TextualSearchPanel({
             {response.summary.documents_without_matches} without a candidate
             match · {response.unsearchable_total} unsearchable
           </p>
+          {response.semantic && (
+            <details className="search-provenance">
+              <summary>Semantic comparison method</summary>
+              <p>
+                {response.textual_candidates_total} textual candidates assessed
+                before semantic filtering. Only the matched passage is embedded;
+                surrounding text is shown for review. Negations, names and
+                amounts can change meaning despite a high score.
+              </p>
+              <p className="identifier">
+                Model: {response.semantic.model}
+                <br />
+                Pipeline: {response.semantic.pipeline}
+                <br />
+                Score: {response.semantic.score_version}
+              </p>
+            </details>
+          )}
           <p className="fineprint">
             Snapshot taken at {formatDate(response.searched_at)}. Rerun after
             processing changes.

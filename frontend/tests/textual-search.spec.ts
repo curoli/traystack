@@ -350,3 +350,129 @@ test("a delayed pagination abort cannot clear a newer search", async ({
   await expect(page.locator(".textual-occurrence")).toHaveCount(1);
   await expect(page.locator(".search-stopped")).toHaveCount(0);
 });
+
+test("local semantic scores filter actual passages and preserve submitted pagination criteria", async ({
+  page,
+}) => {
+  const title = `Semantic comparison ${Date.now()}`;
+  const query = `Buyer${Date.now()} shall pay EUR 500 within thirty days`;
+  await uploadAndProcess(
+    page,
+    title,
+    `${query}. Separate context. `.repeat(7) +
+      `${query.replace("500", "5000")}.`,
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Similar passages", exact: true })
+    .click();
+  await page.locator(".document-row").filter({ hasText: title }).click();
+  await page
+    .getByRole("checkbox", { name: "Search only the open document" })
+    .check();
+  await page.getByLabel("Text passage", { exact: true }).fill(query);
+  await page.getByLabel("Minimum textual match").fill("85");
+  await page
+    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
+    .check();
+  await page.getByLabel("Minimum semantic match").fill("0");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  const card = page.getByRole("region", {
+    name: `Matches in ${title}`,
+    exact: true,
+  });
+  await expect(card.locator(".semantic-score")).toHaveCount(5);
+  await expect(card.locator(".semantic-score").first()).toHaveText(
+    "Semantic match: 100.00%",
+  );
+  await expect(page.locator(".textual-response")).toContainText("8 passages");
+  // Edits to the form must not change the semantic filter for the submitted search.
+  await page.getByLabel("Minimum semantic match").fill("100");
+  await card.getByRole("button", { name: "Next passages" }).click();
+  await expect(card.locator(".semantic-score")).toHaveCount(3);
+  const changed = card
+    .locator(".textual-occurrence")
+    .filter({ hasText: "5000" });
+  // Restrict to the matched/comparison text; snippets can include nearby occurrences.
+  const changedScore = await card
+    .locator(".semantic-score")
+    .last()
+    .textContent();
+  expect(changedScore).not.toBe("Semantic match: 100.00%");
+  await expect(changed).not.toHaveCount(0);
+  await expect(page.locator(".search-query-summary")).toContainText(
+    "minimum semantic 0%",
+  );
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.locator(".search-query-summary")).toContainText(
+    "minimum semantic 100%",
+  );
+  await expect(card).toContainText("7 passages");
+  await card.getByRole("button", { name: "Next passages" }).click();
+  await expect(card.locator(".semantic-score")).toHaveCount(2);
+  await expect(card.locator(".semantic-score").last()).toHaveText(
+    "Semantic match: 100.00%",
+  );
+  await page.getByText("Semantic comparison method", { exact: true }).click();
+  await expect(page.locator(".textual-response")).toContainText(
+    "8 textual candidates assessed",
+  );
+  await expect(page.locator(".textual-response")).toContainText(
+    "Negations, names and amounts",
+  );
+  // A server/model update must not mix a new scoring method into an old card.
+  await page.route("**/api/search/textual", async (route) => {
+    const result = await route.fetch();
+    const body = await result.json();
+    body.semantic.pipeline += "-changed";
+    await route.fulfill({ response: result, json: body });
+  });
+  await card.getByRole("button", { name: "Previous passages" }).click();
+  await expect(card.getByRole("alert")).toContainText("comparison method");
+  await expect(card.locator(".semantic-score")).toHaveCount(2);
+});
+
+test("semantic validation and unavailable-model errors never show textual results as semantic success", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Similar passages", exact: true })
+    .click();
+  await page
+    .getByLabel("Text passage", { exact: true })
+    .fill("Confidential information");
+  await page
+    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
+    .check();
+  await page.getByLabel("Minimum semantic match").fill("101");
+  await expect(
+    page.getByRole("button", { name: "Find passages", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole("alert")).toContainText(
+    "semantic threshold from 0 to 100",
+  );
+  await page.getByLabel("Minimum semantic match").fill("60");
+  await page.route("**/api/search/textual", async (route) => {
+    expect(route.request().postDataJSON().minimum_semantic_score).toBe(60);
+    await route.fulfill({
+      status: 503,
+      json: {
+        detail:
+          "Semantic model is unavailable. Prepare the pinned model during setup.",
+      },
+    });
+  });
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Semantic model is unavailable",
+  );
+  await expect(page.locator(".textual-response")).toHaveCount(0);
+  await expect(page.getByLabel("Minimum semantic match")).toHaveValue("60");
+});

@@ -21,6 +21,7 @@ class TextualAssessmentRequest(BaseModel):
 
 
 class TextualSearchRequest(TextualAssessmentRequest):
+    minimum_semantic_score: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
     scope: Literal["latest"] = "latest"
     document_id: UUID | None = None
     limit: int = Field(default=10, ge=1, le=25)
@@ -64,6 +65,8 @@ class TextDifference(BaseModel):
 class TextualOccurrence(BaseModel):
     occurrence_id: str
     score: float
+    semantic_score: float | None = None
+    semantic_cosine: float | None = None
     start_offset: int
     end_offset: int
     matched_text: str
@@ -106,6 +109,13 @@ class TextualAssessment(BaseModel):
     warnings: list[QueryNotice]
 
 
+class SemanticProvenance(BaseModel):
+    model: str
+    pipeline: str
+    score_version: str
+    max_tokens: int
+
+
 class TextualSearchResponse(BaseModel):
     query: str
     effective_query: str
@@ -114,6 +124,9 @@ class TextualSearchResponse(BaseModel):
     scope: Literal["latest"] = "latest"
     document_id: UUID | None = None
     searched_at: datetime
+    minimum_semantic_score: float | None = None
+    semantic: SemanticProvenance | None = None
+    textual_candidates_total: int
     scorer_version: str
     scorer_library_version: str
     candidate_policy: str
