@@ -832,6 +832,9 @@ select {
   border-bottom: 1px solid var(--border, #dce5df);
   overflow-wrap: anywhere;
 }
+.saved-run-info h3 {
+  overflow-wrap: anywhere;
+}
 .saved-run-actions {
   display: flex;
   gap: 0.75rem;
