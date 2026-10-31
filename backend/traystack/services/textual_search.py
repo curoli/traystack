@@ -33,7 +33,7 @@ from traystack.textual_schemas import (
 
 
 def textual_snapshot(
-    session: Session, request: TextualSearchRequest, semantic_provider=None
+    session: Session, request: TextualSearchRequest, semantic_provider=None, capture=None
 ) -> TextualSearchResponse:
     session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
     session.execute(text("SET TRANSACTION READ ONLY"))
@@ -57,7 +57,10 @@ def textual_snapshot(
         document = TextualDocument.model_validate(provenance.model_dump())
         content = row["search_text"]
         supported = request.mode == "exact" or row["normalization_version"] == NORMALIZATION_VERSION
-        if not content or not content.strip() or not supported:
+        searchable = bool(content and content.strip() and supported)
+        if capture is not None:
+            capture.add_scope(document, searchable)
+        if not searchable:
             unsearchable.append(document)
             continue
         searched += 1
@@ -154,16 +157,26 @@ def textual_snapshot(
     # Stable ties retain the scope's document recency/ID ordering.
     matches.sort(key=lambda item: -item[2][0].score)
     groups = []
-    for document, content, passages in matches[request.offset : request.offset + request.limit]:
+    visible_matches = (
+        matches if capture is not None else matches[request.offset : request.offset + request.limit]
+    )
+    for document, content, passages in visible_matches:
         pages = session.scalars(
             select(PageText)
             .where(PageText.revision_id == document.revision_id)
             .order_by(PageText.page_number)
         ).all()
+        if capture is not None:
+            capture.add_source(session.get(RevisionText, document.revision_id), pages)
         occurrences = []
-        for candidate in passages[
-            request.occurrence_offset : request.occurrence_offset + request.occurrence_limit
-        ]:
+        visible_passages = (
+            passages
+            if capture is not None
+            else passages[
+                request.occurrence_offset : request.occurrence_offset + request.occurrence_limit
+            ]
+        )
+        for candidate in visible_passages:
             numbers, logical, raw_start = [], False, 0
             for page in pages:
                 start, end = (
@@ -295,9 +308,14 @@ def textual_snapshot(
         total=len(matches),
         limit=request.limit,
         offset=request.offset,
-        unsearchable=unsearchable[
-            request.unsearchable_offset : request.unsearchable_offset + request.unsearchable_limit
-        ],
+        unsearchable=(
+            unsearchable
+            if capture is not None
+            else unsearchable[
+                request.unsearchable_offset : request.unsearchable_offset
+                + request.unsearchable_limit
+            ]
+        ),
         unsearchable_total=len(unsearchable),
         unsearchable_limit=request.unsearchable_limit,
         unsearchable_offset=request.unsearchable_offset,

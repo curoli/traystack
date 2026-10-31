@@ -11,7 +11,7 @@ from traystack.services.passage_identity import occurrence_identity, text_finger
 from traystack.services.textual_matching import CANDIDATE_POLICY, SCORER_VERSION
 
 
-def save_review(session, payload: ReviewWrite) -> ReviewOut:
+def validate_current(session, payload):
     # Serialize against new revisions and publication of another selected text.
     document = session.scalar(
         select(Document).where(Document.id == payload.document_id).with_for_update()
@@ -58,8 +58,75 @@ def save_review(session, payload: ReviewWrite) -> ReviewOut:
         raise HTTPException(
             409, "The passage does not match the selected source. Please run the search again."
         )
+    return phrase, identity
+
+
+def validate_saved(session, payload):
+    from traystack.services.search_runs import archived_source, get_run
+
+    run = get_run(session, payload.search_run_id)
+    group = next(
+        (
+            g
+            for g in run.result_json["results"]
+            if g["document"]["document_id"] == str(payload.document_id)
+        ),
+        None,
+    )
+    item = (
+        next(
+            (
+                item
+                for item in group["occurrences"]
+                if item["occurrence_id"] == payload.occurrence_id
+            ),
+            None,
+        )
+        if group
+        else None
+    )
+    fields = {
+        "revision_id": "revision_id",
+        "processing_job_id": "processing_job_id",
+        "source_artifact_id": "artifact_id",
+        "normalization_version": "normalization_version",
+    }
+    if (
+        item is None
+        or any(
+            str(getattr(payload, key)) != str(group["document"][value])
+            for key, value in fields.items()
+        )
+        or payload.query != run.result_json["query"]
+        or payload.mode != run.result_json["mode"]
+        or payload.scorer_version != run.result_json["scorer_version"]
+        or payload.candidate_policy != run.result_json["candidate_policy"]
+        or any(
+            getattr(payload, key) != item[key]
+            for key in ["start_offset", "end_offset", "matched_sha256"]
+        )
+    ):
+        raise HTTPException(409, "This passage does not belong to the saved search")
+    source = archived_source(session, run.id, payload.processing_job_id)
+    content = source["normalized_text"] if payload.mode == "normalized" else source["plain_text"]
+    if (
+        text_fingerprint(content[payload.start_offset : payload.end_offset])
+        != payload.matched_sha256
+    ):
+        raise HTTPException(503, "Saved passage integrity check failed")
+    return run.result_json["effective_query"], item["occurrence_id"]
+
+
+def save_review(session, payload: ReviewWrite) -> ReviewOut:
+    phrase, identity = (
+        validate_saved(session, payload)
+        if payload.search_run_id
+        else validate_current(session, payload)
+    )
     if payload.expected_version == 0:
-        values = payload.model_dump(exclude={"document_id", "query", "expected_version"})
+        values = payload.model_dump(
+            exclude={"document_id", "query", "expected_version", "search_run_id"}
+        )
         values.update(effective_query=phrase, version=1)
         statement = (
             insert(PassageReview)
@@ -85,7 +152,13 @@ def save_review(session, payload: ReviewWrite) -> ReviewOut:
     result = session.scalar(statement)
     if result is None:
         raise HTTPException(
-            409, "This review changed in another view. Please run the search again before saving."
+            409,
+            "This review changed in another view. "
+            + (
+                "Refresh reviews before saving."
+                if payload.search_run_id
+                else "Please run the search again before saving."
+            ),
         )
     answer = ReviewOut.model_validate(result)
     session.commit()

@@ -95,7 +95,7 @@ test("a contract batch supports source inspection, material differences and save
     .getByRole("button", { name: "View source text", exact: true })
     .click();
   await expect(
-    page.getByRole("region", { name: "Extracted page text", exact: true }),
+    page.getByRole("region", { name: "Saved source text", exact: true }),
   ).toBeFocused();
   await first.getByRole("button", { name: "Keep", exact: true }).click();
   await expect(

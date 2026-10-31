@@ -21,7 +21,9 @@ const errorText = (error: unknown) =>
 
 export default function App() {
   const [searchWorkflow, setSearchWorkflow] = useState<"literal" | "textual">(
-    "literal",
+    new URLSearchParams(window.location.search).has("search_run")
+      ? "textual"
+      : "literal",
   );
   const [documents, setDocuments] = useState<Document[]>([]);
   const [total, setTotal] = useState(0);

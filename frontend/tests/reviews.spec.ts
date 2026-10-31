@@ -89,6 +89,7 @@ test("review decisions persist across pages, reload and semantics, and filtered 
     "Review: Keep",
   );
   await page.reload();
+  await expect(page.locator(".textual-response")).toBeVisible();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -168,7 +169,9 @@ test("conflicts, failed saves and reprocessed sources never display an unsaved d
   await item.getByRole("button", { name: "Dismiss", exact: true }).click();
   await expect(item.getByRole("alert")).toContainText("another view");
   await expect(item.locator(".review-status")).toContainText("Not reviewed");
-  await find(page, token);
+  await page
+    .getByRole("button", { name: "Refresh reviews", exact: true })
+    .click();
   await expect(item.locator(".review-status")).toContainText("Review: Keep");
   await page.route("**/api/reviews", (route) =>
     route.fulfill({
@@ -182,10 +185,10 @@ test("conflicts, failed saves and reprocessed sources never display an unsaved d
   await page.unroute("**/api/reviews");
   await process(page, doc.revisions[0].id);
   await item.getByRole("button", { name: "Decide later", exact: true }).click();
-  await expect(item.getByRole("alert")).toContainText(
-    "selected source has changed",
+  await expect(item.locator(".review-status")).toContainText(
+    "Review: Decide later",
   );
-  await expect(item.locator(".review-status")).toContainText("Review: Keep");
+  await expect(item.getByRole("alert")).toHaveCount(0);
   await find(page, token);
   await expect(item.locator(".review-status")).toContainText("Not reviewed");
 });

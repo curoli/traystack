@@ -99,3 +99,13 @@
   gegen den bisherigen Stand verglichen. Messung und Grenzen stehen in
   [search-performance.md](search-performance.md); der gesamte Originalkorpus und
   ein neuer Kandidatenindex sind damit noch nicht bewertet.
+
+- **Suchergebnisse dauerhaft als vollständige Momentaufnahme:** Ein gespeicherter
+  Ausdruck allein reproduziert nach Neuverarbeitung oder Bestandsänderung nicht
+  dieselben Treffer. Deshalb speichert jeder erfolgreiche UI-Suchlauf die komplette
+  Menge nach beiden Ähnlichkeitsfiltern, vor Review-Filter und Pagination, samt
+  damaligem Scope und einmal pro Job archiviertem Text. Wiederöffnen liest diese
+  Daten ohne Matcher/Modell; Run again erstellt eine verknüpfte neue Momentaufnahme.
+  Aktuelle Bewertungen bleiben bearbeitbar, der Erfassungszustand separat erhalten.
+  Atomare Persistenz und explizite Größenlimits verhindern gespeicherte Teilmengen.
+  Einzelheiten und Aufbewahrungsgrenzen: [saved-search-runs.md](saved-search-runs.md).

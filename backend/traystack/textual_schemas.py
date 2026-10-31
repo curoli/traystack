@@ -68,6 +68,7 @@ class TextualOccurrence(BaseModel):
     occurrence_id: str
     score: float
     matched_sha256: str
+    review_at_capture: ReviewOut | None = None
     review: ReviewOut = Field(default_factory=ReviewOut)
     semantic_score: float | None = None
     semantic_cosine: float | None = None
@@ -122,6 +123,11 @@ class SemanticProvenance(BaseModel):
 
 
 class TextualSearchResponse(BaseModel):
+    captured_review_filter: ReviewFilter | None = None
+    run_id: UUID | None = None
+    run_name: str | None = None
+    parent_run_id: UUID | None = None
+    scope_total: int | None = None
     review_filter: ReviewFilter = "all"
     review_counts: ReviewCounts
     query: str

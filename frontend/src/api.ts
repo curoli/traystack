@@ -271,6 +271,7 @@ export interface PassageReview {
   updated_at: string | null;
 }
 export interface ReviewWrite {
+  search_run_id?: string;
   occurrence_id: string;
   document_id: string;
   revision_id: string;
@@ -328,6 +329,7 @@ export type TextualDocument = Pick<
   | "latest_job"
 >;
 export interface TextualOccurrence {
+  review_at_capture?: PassageReview | null;
   matched_sha256: string;
   review: PassageReview;
   occurrence_id: string;
@@ -356,6 +358,11 @@ export interface TextualGroup {
   occurrence_limit: number;
 }
 export interface TextualSearchResponse {
+  captured_review_filter: ReviewFilter | null;
+  run_id: string | null;
+  run_name: string | null;
+  parent_run_id: string | null;
+  scope_total: number | null;
   review_filter: ReviewFilter;
   review_counts: ReviewCounts;
   minimum_semantic_score: number | null;
@@ -426,3 +433,66 @@ export const assessTextual = (
     body: JSON.stringify(payload),
     signal,
   });
+
+export interface SavedRunSummary {
+  id: string;
+  name: string;
+  query: string;
+  searched_at: string;
+  created_at: string;
+  parent_run_id: string | null;
+  result_documents: number;
+  result_passages: number;
+}
+export const createSearchRun = (
+  search: TextualSearchRequest,
+  name?: string,
+  parent_run_id?: string,
+) =>
+  request<TextualSearchResponse>("/api/search-runs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ search, name, parent_run_id }),
+  });
+export function getSearchRun(
+  id: string,
+  view: Partial<TextualSearchRequest> = {},
+) {
+  const query = new URLSearchParams();
+  for (const key of [
+    "document_id",
+    "review_filter",
+    "limit",
+    "offset",
+    "occurrence_limit",
+    "occurrence_offset",
+    "unsearchable_limit",
+    "unsearchable_offset",
+  ] as const) {
+    const value = view[key];
+    if (value != null) query.set(key, String(value));
+  }
+  return request<TextualSearchResponse>(`/api/search-runs/${id}?${query}`);
+}
+export const listSearchRuns = (offset = 0) =>
+  request<{
+    items: SavedRunSummary[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>(`/api/search-runs?offset=${offset}`);
+export const renameSearchRun = (id: string, name: string) =>
+  request<SavedRunSummary>(`/api/search-runs/${id}/name`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+export const getSavedSource = (id: string, job: string) =>
+  request<TextContent>(`/api/search-runs/${id}/sources/${job}`);
+export const getSavedScope = (id: string, offset = 0) =>
+  request<{
+    items: (TextualDocument & { searchable: boolean })[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>(`/api/search-runs/${id}/scope?offset=${offset}`);
