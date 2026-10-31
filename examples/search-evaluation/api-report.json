@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "description": "HTTP/DB/model measurements on a fresh dedicated local stack. OS file cache was not reset. No before/after API speedup is claimed.",
+  "synthetic_documents": 32,
+  "actual_ocr_documents": 2,
+  "upload_and_processing_s": 4.955229955000505,
+  "cases": [
+    {
+      "query_id": "confidentiality",
+      "documents_with_matches": 24,
+      "passages": 24,
+      "textual_samples_s": [
+        0.19750650100013445,
+        0.1816401220003172,
+        0.18328713499977312,
+        0.1908464850002929,
+        0.1883915540001908
+      ],
+      "textual_median_s": 0.1883915540001908,
+      "first_semantic_request_s": 1.0069854969997323,
+      "includes_first_model_initialization": true,
+      "warm_semantic_samples_s": [
+        0.20316610999998375,
+        0.21271244199942885,
+        0.18980679800006328,
+        0.18735359400034213,
+        0.1852366160001111
+      ],
+      "warm_semantic_median_s": 0.18980679800006328,
+      "semantic": {
+        "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+        "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+        "score_version": "positive-cosine-exact-100-v1",
+        "max_tokens": 128
+      }
+    },
+    {
+      "query_id": "amount",
+      "documents_with_matches": 32,
+      "passages": 32,
+      "textual_samples_s": [
+        0.13430545200026245,
+        0.13632791100008035,
+        0.13068898499932402,
+        0.13345970799946372,
+        0.13041703900034918
+      ],
+      "textual_median_s": 0.13345970799946372,
+      "first_semantic_request_s": 0.214263416999529,
+      "includes_first_model_initialization": false,
+      "warm_semantic_samples_s": [
+        0.14220582000052673,
+        0.136753688000681,
+        0.1437477299996317,
+        0.13963068700013537,
+        0.19224246100020537
+      ],
+      "warm_semantic_median_s": 0.14220582000052673,
+      "semantic": {
+        "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+        "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+        "score_version": "positive-cosine-exact-100-v1",
+        "max_tokens": 128
+      }
+    },
+    {
+      "query_id": "name",
+      "documents_with_matches": 32,
+      "passages": 32,
+      "textual_samples_s": [
+        0.10685281199948804,
+        0.1059860289997232,
+        0.10330560200054606,
+        0.09893668099994102,
+        0.10605030900023849
+      ],
+      "textual_median_s": 0.1059860289997232,
+      "first_semantic_request_s": 0.14416677600002004,
+      "includes_first_model_initialization": false,
+      "warm_semantic_samples_s": [
+        0.10477425600038259,
+        0.10830768699997861,
+        0.10863050300031318,
+        0.10943786500047281,
+        0.09933525499945972
+      ],
+      "warm_semantic_median_s": 0.10830768699997861,
+      "semantic": {
+        "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+        "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+        "score_version": "positive-cosine-exact-100-v1",
+        "max_tokens": 128
+      }
+    },
+    {
+      "query_id": "german",
+      "documents_with_matches": 32,
+      "passages": 32,
+      "textual_samples_s": [
+        0.10091374199964775,
+        0.10451037599978008,
+        0.10502648100009537,
+        0.0958288129995708,
+        0.10820373299975472
+      ],
+      "textual_median_s": 0.10451037599978008,
+      "first_semantic_request_s": 0.16939399500006402,
+      "includes_first_model_initialization": false,
+      "warm_semantic_samples_s": [
+        0.10107228800006851,
+        0.10633440900073765,
+        0.10425417199985532,
+        0.10329112999988865,
+        0.1009412120001798
+      ],
+      "warm_semantic_median_s": 0.10329112999988865,
+      "semantic": {
+        "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+        "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+        "score_version": "positive-cosine-exact-100-v1",
+        "max_tokens": 128
+      }
+    }
+  ],
+  "workflow": {
+    "source_access": true,
+    "persisted_decisions": [
+      "keep",
+      "dismiss",
+      "later",
+      "unreviewed"
+    ],
+    "material_differences_visible": true,
+    "actual_printed_ocr_retrieved": true
+  }
+}

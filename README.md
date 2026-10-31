@@ -29,6 +29,10 @@ erklären die zweite Schwelle, lokales Modell, Cache und Grenzen.
 **Not reviewed**, Statusfilter und Zähler unterstützen den Prüfablauf;
 **Reset review** setzt eine Entscheidung zurück. Die [Review-Regeln](docs/passage-reviews.md)
 beschreiben Quellenbindung, Konflikte und das Verhalten nach Neuverarbeitung.
+Ein [reproduzierbarer Prüfbestand und Laufzeitbericht](docs/search-performance.md)
+vergleichen textuelle Suche, erste Embeddings und Cache-Nutzung. Die gemessenen
+Optimierungen erhalten Treffer und Scores; die Oberfläche zeigt Suchdauer und
+Ladezustand beim Blättern durch Fundstellen.
 
 ## Start
 
@@ -144,6 +148,8 @@ Entfernen des Testcontainers verloren. Eine frische Instanz testet die Migration
 von einer leeren Datenbank. Storage-Tests benötigen keine Datenbank.
 
 Browser-Tests gegen den laufenden Stack (legen synthetische Datensätze an):
+Für kontrollierte Bestandsgrößen einen separaten Stack und `TRAYSTACK_BASE_URL`
+verwenden; Beispiele und Messgrenzen stehen im [Laufzeitbericht](docs/search-performance.md).
 
 ```sh
 cd frontend

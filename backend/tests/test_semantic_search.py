@@ -201,3 +201,23 @@ def test_real_model_budgets_stop_without_partial_scores(real_engine, monkeypatch
         real_engine.compare("cached query", ["cached passage"])
     assert caught.value.reason == "semantic_time_limit"
     assert caught.value.detail()["results_complete"] is False
+
+
+def test_complete_warm_cache_avoids_directory_scan_but_misses_still_enforce_quota(
+    real_engine, monkeypatch
+):
+    query, passage = "The buyer pays EUR 500.", "The buyer pays EUR 5000."
+    expected = real_engine.compare(query, [passage])
+    original_glob = Path.glob
+    scans = []
+
+    def track_scan(path, pattern, **kwargs):
+        if path == real_engine.cache_path:
+            scans.append(pattern)
+        return original_glob(path, pattern, **kwargs)
+
+    monkeypatch.setattr(Path, "glob", track_scan)
+    assert real_engine.compare(query, [passage]) == expected
+    assert scans == []
+    real_engine.compare(query, ["A new uncached delivery clause."])
+    assert scans == ["*.json"]

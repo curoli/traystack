@@ -159,3 +159,9 @@ kurzen Schreibvorgang und verwendet eine erwartete Versionsnummer gegen verloren
 Updates. Die Suche bleibt read-only: Sie liest Entscheidungen im selben Snapshot,
 zählt nach textueller/semantischer Filterung und filtert vor der Pagination nach
 Review-Status. Neuverarbeitung übernimmt keine alten Entscheidungen automatisch.
+
+Die [Laufzeitmessung](search-performance.md) trennt Matcher, Modell-/Embedding-Cache
+und tatsächliche HTTP-Anfragen. Optimierte Wortfenster behalten dieselben Scores,
+Fundstellen und Ressourcenbudgets; vollständige Embedding-Cache-Treffer benötigen
+keinen Verzeichnisscan. Ein zusätzlicher Index oder eine Such-Snapshot-Warteschlange
+wird durch diesen begrenzten Messbestand nicht eingeführt.

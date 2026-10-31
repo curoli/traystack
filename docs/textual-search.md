@@ -292,3 +292,12 @@ abort callbacks are bound to the originating search request ID. Successful
 workflows use the real stack.
 TypeScript/Vite, Ruff, Prettier, dependency consistency, Markdown links and
 `git diff --check` are checked. The known Starlette/HTTPX TestClient warning remains.
+
+## Measured implementation optimization
+
+The [mixed-workload report](search-performance.md) compares the current matcher
+with the merged PR #11 implementation. Precomputed offsets and conservative
+length checks avoid unnecessary Python work while preserving complete scores,
+occurrence IDs, policy and work budgets. No approximate candidate index was added.
+The UI reports completed-request elapsed time and indicates pending occurrence
+pagination; timing does not include upload/extraction or final browser paint.

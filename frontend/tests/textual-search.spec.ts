@@ -281,6 +281,9 @@ test("a delayed pagination abort cannot clear a newer search", async ({
     .getByRole("button", { name: "Next passages", exact: true })
     .click();
   await pagingStarted;
+  await expect(
+    page.getByRole("status").filter({ hasText: "Loading passages" }),
+  ).toBeVisible();
   await page.getByLabel("Text passage", { exact: true }).fill(replacement);
   await page
     .getByRole("button", { name: "Find passages", exact: true })

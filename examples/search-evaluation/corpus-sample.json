@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "generator": "contract-workload-v1",
+  "marker": "EvaluationTenant001",
+  "description": "Authored synthetic contracts; simulated OCR variants are typed errors, not OCR measurements.",
+  "background_sections": 3,
+  "queries": {
+    "confidentiality": "The receiving party for EvaluationTenant001 shall not disclose confidential information.",
+    "amount": "The buyer EvaluationTenant001 shall pay EUR 500 within thirty days.",
+    "name": "Acme Limited shall deliver the goods to EvaluationTenant001.",
+    "german": "Der Käufer EvaluationTenant001 muss die Rechnung bezahlen."
+  },
+  "documents": [
+    {
+      "id": "synthetic-001",
+      "text": "Synthetic supply agreement 001. Independently authored evaluation data.\n\nSection 1. Scope of services. Scheduled deliveries follow the order confirmation and the agreed specification. The supplier records packaging requirements and provides a contact for operational questions.\n\nSection 2. Inspection. The customer checks quantities after receipt and records visible transport damage. A discrepancy report identifies the delivery date, affected items and supporting photographs.\n\nSection 3. Records. Each party retains correspondence concerning an order and its amendments. Changes to the specification require a written confirmation by the designated representatives.\n\nThe receiving party for EvaluationTenant001 shall not disclose confidential information.\n\nThe buyer EvaluationTenant001 shall pay EUR 500 within thirty days.\n\nAcme Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnung bezahlen.\n",
+      "sha256": "8d364d9f932bb0a21fdfc94ac8f6b892130f68de206c3682ad5f70e78745d52d",
+      "targets": {
+        "confidentiality": {
+          "case": "identity",
+          "clause": "The receiving party for EvaluationTenant001 shall not disclose confidential information.",
+          "start": 666,
+          "end": 754
+        },
+        "amount": {
+          "case": "identity",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 500 within thirty days.",
+          "start": 755,
+          "end": 822
+        },
+        "name": {
+          "case": "identity",
+          "clause": "Acme Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 823,
+          "end": 883
+        },
+        "german": {
+          "case": "identity",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnung bezahlen.",
+          "start": 884,
+          "end": 942
+        }
+      }
+    },
+    {
+      "id": "synthetic-002",
+      "text": "Synthetic supply agreement 002. Independently authored evaluation data.\n\nSection 1. Inspection. The customer checks quantities after receipt and records visible transport damage. A discrepancy report identifies the delivery date, affected items and supporting photographs.\n\nSection 2. Records. Each party retains correspondence concerning an order and its amendments. Changes to the specification require a written confirmation by the designated representatives.\n\nSection 3. Term and notices. This framework starts on the date shown in the signature block. Routine operational messages are sent to the contact addresses maintained by each party.\n\nThe receiving party for EvaluationTenant001 shall disclose confidential information.\n\nThe buyer EvaluationTenant001 shall pay EUR 5000 within thirty days.\n\nBeta Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnung nicht bezahlen.\n",
+      "sha256": "5ce8663199bf8ba0bb492fd79fab381e222b432f101900f4fe1cddcd4b026f23",
+      "targets": {
+        "confidentiality": {
+          "case": "changed_negation",
+          "clause": "The receiving party for EvaluationTenant001 shall disclose confidential information.",
+          "start": 643,
+          "end": 727
+        },
+        "amount": {
+          "case": "changed_amount",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 5000 within thirty days.",
+          "start": 728,
+          "end": 796
+        },
+        "name": {
+          "case": "changed_name",
+          "clause": "Beta Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 797,
+          "end": 857
+        },
+        "german": {
+          "case": "changed_negation",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnung nicht bezahlen.",
+          "start": 858,
+          "end": 922
+        }
+      }
+    },
+    {
+      "id": "synthetic-003",
+      "text": "Synthetic supply agreement 003. Independently authored evaluation data.\n\nSection 1. Records. Each party retains correspondence concerning an order and its amendments. Changes to the specification require a written confirmation by the designated representatives.\n\nSection 2. Term and notices. This framework starts on the date shown in the signature block. Routine operational messages are sent to the contact addresses maintained by each party.\n\nSection 3. Force majeure. A party affected by an external disruption informs the other party promptly. Both parties document the expected duration and discuss reasonable continuity measures.\n\nThe receiving party for EvaluationTenant001 shall not share confidential information.\n\nThe buyer EvaluationTenant001 shall pay EUR 500 within three days.\n\nAcme Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnung begleichen.\n",
+      "sha256": "48224a184fa6b573e0907c9ee955c446a568a4ce2d74e0a01ca2d4c073e9d3c1",
+      "targets": {
+        "confidentiality": {
+          "case": "paraphrase",
+          "clause": "The receiving party for EvaluationTenant001 shall not share confidential information.",
+          "start": 634,
+          "end": 719
+        },
+        "amount": {
+          "case": "changed_deadline",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 500 within three days.",
+          "start": 720,
+          "end": 786
+        },
+        "name": {
+          "case": "identity",
+          "clause": "Acme Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 787,
+          "end": 847
+        },
+        "german": {
+          "case": "paraphrase",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnung begleichen.",
+          "start": 848,
+          "end": 908
+        }
+      }
+    },
+    {
+      "id": "synthetic-004",
+      "text": "Synthetic supply agreement 004. Independently authored evaluation data.\n\nSection 1. Term and notices. This framework starts on the date shown in the signature block. Routine operational messages are sent to the contact addresses maintained by each party.\n\nSection 2. Force majeure. A party affected by an external disruption informs the other party promptly. Both parties document the expected duration and discuss reasonable continuity measures.\n\nSection 3. General provisions. The parties identify applicable schedules by their reference numbers. An amendment records its effective date and the representatives approving the change.\n\nThe receivlng party for EvaluationTenant001 shall not disclose confidential informatlon.\n\nThe buyer EvaluationTenant001 shall pay EUR 500 wlthin thirty days.\n\nBeta Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnunq bezahlen.\n",
+      "sha256": "085918ec469e8d563b751c9d9686378bc032a0c9d8ad75e9634d7bd3afb8d896",
+      "targets": {
+        "confidentiality": {
+          "case": "simulated_ocr",
+          "clause": "The receivlng party for EvaluationTenant001 shall not disclose confidential informatlon.",
+          "start": 632,
+          "end": 720
+        },
+        "amount": {
+          "case": "simulated_ocr",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 500 wlthin thirty days.",
+          "start": 721,
+          "end": 788
+        },
+        "name": {
+          "case": "changed_name",
+          "clause": "Beta Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 789,
+          "end": 849
+        },
+        "german": {
+          "case": "simulated_ocr",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnunq bezahlen.",
+          "start": 850,
+          "end": 908
+        }
+      }
+    },
+    {
+      "id": "synthetic-005",
+      "text": "Synthetic supply agreement 005. Independently authored evaluation data.\n\nSection 1. Force majeure. A party affected by an external disruption informs the other party promptly. Both parties document the expected duration and discuss reasonable continuity measures.\n\nSection 2. General provisions. The parties identify applicable schedules by their reference numbers. An amendment records its effective date and the representatives approving the change.\n\nSection 3. Scope of services. Scheduled deliveries follow the order confirmation and the agreed specification. The supplier records packaging requirements and provides a contact for operational questions.\n\nThe receiving party for EvaluationTenant001 shall not disclose confidential information.\n\nThe buyer EvaluationTenant001 shall pay EUR 500 within thirty days.\n\nAcme Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnung bezahlen.\n",
+      "sha256": "6e62a45e8bdfa91560c65e74938887f0287ff308234c4538447c71247fb375db",
+      "targets": {
+        "confidentiality": {
+          "case": "identity",
+          "clause": "The receiving party for EvaluationTenant001 shall not disclose confidential information.",
+          "start": 655,
+          "end": 743
+        },
+        "amount": {
+          "case": "identity",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 500 within thirty days.",
+          "start": 744,
+          "end": 811
+        },
+        "name": {
+          "case": "identity",
+          "clause": "Acme Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 812,
+          "end": 872
+        },
+        "german": {
+          "case": "identity",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnung bezahlen.",
+          "start": 873,
+          "end": 931
+        }
+      }
+    },
+    {
+      "id": "synthetic-006",
+      "text": "Synthetic supply agreement 006. Independently authored evaluation data.\n\nSection 1. General provisions. The parties identify applicable schedules by their reference numbers. An amendment records its effective date and the representatives approving the change.\n\nSection 2. Scope of services. Scheduled deliveries follow the order confirmation and the agreed specification. The supplier records packaging requirements and provides a contact for operational questions.\n\nSection 3. Inspection. The customer checks quantities after receipt and records visible transport damage. A discrepancy report identifies the delivery date, affected items and supporting photographs.\n\nThe receiving party for EvaluationTenant001 shall disclose confidential information.\n\nThe buyer EvaluationTenant001 shall pay EUR 5000 within thirty days.\n\nBeta Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnung nicht bezahlen.\n",
+      "sha256": "ab638b5d3225217449c31a2ff161137dc3f4030402cf84f1db780ed70ff430bf",
+      "targets": {
+        "confidentiality": {
+          "case": "changed_negation",
+          "clause": "The receiving party for EvaluationTenant001 shall disclose confidential information.",
+          "start": 664,
+          "end": 748
+        },
+        "amount": {
+          "case": "changed_amount",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 5000 within thirty days.",
+          "start": 749,
+          "end": 817
+        },
+        "name": {
+          "case": "changed_name",
+          "clause": "Beta Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 818,
+          "end": 878
+        },
+        "german": {
+          "case": "changed_negation",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnung nicht bezahlen.",
+          "start": 879,
+          "end": 943
+        }
+      }
+    },
+    {
+      "id": "synthetic-007",
+      "text": "Synthetic supply agreement 007. Independently authored evaluation data.\n\nSection 1. Scope of services. Scheduled deliveries follow the order confirmation and the agreed specification. The supplier records packaging requirements and provides a contact for operational questions.\n\nSection 2. Inspection. The customer checks quantities after receipt and records visible transport damage. A discrepancy report identifies the delivery date, affected items and supporting photographs.\n\nSection 3. Records. Each party retains correspondence concerning an order and its amendments. Changes to the specification require a written confirmation by the designated representatives.\n\nThe warehouse is open on weekdays during business hours.\n\nThe buyer EvaluationTenant001 shall pay EUR 500 within three days.\n\nAcme Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnung begleichen.\n",
+      "sha256": "2f19f7a2d713ebca430cc9680c7599e73a849580232034517ce19e8f0cb80f98",
+      "targets": {
+        "confidentiality": {
+          "case": "unrelated",
+          "clause": "The warehouse is open on weekdays during business hours.",
+          "start": 666,
+          "end": 722
+        },
+        "amount": {
+          "case": "changed_deadline",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 500 within three days.",
+          "start": 723,
+          "end": 789
+        },
+        "name": {
+          "case": "identity",
+          "clause": "Acme Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 790,
+          "end": 850
+        },
+        "german": {
+          "case": "paraphrase",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnung begleichen.",
+          "start": 851,
+          "end": 911
+        }
+      }
+    },
+    {
+      "id": "synthetic-008",
+      "text": "Synthetic supply agreement 008. Independently authored evaluation data.\n\nSection 1. Inspection. The customer checks quantities after receipt and records visible transport damage. A discrepancy report identifies the delivery date, affected items and supporting photographs.\n\nSection 2. Records. Each party retains correspondence concerning an order and its amendments. Changes to the specification require a written confirmation by the designated representatives.\n\nSection 3. Term and notices. This framework starts on the date shown in the signature block. Routine operational messages are sent to the contact addresses maintained by each party.\n\nShipping insurance covers damage while goods are in transit.\n\nThe buyer EvaluationTenant001 shall pay EUR 500 wlthin thirty days.\n\nBeta Limited shall deliver the goods to EvaluationTenant001.\n\nDer Käufer EvaluationTenant001 muss die Rechnunq bezahlen.\n",
+      "sha256": "ae1956c8b67382926db499f34923e38bf4dc4ccdad7158045dc38986513dacf1",
+      "targets": {
+        "confidentiality": {
+          "case": "unrelated",
+          "clause": "Shipping insurance covers damage while goods are in transit.",
+          "start": 643,
+          "end": 703
+        },
+        "amount": {
+          "case": "simulated_ocr",
+          "clause": "The buyer EvaluationTenant001 shall pay EUR 500 wlthin thirty days.",
+          "start": 704,
+          "end": 771
+        },
+        "name": {
+          "case": "changed_name",
+          "clause": "Beta Limited shall deliver the goods to EvaluationTenant001.",
+          "start": 772,
+          "end": 832
+        },
+        "german": {
+          "case": "simulated_ocr",
+          "clause": "Der Käufer EvaluationTenant001 muss die Rechnunq bezahlen.",
+          "start": 833,
+          "end": 891
+        }
+      }
+    }
+  ]
+}
