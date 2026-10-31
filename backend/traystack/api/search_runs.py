@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from traystack.db import get_session
@@ -136,4 +136,33 @@ def export(
             f'{review_filter}.{file_format}"',
             "Cache-Control": "no-store",
         },
+    )
+
+
+@router.get("/{identity}/workspace", response_model=TextualSearchResponse)
+def workspace(
+    identity: UUID, session: SessionDep, response: Response, review_filter: ReviewFilter = "all"
+):
+    response.headers["Cache-Control"] = "no-store"
+    # Stored matches are bounded at capture. Load them once for navigation across
+    # every document and passage without rerunning matching or embeddings.
+    session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
+    session.execute(text("SET TRANSACTION READ ONLY"))
+    result = read_run(session, identity, review_filter=review_filter, complete=True)
+    return result.model_copy(
+        update={
+            "limit": max(result.total, 1),
+            "offset": 0,
+            "unsearchable_limit": max(result.unsearchable_total, 1),
+            "unsearchable_offset": 0,
+            "results": [
+                group.model_copy(
+                    update={
+                        "occurrence_limit": max(group.occurrence_total, 1),
+                        "occurrence_offset": 0,
+                    }
+                )
+                for group in result.results
+            ],
+        }
     )

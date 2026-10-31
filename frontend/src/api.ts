@@ -519,3 +519,13 @@ export async function exportSearchRun(
     filename: `traystack-search-${id}-${reviewFilter}.${format}`,
   };
 }
+
+export const getReviewWorkspace = (
+  id: string,
+  filter: ReviewFilter,
+  signal: AbortSignal,
+) =>
+  request<TextualSearchResponse>(
+    `/api/search-runs/${id}/workspace?review_filter=${filter}`,
+    { signal },
+  );

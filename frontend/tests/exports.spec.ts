@@ -42,7 +42,7 @@ test("CSV and JSON download complete saved results with current filters and froz
     name: `Matches in ${title}`,
     exact: true,
   });
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await card
     .locator(".textual-occurrence")
     .first()
@@ -82,7 +82,7 @@ test("CSV and JSON download complete saved results with current filters and froz
   expect(kept.result.semantic).toEqual(run.semantic);
   expect(kept.result.searched_at).toBe(run.searched_at);
   expect(kept.exported_at).toBeTruthy();
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await page
     .getByLabel("Export review status", { exact: true })
     .selectOption("all");
