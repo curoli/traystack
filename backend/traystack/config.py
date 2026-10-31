@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://traystack:traystack_local@localhost:5432/traystack"
     storage_path: Path = Path("/data/blobs")
+    semantic_model_path: Path = Path("/opt/traystack/semantic-model")
     upload_max_bytes: int = Field(default=25 * 1024 * 1024, gt=0)
     cors_origins: list[str] = ["http://localhost:8080", "http://127.0.0.1:8080"]
 

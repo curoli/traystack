@@ -69,3 +69,14 @@
   Fundstellenanzahl/-dichte und Ressourcenbudgets können einen Lauf abbrechen;
   dann wird keine Teilmenge als fertiges Suchergebnis ausgegeben. Die Oberfläche
   verändert keine Schwelle automatisch und kann auf das offene Dokument eingrenzen.
+
+- **Semantik nach konkreten Fundstellen:** Ein lokales, fest versioniertes
+  MiniLM-ONNX-Modell bewertet erst textuell gefundene Passagen. Embeddings entstehen
+  bei Bedarf und werden nach Textinhalt und Pipeline-Version wiederverwendet.
+  Kontext wird angezeigt, aber nicht in den Passagenscore eingemischt. Semantische
+  Filterung erfolgt vor Pagination und Zählung; textuelle Rangfolge bleibt erhalten.
+  100 bedeutet ausdrücklich identischen Vergleichstext, niedrigere Scores sind
+  keine Wahrscheinlichkeiten oder juristische Äquivalenz. Überlange Modelleingaben
+  werden abgelehnt statt abgeschnitten. Feste Singleton-Eingaben verhindern, dass
+  dynamische INT8-Quantisierung vom übrigen Batch oder Cache-Zustand abhängt.
+  Grenzen und Messbeispiele stehen in [semantic-search.md](semantic-search.md).

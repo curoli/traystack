@@ -1,8 +1,10 @@
 # Textual similarity and multiple occurrences
 
 The **Similar passages** workflow is positive candidate retrieval, separate from
-**Literal search** and its exact/normalized absence checks. It adds no semantic
-scores, embeddings or review decisions yet. It never establishes clause absence.
+**Literal search** and its exact/normalized absence checks. An optional
+[semantic comparison stage](semantic-search.md) now scores and filters these
+textual candidates. Review decisions remain a future step. Neither similarity
+stage establishes clause absence.
 
 ## User workflow
 
@@ -122,7 +124,8 @@ additional candidate variants removed by per-start selection or overlap consolid
 the candidate policy and scorer version explicitly; counts refer to retained
 occurrences under that policy, not every conceivable text interval.
 
-There is no trigram candidate index or semantic ranker in this increment. A
+There is no trigram candidate index or semantic reranking. The optional semantic
+stage filters existing candidates and preserves textual ranking. A
 future index must be evaluated for recall rather than silently restricting what
 a negative search is allowed to examine.
 

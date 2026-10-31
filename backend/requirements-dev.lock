@@ -13,29 +13,48 @@ annotated-types==0.8.0
 anyio==4.15.1
     # via
     #   httpx
+    #   httpx2
     #   starlette
 certifi==2026.10.23
     # via
     #   httpcore
     #   httpx
 click==8.5.0
-    # via uvicorn
+    # via
+    #   huggingface-hub
+    #   uvicorn
 fastapi==0.162.0
     # via traystack (backend/pyproject.toml)
+filelock==4.2.5
+    # via huggingface-hub
+flatbuffers==25.12.19
+    # via onnxruntime
+fsspec==2026.9.0
+    # via huggingface-hub
 greenlet==3.5.6
     # via sqlalchemy
 h11==0.16.0
     # via
     #   httpcore
+    #   httpcore2
     #   uvicorn
+hf-xet==1.8.0
+    # via huggingface-hub
 httpcore==1.0.9
     # via httpx
+httpcore2==2.16.0
+    # via httpx2
 httpx==0.28.1
     # via traystack (backend/pyproject.toml)
+httpx2==2.16.0
+    # via huggingface-hub
+huggingface-hub==2.4.0
+    # via tokenizers
 idna==3.20
     # via
     #   anyio
     #   httpx
+    #   httpx2
 iniconfig==2.3.1
     # via pytest
 jinja2==3.1.6
@@ -46,10 +65,18 @@ markupsafe==3.0.4
     # via
     #   jinja2
     #   mako
+numpy==2.5.4
+    # via
+    #   onnxruntime
+    #   traystack (backend/pyproject.toml)
+onnxruntime==1.31.1
+    # via traystack (backend/pyproject.toml)
 opentelemetry-api==1.45.2
     # via fastapi
 packaging==26.3
     # via
+    #   huggingface-hub
+    #   onnxruntime
     #   pytesseract
     #   pytest
     #   swagger-ui-py
@@ -59,6 +86,8 @@ pillow==12.3.0
     #   traystack (backend/pyproject.toml)
 pluggy==1.7.0
     # via pytest
+protobuf==7.36.2
+    # via onnxruntime
 psycopg==3.3.6
     # via traystack (backend/pyproject.toml)
 psycopg-binary==3.3.6
@@ -84,7 +113,9 @@ python-dotenv==1.2.4
 python-multipart==0.0.32
     # via traystack (backend/pyproject.toml)
 pyyaml==6.0.3
-    # via swagger-ui-py
+    # via
+    #   huggingface-hub
+    #   swagger-ui-py
 rapidfuzz==3.14.6
     # via traystack (backend/pyproject.toml)
 ruff==0.17.3
@@ -97,11 +128,20 @@ starlette==1.10.0
     # via fastapi
 swagger-ui-py==25.7.1
     # via traystack (backend/pyproject.toml)
+tokenizers==0.23.3
+    # via traystack (backend/pyproject.toml)
+tqdm==4.70.1
+    # via huggingface-hub
+truststore==0.10.5
+    # via
+    #   httpcore2
+    #   httpx2
 typing-extensions==4.16.0
     # via
     #   alembic
     #   anyio
     #   fastapi
+    #   huggingface-hub
     #   opentelemetry-api
     #   pydantic
     #   pydantic-core

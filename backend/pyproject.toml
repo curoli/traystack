@@ -20,10 +20,16 @@ dependencies = [
   "pytesseract>=0.3.13,<1",
   "swagger-ui-py>=25.7.1,<26",
   "rapidfuzz>=3.14,<4",
+  "numpy>=2.2,<3",
+  "onnxruntime>=1.23,<2",
+  "tokenizers>=0.22,<1",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.11,<1"]
+
+[tool.setuptools.package-data]
+traystack = ["model_license.txt"]
 
 [tool.setuptools.packages.find]
 include = ["traystack*"]

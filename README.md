@@ -21,13 +21,17 @@ Positive Schwelle bis 100, mehrere Fundstellen je Dokument, Kontext und markiert
 Textunterschiede. Die [Score- und Fundstellenregeln](docs/textual-search.md) erklären
 auch die Trainingsmessung mit echten OCR-Ausgaben. Suchausdruckabhängige Hinweise,
 Edit-Budgets und kontrollierte Abbrüche begrenzen zu breite Suchen; 0 ist nicht
-zulässig. Mit **Search only the open document** lässt sich die Auswahl eingrenzen. Semantische Scores und
-**Keep / Dismiss / Decide later** folgen in späteren Schritten.
+zulässig. Mit **Search only the open document** lässt sich die Auswahl eingrenzen.
+Optional bewertet **Compare meaning with local embeddings** die tatsächlich gefundenen
+Passagen semantisch und zeigt beide Scores. Die [semantischen Regeln](docs/semantic-search.md)
+erklären die zweite Schwelle, lokales Modell, Cache und Grenzen. **Keep / Dismiss /
+Decide later** folgt in einem späteren Schritt.
 
 ## Start
 
 Voraussetzungen: Docker mit Compose v2+ und Zugriff auf den Docker-Daemon.
-Der erste Build lädt Images und Abhängigkeiten; die laufende Anwendung benötigt
+Der erste Build lädt Images, Abhängigkeiten und das fest versionierte semantische
+Modell samt Tokenizer (zusammen etwa 135 MB); die laufende Anwendung benötigt
 keine Cloud-Dienste, API-Schlüssel oder externen Netzaufrufe. Auch die API-Dokumentation
 wird lokal ausgeliefert.
 
@@ -122,6 +126,15 @@ TEST_DATABASE_URL=postgresql+psycopg://traystack:traystack_test@127.0.0.1:55432/
 docker compose -f compose.test.yaml down
 ```
 
+Für echte Modelltests zusätzlich einmal das Modell vorbereiten und
+`SEMANTIC_MODEL_PATH=data/models/minilm` beim Pytest-Aufruf setzen:
+
+```sh
+.venv/bin/python -m traystack.prepare_semantic_model data/models/minilm
+```
+
+Ohne `SEMANTIC_MODEL_PATH` werden echte Modelltests ausdrücklich übersprungen;
+Filter-/API-Vertragstests bleiben davon unabhängig.
 Ohne `TEST_DATABASE_URL` werden Datenbanktests ausdrücklich übersprungen.
 Die isolierte Testdatenbank liegt im flüchtigen Speicher; ihre Daten gehen beim
 Entfernen des Testcontainers verloren. Eine frische Instanz testet die Migration

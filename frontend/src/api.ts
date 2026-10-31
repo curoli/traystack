@@ -263,6 +263,7 @@ export interface SearchTarget {
   page_number: number | null;
 }
 export interface TextualSearchRequest {
+  minimum_semantic_score?: number | null;
   query: string;
   mode: "exact" | "normalized";
   minimum_score: number;
@@ -296,6 +297,8 @@ export type TextualDocument = Pick<
 export interface TextualOccurrence {
   occurrence_id: string;
   score: number;
+  semantic_score: number | null;
+  semantic_cosine: number | null;
   start_offset: number;
   end_offset: number;
   matched_text: string;
@@ -317,6 +320,14 @@ export interface TextualGroup {
   occurrence_limit: number;
 }
 export interface TextualSearchResponse {
+  minimum_semantic_score: number | null;
+  textual_candidates_total: number;
+  semantic: {
+    model: string;
+    pipeline: string;
+    score_version: string;
+    max_tokens: number;
+  } | null;
   query: string;
   effective_query: string;
   mode: "exact" | "normalized";

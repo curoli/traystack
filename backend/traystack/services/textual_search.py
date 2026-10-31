@@ -30,7 +30,9 @@ from traystack.textual_schemas import (
 )
 
 
-def textual_snapshot(session: Session, request: TextualSearchRequest) -> TextualSearchResponse:
+def textual_snapshot(
+    session: Session, request: TextualSearchRequest, semantic_provider=None
+) -> TextualSearchResponse:
     session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
     session.execute(text("SET TRANSACTION READ ONLY"))
     searched_at = datetime.now(UTC)
@@ -64,6 +66,45 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
             raise
         if passages:
             matches.append((document, content, passages))
+    textual_candidates_total = passage_budget.total
+    semantic_values, semantic = {}, None
+    if request.minimum_semantic_score is not None:
+        if textual_candidates_total > 500:
+            error = SearchTooBroad(
+                "Too many passages for semantic comparison. Raise the textual threshold or "
+                "narrow the document selection.",
+                reason="semantic_passage_limit",
+                resource="semantic_passages",
+                limit=500,
+                observed=textual_candidates_total,
+            )
+            error.documents_inspected = documents_total
+            raise error
+        engine = semantic_provider()
+        semantic = engine.provenance()
+        flat = [
+            (document, content, candidate)
+            for document, content, passages in matches
+            for candidate in passages
+        ]
+        try:
+            values = engine.compare(phrase, [content[c.start : c.end] for _, content, c in flat])
+        except SearchTooBroad as error:
+            error.documents_inspected = documents_total
+            raise
+        for (document, _, candidate), value in zip(flat, values, strict=True):
+            semantic_values[document.document_id, candidate.start, candidate.end] = value
+        filtered = []
+        for document, content, passages in matches:
+            retained = [
+                candidate
+                for candidate in passages
+                if semantic_values[document.document_id, candidate.start, candidate.end][0]
+                >= request.minimum_semantic_score
+            ]
+            if retained:
+                filtered.append((document, content, retained))
+        matches = filtered
     # Stable ties retain the scope's document recency/ID ordering.
     matches.sort(key=lambda item: -item[2][0].score)
     groups = []
@@ -98,6 +139,21 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
                 TextualOccurrence(
                     occurrence_id=occurrence_id,
                     score=round(candidate.score, 4),
+                    semantic_score=(
+                        round(
+                            semantic_values[document.document_id, candidate.start, candidate.end][
+                                0
+                            ],
+                            4,
+                        )
+                        if semantic is not None
+                        else None
+                    ),
+                    semantic_cosine=(
+                        semantic_values[document.document_id, candidate.start, candidate.end][1]
+                        if semantic is not None
+                        else None
+                    ),
                     start_offset=candidate.start,
                     end_offset=candidate.end,
                     matched_text=matched,
@@ -125,11 +181,36 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
             QueryNotice(
                 code="many_passages",
                 message=(
-                    f"This completed search returned {passage_budget.total} candidate passages. "
+                    f"The textual stage found {passage_budget.total} candidate passages. "
                     "Consider a higher threshold or a narrower selection to reduce review work."
                 ),
             )
         )
+    if request.minimum_semantic_score is not None:
+        result_warnings.append(
+            QueryNotice(
+                code="semantic_not_equivalence",
+                message="Semantic scores measure model similarity, not confidence or legal "
+                "equivalence. Negations, names and amounts can change meaning despite "
+                "a high score.",
+            )
+        )
+        if request.minimum_semantic_score == 100 and request.minimum_score < 100:
+            result_warnings.append(
+                QueryNotice(
+                    code="semantic_exact_only",
+                    message="Semantic 100 retains only identical "
+                    "comparison text. A textual threshold of 100 is sufficient for this purpose.",
+                )
+            )
+        elif request.minimum_semantic_score < 50:
+            result_warnings.append(
+                QueryNotice(
+                    code="permissive_semantic_threshold",
+                    message="This semantic threshold is "
+                    "permissive and can retain unrelated wording. Zero applies no semantic filter.",
+                )
+            )
     warnings = [notice.code for notice in [*assessment.warnings, *result_warnings]]
     return TextualSearchResponse(
         query=request.query,
@@ -138,6 +219,9 @@ def textual_snapshot(session: Session, request: TextualSearchRequest) -> Textual
         minimum_score=request.minimum_score,
         document_id=request.document_id,
         searched_at=searched_at,
+        minimum_semantic_score=request.minimum_semantic_score,
+        semantic=semantic,
+        textual_candidates_total=textual_candidates_total,
         scorer_version=SCORER_VERSION,
         scorer_library_version=version("rapidfuzz"),
         candidate_policy=CANDIDATE_POLICY,
