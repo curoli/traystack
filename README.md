@@ -37,6 +37,10 @@ Unterschied zwischen festen Treffern und weiterhin bearbeitbaren Bewertungen.
 **Export results** lädt alle Treffer eines gespeicherten Laufs als CSV oder JSON,
 wahlweise nach aktueller Prüfentscheidung gefiltert. Details stehen im
 [Exportvertrag](docs/search-exports.md).
+Die [Prüfansicht](docs/review-workspace.md) zeigt eine kompakte Trefferliste neben
+der ausgewählten Fundstelle, navigiert über Dokumentgrenzen hinweg und zählt
+Keep/Dismiss als abschließende Entscheidungen. Suchparameter sind einklappbar;
+Tastaturbedienung und die nächste ungeprüfte Fundstelle beschleunigen die Prüfung.
 Ein [reproduzierbarer Prüfbestand und Laufzeitbericht](docs/search-performance.md)
 vergleichen textuelle Suche, erste Embeddings und Cache-Nutzung. Die gemessenen
 Optimierungen erhalten Treffer und Scores; die Oberfläche zeigt Suchdauer und

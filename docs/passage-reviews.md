@@ -23,16 +23,16 @@ Document/occurrence totals and result pages describe passages passing the review
 filter too. Unsearchable documents remain a separate group. A status filter never
 turns a missing positive candidate into proof of absence.
 
-With **All review states**, saving keeps the current occurrence page and updates
-the counters. Fresh per-document counts are also reconciled after occurrence
-pagination, so a decision changed elsewhere does not yield a negative counter
-when the user next edits it. Other documents retain their displayed review state until
-visited or **Refresh reviews** is used; this is not live synchronization across all views.
-After a save in a filtered view, the saved result view refills from the first result page
-using the **submitted** query, thresholds, scope and review filter. Unsubmitted
-form edits are not applied. This also avoids leaving an empty page after its last
-matching passage changes state. Saves and pagination callbacks from superseded
-search runs cannot modify newer results or their counters.
+The [review workspace](review-workspace.md) loads every stored matching passage
+into a compact list with one selected detail view. With **All review states**, a
+confirmed save keeps that selection and updates its counters. In a filtered view,
+a passage leaving the filter is removed and the next remaining item is selected.
+Unsubmitted form edits are not applied. Navigation and review callbacks from a
+superseded search cannot modify newer results or their counters.
+
+Other views' decisions are reconciled with **Refresh reviews**, preserving the
+selected occurrence when it remains in the filter. This is not live synchronization.
+Keep and Dismiss count toward **Final decisions**; Decide later remains pending.
 
 ## Identity and source binding
 

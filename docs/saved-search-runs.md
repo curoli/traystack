@@ -53,6 +53,9 @@ same optimistic version checks, so one view cannot blindly overwrite another.
 A new processing run has new occurrence IDs and does not inherit old decisions.
 There are no reviewer accounts or complete review-event audit history.
 
+The [review workspace](review-workspace.md) navigates all captured matches across
+documents and former page boundaries while keeping one passage in focus.
+
 ## Export
 
 **Export results** downloads the full run as CSV or JSON with an independent

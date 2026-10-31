@@ -52,11 +52,10 @@ test("a bookmarked run preserves every result, scope and historical source while
     name: `Matches in ${title}`,
     exact: true,
   });
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
-  await card
-    .getByRole("button", { name: "Next passages", exact: true })
-    .click();
-  await expect(card.locator(".textual-occurrence")).toHaveCount(2);
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
+  await expect(page.locator(".passage-choice")).toHaveCount(7);
+  await page.locator(".passage-choice").nth(5).click();
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await card
     .getByRole("button", { name: "View source text", exact: true })
     .first()
@@ -99,7 +98,7 @@ test("a bookmarked run preserves every result, scope and historical source while
   ).toContainText(name);
   await expect(page.locator(".textual-response")).toContainText("7 passages");
   await expect(page.locator(".textual-response")).toContainText(pendingTitle);
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await card
     .getByRole("button", { name: "View source text", exact: true })
     .first()
@@ -129,7 +128,7 @@ test("a bookmarked run preserves every result, scope and historical source while
   await page
     .getByLabel("Review saved results", { exact: true })
     .selectOption("all");
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await page.getByLabel("Search name", { exact: true }).fill(`${name} renamed`);
   await page.getByRole("button", { name: "Save name", exact: true }).click();
   await expect(

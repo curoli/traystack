@@ -3,7 +3,7 @@ import { uploadAndProcess, process } from "./support/textual";
 
 test.use({ reducedMotion: "reduce" });
 
-test("textual matches show differences, page through occurrences and retain submitted criteria", async ({
+test("textual matches show differences, navigate occurrences and retain submitted criteria", async ({
   page,
 }) => {
   const title = `Textual comparison ${Date.now()}`;
@@ -15,6 +15,10 @@ test("textual matches show differences, page through occurrences and retain subm
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
+  await page.locator(".document-row").filter({ hasText: title }).click();
+  await page
+    .getByRole("checkbox", { name: "Search only the open document" })
+    .check();
   await page.getByLabel("Text passage", { exact: true }).fill(query);
   await page.getByLabel("Minimum textual match").fill("85");
   await page
@@ -25,7 +29,7 @@ test("textual matches show differences, page through occurrences and retain subm
     exact: true,
   });
   await expect(card).toBeVisible();
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await expect(card.locator(".textual-score").first()).toHaveText(
     "Textual match: 100.00%",
   );
@@ -35,8 +39,9 @@ test("textual matches show differences, page through occurrences and retain subm
     .getByLabel("Text passage", { exact: true })
     .fill("different unsubmitted query");
   await page.getByLabel("Minimum textual match").fill("100");
-  await card.getByRole("button", { name: "Next passages" }).click();
-  await expect(card.locator(".textual-occurrence")).toHaveCount(3);
+  await expect(page.locator(".passage-choice")).toHaveCount(8);
+  await page.locator(".passage-choice").nth(7).click();
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   const changed = card
     .locator(".textual-occurrence")
     .filter({ hasText: "Possible match" });
@@ -67,8 +72,8 @@ test("textual matches show differences, page through occurrences and retain subm
   // A saved run retains its original source and pages after reprocessing.
   const archivedIdentity = await viewer.locator(".identifier").textContent();
   await process(page, document.revisions[0].id);
-  await card.getByRole("button", { name: "Previous passages" }).click();
-  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await page.locator(".passage-choice").first().click();
+  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await expect(card.getByRole("alert")).toHaveCount(0);
   await card.getByRole("button", { name: "View source text" }).first().click();
   await expect(viewer).toBeFocused();
@@ -131,6 +136,10 @@ test("zero is blocked, scope can be narrowed, and exact mode is preserved", asyn
   await page
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
+  await page
+    .getByText("Submitted search guidance", { exact: true })
+    .first()
+    .click();
   await expect(
     page.getByRole("region", {
       name: "Submitted search guidance",
@@ -177,107 +186,69 @@ test("too many real passages abort without partial results and can be refined", 
   await expect(page.locator(".search-stopped")).toHaveCount(0);
 });
 
-test("an occurrence-pagination abort clears the old complete snapshot", async ({
+test("a failed workspace load offers retry without showing partial passages", async ({
   page,
 }) => {
-  const token = `PagingProbe${Date.now()}`;
-  await uploadAndProcess(
-    page,
-    `Paging controls ${Date.now()}`,
-    `${token} separate paragraph. `.repeat(7),
-  );
+  const token = `WorkspaceFailure${Date.now()}`;
+  await uploadAndProcess(page, token, `${token} context`);
   await page.goto("/");
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
   await page.getByLabel("Text passage", { exact: true }).fill(token);
   await page.getByLabel("Minimum textual match").fill("100");
+  await page.route("**/workspace?**", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { detail: "Saved passages unavailable" },
+    }),
+  );
   await page
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
-  await expect(page.locator(".textual-occurrence")).toHaveCount(5);
-  // Isolated error-rendering contract; successful search above uses the real API.
-  await page.route(/\/api\/search-runs\/[^/?]+\?/, async (route) => {
-    if (
-      Number(
-        new URL(route.request().url()).searchParams.get("occurrence_offset"),
-      ) > 0
-    ) {
-      await route.fulfill({
-        status: 422,
-        json: {
-          detail: {
-            code: "textual_search_aborted",
-            reason: "document_passage_limit",
-            message:
-              "Too many candidate passages in one document. Increase textual similarity.",
-            resource: "retained_passages_in_document",
-            limit: 250,
-            observed_at_least: 251,
-            documents_inspected: 1,
-            results_complete: false,
-          },
-        },
-      });
-    } else await route.continue();
-  });
-  await page
-    .getByRole("button", { name: "Next passages", exact: true })
-    .click();
-  await expect(page.locator(".search-stopped")).toContainText(
-    "Search stopped — no results returned",
+  await expect(page.getByRole("alert")).toContainText(
+    "Saved passages unavailable",
   );
-  await expect(page.locator(".textual-response")).toHaveCount(0);
-  await expect(page.getByLabel("Minimum textual match")).toHaveValue("100");
-  await expect(
-    page.getByRole("button", { name: "Find passages", exact: true }),
-  ).toBeEnabled();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(0);
+  await page.unroute("**/workspace?**");
+  await page
+    .getByRole("button", { name: "Retry loading passages", exact: true })
+    .click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
 });
 
-test("a delayed pagination abort cannot clear a newer search", async ({
+test("a delayed workspace failure cannot clear a newer search", async ({
   page,
 }) => {
-  const token = `ObsoletePaging${Date.now()}`;
-  const replacement = `ReplacementSearch${Date.now()}`;
-  await uploadAndProcess(
-    page,
-    `Delayed paging controls ${Date.now()}`,
-    `${token} separate paragraph. `.repeat(7) + replacement,
-  );
+  const old = `OldWorkspace${Date.now()}`;
+  const next = `NewWorkspace${Date.now()}`;
+  await uploadAndProcess(page, old, `${old} context ${next}`);
   await page.goto("/");
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
-  await page.getByLabel("Text passage", { exact: true }).fill(token);
-  await page.getByLabel("Minimum textual match").fill("100");
-  await page
-    .getByRole("button", { name: "Find passages", exact: true })
-    .click();
-  await expect(page.locator(".textual-occurrence")).toHaveCount(5);
-
-  let releaseAbort!: () => void;
-  const delayedAbort = new Promise<void>((resolve) => {
-    releaseAbort = resolve;
+  let release!: () => void;
+  let entered!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
   });
-  let notifyPaging!: () => void;
-  const pagingStarted = new Promise<void>((resolve) => {
-    notifyPaging = resolve;
+  const started = new Promise<void>((resolve) => {
+    entered = resolve;
   });
-  await page.route(/\/api\/search-runs\/[^/?]+\?/, async (route) => {
-    if (
-      Number(
-        new URL(route.request().url()).searchParams.get("occurrence_offset"),
-      ) > 0
-    ) {
-      notifyPaging();
-      await delayedAbort;
-      await route.fulfill({
+  let first = true;
+  await page.route("**/workspace?**", async (route) => {
+    if (!first) return route.continue();
+    first = false;
+    entered();
+    await gate;
+    await route
+      .fulfill({
         status: 422,
         json: {
           detail: {
             code: "textual_search_aborted",
             reason: "document_passage_limit",
-            message: "Too many candidate passages in one document.",
+            message: "Old load stopped",
             resource: "retained_passages_in_document",
             limit: 250,
             observed_at_least: 251,
@@ -285,48 +256,28 @@ test("a delayed pagination abort cannot clear a newer search", async ({
             results_complete: false,
           },
         },
-      });
-    } else await route.continue();
+      })
+      .catch(() => {});
   });
+  await page.getByLabel("Text passage", { exact: true }).fill(old);
+  await page.getByLabel("Minimum textual match").fill("100");
   await page
-    .getByRole("button", { name: "Next passages", exact: true })
+    .getByRole("button", { name: "Find passages", exact: true })
     .click();
-  await pagingStarted;
-  await expect(
-    page.getByRole("status").filter({ hasText: "Loading passages" }),
-  ).toBeVisible();
-  await page.getByLabel("Text passage", { exact: true }).fill(replacement);
+  await started;
+  await page.getByLabel("Text passage", { exact: true }).fill(next);
   await page
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
   await expect(page.locator(".textual-occurrence")).toHaveCount(1);
-  await expect(page.locator(".search-query-summary")).toContainText(
-    replacement,
-  );
-
-  const oldResponse = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/search-runs/") && response.status() === 422,
-  );
-  releaseAbort();
-  await (await oldResponse).finished();
-  // Let the old fetch rejection and React's resulting render finish before
-  // checking that the new successful snapshot survived.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
-  );
-  await expect(page.locator(".textual-response")).toBeVisible();
-  await expect(page.locator(".search-query-summary")).toContainText(
-    replacement,
-  );
-  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
+  release();
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator(".search-query-summary")).toContainText(next);
   await expect(page.locator(".search-stopped")).toHaveCount(0);
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
 });
 
-test("local semantic scores filter actual passages and preserve submitted pagination criteria", async ({
+test("local semantic scores filter actual passages and preserve submitted navigation criteria", async ({
   page,
 }) => {
   const title = `Semantic comparison ${Date.now()}`;
@@ -358,15 +309,15 @@ test("local semantic scores filter actual passages and preserve submitted pagina
     name: `Matches in ${title}`,
     exact: true,
   });
-  await expect(card.locator(".semantic-score")).toHaveCount(5);
+  await expect(card.locator(".semantic-score")).toHaveCount(1);
   await expect(card.locator(".semantic-score").first()).toHaveText(
     "Semantic match: 100.00%",
   );
   await expect(page.locator(".textual-response")).toContainText("8 passages");
   // Edits to the form must not change the semantic filter for the submitted search.
   await page.getByLabel("Minimum semantic match").fill("100");
-  await card.getByRole("button", { name: "Next passages" }).click();
-  await expect(card.locator(".semantic-score")).toHaveCount(3);
+  await page.locator(".passage-choice").nth(7).click();
+  await expect(card.locator(".semantic-score")).toHaveCount(1);
   const changed = card
     .locator(".textual-occurrence")
     .filter({ hasText: "5000" });
@@ -386,9 +337,9 @@ test("local semantic scores filter actual passages and preserve submitted pagina
   await expect(page.locator(".search-query-summary")).toContainText(
     "minimum semantic 100%",
   );
-  await expect(card).toContainText("7 passages");
-  await card.getByRole("button", { name: "Next passages" }).click();
-  await expect(card.locator(".semantic-score")).toHaveCount(2);
+  await expect(page.locator(".passage-choice")).toHaveCount(7);
+  await page.locator(".passage-choice").last().click();
+  await expect(card.locator(".semantic-score")).toHaveCount(1);
   await expect(card.locator(".semantic-score").last()).toHaveText(
     "Semantic match: 100.00%",
   );
@@ -400,15 +351,17 @@ test("local semantic scores filter actual passages and preserve submitted pagina
     "Negations, names and amounts",
   );
   // A server/model update must not mix a new scoring method into an old card.
-  await page.route(/\/api\/search-runs\/[^/?]+\?/, async (route) => {
+  await page.route("**/workspace?**", async (route) => {
     const result = await route.fetch();
     const body = await result.json();
     body.semantic.pipeline += "-changed";
     await route.fulfill({ response: result, json: body });
   });
-  await card.getByRole("button", { name: "Previous passages" }).click();
-  await expect(card.getByRole("alert")).toContainText("comparison method");
-  await expect(card.locator(".semantic-score")).toHaveCount(2);
+  await page
+    .getByRole("button", { name: "Refresh reviews", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("comparison metadata");
+  await expect(page.locator(".semantic-score")).toHaveCount(0);
 });
 
 test("semantic validation and unavailable-model errors never show textual results as semantic success", async ({

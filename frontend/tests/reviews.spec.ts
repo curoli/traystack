@@ -11,6 +11,7 @@ async function find(page: Page, query: string) {
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
   await expect(page.locator(".textual-response")).toBeVisible();
+  await expect(page.locator(".passage-choice").first()).toBeVisible();
 }
 async function open(page: Page) {
   await page.goto("/");
@@ -44,7 +45,7 @@ function reviewCommand(
   };
 }
 
-test("review decisions persist across pages, reload and semantics, and filtered saves refill results", async ({
+test("review decisions persist across navigation, reload and semantics, and filtered saves advance", async ({
   page,
 }) => {
   const token = `ReviewPersistence${Date.now()}`;
@@ -62,29 +63,26 @@ test("review decisions persist across pages, reload and semantics, and filtered 
     "Dismiss",
     "Decide later",
   ].entries()) {
+    await page.locator(".passage-choice").nth(index).click();
     await items
-      .nth(index)
+      .first()
       .getByRole("button", { name: decision, exact: true })
       .click();
-    await expect(items.nth(index).locator(".review-status")).toContainText(
+    await expect(items.first().locator(".review-status")).toContainText(
       `Review: ${decision}`,
     );
   }
   await expect(counts).toContainText(
     "Not reviewed: 5 · Keep: 1 · Dismiss: 1 · Decide later: 1",
   );
-  await page
-    .getByRole("button", { name: "Next passages", exact: true })
-    .click();
-  await expect(items).toHaveCount(3);
+  await page.locator(".passage-choice").nth(5).click();
+  await expect(items).toHaveCount(1);
   await items
     .first()
     .getByRole("button", { name: "Keep", exact: true })
     .click();
   await expect(counts).toContainText("Not reviewed: 4 · Keep: 2");
-  await page
-    .getByRole("button", { name: "Previous passages", exact: true })
-    .click();
+  await page.locator(".passage-choice").first().click();
   await expect(items.first().locator(".review-status")).toContainText(
     "Review: Keep",
   );
@@ -100,12 +98,15 @@ test("review decisions persist across pages, reload and semantics, and filtered 
   await expect(items.first().locator(".review-status")).toContainText(
     "Review: Keep",
   );
-  await expect(items.nth(1).locator(".review-status")).toContainText(
+  await page.locator(".passage-choice").nth(1).click();
+  await expect(items.first().locator(".review-status")).toContainText(
     "Review: Dismiss",
   );
-  await expect(items.nth(2).locator(".review-status")).toContainText(
+  await page.locator(".passage-choice").nth(2).click();
+  await expect(items.first().locator(".review-status")).toContainText(
     "Review: Decide later",
   );
+  await page.locator(".passage-choice").first().click();
   await items
     .first()
     .getByRole("button", { name: "Reset review", exact: true })
@@ -116,7 +117,7 @@ test("review decisions persist across pages, reload and semantics, and filtered 
   await page.getByLabel("Review status", { exact: true }).selectOption("later");
   await find(page, token);
   await expect(items).toHaveCount(1);
-  // A filtered save must rerun submitted criteria, even if the form was edited.
+  // A filtered save must retain captured criteria, even if the form was edited.
   await page
     .getByLabel("Text passage", { exact: true })
     .fill("Unsubmitted expression");
@@ -256,7 +257,7 @@ for (const filter of ["all", "unreviewed"]) {
   });
 }
 
-test("fresh review states from another view keep global counts consistent while paging", async ({
+test("refreshing review states from another view keeps full-run counts consistent", async ({
   page,
 }) => {
   const token = `ReviewPageCounts${Date.now()}`;
@@ -285,8 +286,10 @@ test("fresh review states from another view keep global counts consistent while 
     ).status(),
   ).toBe(200);
   await page
-    .getByRole("button", { name: "Next passages", exact: true })
+    .getByRole("button", { name: "Refresh reviews", exact: true })
     .click();
+  await expect(counts).toContainText("Not reviewed: 6 · Keep: 1");
+  await page.locator(".passage-choice").nth(5).click();
   await expect(
     page.locator(".textual-occurrence").first().locator(".review-status"),
   ).toContainText("Review: Keep");
@@ -297,10 +300,8 @@ test("fresh review states from another view keep global counts consistent while 
     .getByRole("button", { name: "Dismiss", exact: true })
     .click();
   await expect(counts).toContainText("Not reviewed: 6 · Keep: 0 · Dismiss: 1");
-  await page
-    .getByRole("button", { name: "Previous passages", exact: true })
-    .click();
-  await expect(page.locator(".textual-occurrence")).toHaveCount(5);
+  await page.locator(".passage-choice").first().click();
+  await expect(page.locator(".textual-occurrence")).toHaveCount(1);
   await expect(counts).toContainText("Not reviewed: 6 · Keep: 0 · Dismiss: 1");
   await find(page, token);
   await expect(counts).toContainText("Not reviewed: 6 · Keep: 0 · Dismiss: 1");

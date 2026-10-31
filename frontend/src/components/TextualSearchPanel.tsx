@@ -2,30 +2,24 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ApiError,
   assessTextual,
-  artifactUrl,
   type Document,
+  type ReviewDecision,
   type SearchAbortDetails,
   type TextualAssessment,
   searchTextual,
   createSearchRun,
   getSearchRun,
   renameSearchRun,
-  saveReview,
-  type ReviewDecision,
-  type ReviewCounts,
   type ReviewFilter,
   type SearchTarget,
-  type TextualDocument,
-  type TextualGroup,
-  type TextualOccurrence,
   type TextualSearchResponse,
 } from "../api";
 import { formatDate } from "../format";
 import SavedSearches, { SavedScope } from "./SavedSearches";
 import SavedSource, { type SavedSourceLocation } from "./SavedSource";
+import ReviewWorkspace from "./ReviewWorkspace";
+import { Provenance, reviewLabels } from "./PassageDetails";
 import SearchRunExport from "./SearchRunExport";
-import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
-import { searchWarnings } from "./SearchPanel";
 
 function QueryGuidance({
   assessment,
@@ -90,403 +84,6 @@ function SearchStopped({ details }: { details: SearchAbortDetails }) {
   );
 }
 
-function Provenance({ document }: { document: TextualDocument }) {
-  return (
-    <>
-      {document.warnings.length > 0 && (
-        <ul className="search-warnings">
-          {document.warnings.map((reason) => (
-            <li key={reason}>
-              {searchWarnings[reason] || warningLabel(reason)}
-            </li>
-          ))}
-        </ul>
-      )}
-      <details className="search-provenance">
-        <summary>Source and processing status</summary>
-        <p>
-          {document.coverage
-            ? coverageLabel[document.coverage]
-            : "Not processed"}{" "}
-          ·{" "}
-          {document.quality_status
-            ? qualityLabel[document.quality_status]
-            : "Quality not assessed"}
-        </p>
-        <p className="identifier">
-          Selected run: {document.processing_job_id || "None"}
-          <br />
-          Source: {document.artifact_id || "None"}
-          <br />
-          Normalization: {document.normalization_version || "Not available"}
-        </p>
-      </details>
-    </>
-  );
-}
-
-const reviewLabels: Record<ReviewDecision, string> = {
-  unreviewed: "Not reviewed",
-  keep: "Keep",
-  dismiss: "Dismiss",
-  later: "Decide later",
-};
-
-function Occurrence({
-  occurrence,
-  mode,
-  onOpen,
-  onReview,
-  reviewDisabled,
-  saving,
-  reviewError,
-}: {
-  onReview: (decision: ReviewDecision) => void;
-  reviewDisabled: boolean;
-  saving: boolean;
-  reviewError: string;
-  occurrence: TextualOccurrence;
-  mode: string;
-  onOpen: () => void;
-}) {
-  const characters = Array.from(occurrence.snippet);
-  const start = occurrence.start_offset - occurrence.snippet_start_offset;
-  const end = start + Array.from(occurrence.matched_text).length;
-  return (
-    <article className="textual-occurrence">
-      <div className="section-heading">
-        <strong className="textual-score">
-          Textual match: {occurrence.score.toFixed(2)}%
-        </strong>
-        {occurrence.semantic_score != null && (
-          <strong className="semantic-score">
-            Semantic match: {occurrence.semantic_score.toFixed(2)}%
-          </strong>
-        )}
-        <span className="fineprint">
-          {occurrence.score === 100
-            ? `Identical ${mode} text`
-            : "Possible match · inspect differences"}
-        </span>
-      </div>
-      <p className="search-snippet">
-        {occurrence.snippet_start_offset > 0 && "…"}
-        {characters.slice(0, start).join("")}
-        <mark>{characters.slice(start, end).join("")}</mark>
-        {characters.slice(end).join("")}
-      </p>
-      <div className="text-comparison" aria-label="Text comparison">
-        <div>
-          <h5>Search text ({mode})</h5>
-          <pre>
-            {occurrence.differences.map((part, index) =>
-              part.kind === "equal" ? (
-                <span key={index}>{part.query_text}</span>
-              ) : (
-                <del key={index}>{part.query_text}</del>
-              ),
-            )}
-          </pre>
-        </div>
-        <div>
-          <h5>Found passage ({mode})</h5>
-          <pre>
-            {occurrence.differences.map((part, index) =>
-              part.kind === "equal" ? (
-                <span key={index}>{part.passage_text}</span>
-              ) : (
-                <ins key={index}>{part.passage_text}</ins>
-              ),
-            )}
-          </pre>
-        </div>
-      </div>
-      <p className="fineprint">
-        Differences are marked in both texts. A high score can still hide a
-        changed name, amount, deadline or negation.
-      </p>
-      <fieldset className="review-actions" disabled={reviewDisabled}>
-        <legend>Review this passage</legend>
-        <p className="review-status" role="status">
-          {saving
-            ? "Saving decision …"
-            : `Review: ${reviewLabels[occurrence.review.decision]}`}
-          {occurrence.review.updated_at && !saving && (
-            <span className="fineprint">
-              {" · Saved "}
-              {formatDate(occurrence.review.updated_at)}
-            </span>
-          )}
-        </p>
-        <div className="review-buttons">
-          {(["keep", "dismiss", "later"] as const).map((decision) => (
-            <button
-              key={decision}
-              className="secondary"
-              type="button"
-              aria-pressed={occurrence.review.decision === decision}
-              disabled={occurrence.review.decision === decision}
-              onClick={() => onReview(decision)}
-            >
-              {reviewLabels[decision]}
-            </button>
-          ))}
-          {occurrence.review.decision !== "unreviewed" && (
-            <button
-              className="secondary"
-              type="button"
-              onClick={() => onReview("unreviewed")}
-            >
-              Reset review
-            </button>
-          )}
-        </div>
-        {reviewError && (
-          <p role="alert" className="message error">
-            {reviewError}
-          </p>
-        )}
-      </fieldset>
-      <button className="secondary" onClick={onOpen}>
-        {occurrence.page_reference === "logical"
-          ? "View source text"
-          : occurrence.page_numbers.length
-            ? `View page ${occurrence.page_numbers[0]}`
-            : "Open document"}
-      </button>
-      <span className="fineprint">
-        {" "}
-        {occurrence.page_reference === "logical"
-          ? "Logical text section"
-          : occurrence.page_numbers.length
-            ? `Pages: ${occurrence.page_numbers.join(", ")}`
-            : "No reliable page reference"}
-      </span>
-    </article>
-  );
-}
-
-function DocumentMatches({
-  initial,
-  response,
-  onOpen,
-  onAbort,
-  onReviewSaved,
-  onReviewCounts,
-  disabled,
-}: {
-  disabled: boolean;
-  onReviewSaved: (counts: ReviewCounts) => void;
-  onReviewCounts: (counts: ReviewCounts) => void;
-  onAbort: (details: SearchAbortDetails) => void;
-  initial: TextualGroup;
-  response: TextualSearchResponse;
-  onOpen: (target: SearchTarget) => void;
-}) {
-  const [group, setGroup] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [stale, setStale] = useState(false);
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const saving = useRef(false);
-  const [reviewError, setReviewError] = useState<{
-    id: string;
-    message: string;
-  } | null>(null);
-  async function review(
-    occurrence: TextualOccurrence,
-    decision: ReviewDecision,
-  ) {
-    if (saving.current || busy || stale || disabled) return;
-    saving.current = true;
-    setSavingId(occurrence.occurrence_id);
-    setReviewError(null);
-    try {
-      const saved = await saveReview({
-        search_run_id: response.run_id ?? undefined,
-        occurrence_id: occurrence.occurrence_id,
-        document_id: group.document.document_id,
-        revision_id: group.document.revision_id!,
-        processing_job_id: group.document.processing_job_id!,
-        source_artifact_id: group.document.artifact_id!,
-        normalization_version: group.document.normalization_version!,
-        query: response.query,
-        mode: response.mode,
-        scorer_version: response.scorer_version,
-        candidate_policy: response.candidate_policy,
-        start_offset: occurrence.start_offset,
-        end_offset: occurrence.end_offset,
-        matched_sha256: occurrence.matched_sha256,
-        expected_version: occurrence.review.version,
-        decision,
-      });
-      const counts = { ...group.review_counts };
-      if (occurrence.review.decision !== saved.decision) {
-        counts[occurrence.review.decision]--;
-        counts[saved.decision]++;
-      }
-      setGroup((current) => ({
-        ...current,
-        review_counts: counts,
-        occurrences: current.occurrences.map((item) =>
-          item.occurrence_id === occurrence.occurrence_id
-            ? { ...item, review: saved }
-            : item,
-        ),
-      }));
-      onReviewSaved(counts);
-    } catch (error) {
-      setReviewError({
-        id: occurrence.occurrence_id,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Could not save the review. Please try again.",
-      });
-    } finally {
-      saving.current = false;
-      setSavingId(null);
-    }
-  }
-  async function pageMatches(delta: number) {
-    setBusy(true);
-    setError("");
-    try {
-      const request = {
-        query: response.query,
-        mode: response.mode,
-        minimum_score: response.minimum_score,
-        minimum_semantic_score: response.minimum_semantic_score,
-        review_filter: response.review_filter,
-        document_id: initial.document.document_id,
-        occurrence_limit: group.occurrence_limit,
-        occurrence_offset: group.occurrence_offset + delta,
-      };
-      const result = response.run_id
-        ? await getSearchRun(response.run_id, request)
-        : await searchTextual(request);
-      const next = result.results[0];
-      if (
-        !next ||
-        next.document.processing_job_id !==
-          initial.document.processing_job_id ||
-        result.semantic?.pipeline !== response.semantic?.pipeline ||
-        result.semantic?.score_version !== response.semantic?.score_version ||
-        result.scorer_version !== response.scorer_version ||
-        result.scorer_library_version !== response.scorer_library_version ||
-        result.candidate_policy !== response.candidate_policy
-      ) {
-        setStale(true);
-        setError(
-          "The selected text, comparison method or result set has changed. Please run the search again.",
-        );
-      } else {
-        setGroup(next);
-        onReviewCounts(next.review_counts);
-      }
-    } catch (error) {
-      if (error instanceof ApiError && error.details) {
-        onAbort(error.details);
-        return;
-      }
-      setError(
-        error instanceof Error ? error.message : "Could not load passages.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <section
-      className="search-result textual-document"
-      aria-label={`Matches in ${group.document.title}`}
-      aria-busy={busy || savingId !== null}
-    >
-      <div className="section-heading">
-        <h3>{group.document.title}</h3>
-        <span className="badge">
-          Revision {group.document.revision_number} · {group.occurrence_total}{" "}
-          passages
-        </span>
-      </div>
-      <Provenance document={group.document} />
-      {group.document.artifact_id && (
-        <a className="download" href={artifactUrl(group.document.artifact_id)}>
-          Download original ↓
-        </a>
-      )}
-      {group.occurrences.map((occurrence) => (
-        <Occurrence
-          key={occurrence.occurrence_id}
-          occurrence={occurrence}
-          mode={response.mode}
-          onReview={(decision) => void review(occurrence, decision)}
-          reviewDisabled={disabled || busy || stale || savingId !== null}
-          saving={savingId === occurrence.occurrence_id}
-          reviewError={
-            reviewError?.id === occurrence.occurrence_id
-              ? reviewError.message
-              : ""
-          }
-          onOpen={() =>
-            onOpen({
-              document_id: group.document.document_id,
-              revision_id: group.document.revision_id,
-              processing_job_id: group.document.processing_job_id,
-              page_number: occurrence.page_numbers[0] ?? null,
-            })
-          }
-        />
-      ))}
-      {error && (
-        <p role="alert" className="message error">
-          {error}
-        </p>
-      )}
-      {busy && <p role="status">Loading passages …</p>}
-      <nav
-        className="pagination"
-        aria-label={`Passages in ${group.document.title}`}
-      >
-        <button
-          className="secondary"
-          disabled={
-            disabled ||
-            busy ||
-            stale ||
-            savingId !== null ||
-            group.occurrence_offset === 0
-          }
-          onClick={() => void pageMatches(-group.occurrence_limit)}
-        >
-          Previous passages
-        </button>
-        <span>
-          {group.occurrences.length ? group.occurrence_offset + 1 : 0}–
-          {group.occurrences.length
-            ? group.occurrence_offset + group.occurrences.length
-            : 0}{" "}
-          of {group.occurrence_total}
-        </span>
-        <button
-          className="secondary"
-          disabled={
-            disabled ||
-            busy ||
-            savingId !== null ||
-            stale ||
-            group.occurrence_offset + group.occurrence_limit >=
-              group.occurrence_total
-          }
-          onClick={() => void pageMatches(group.occurrence_limit)}
-        >
-          Next passages
-        </button>
-      </nav>
-    </section>
-  );
-}
-
 export default function TextualSearchPanel({
   onOpen,
   openDocument,
@@ -500,6 +97,10 @@ export default function TextualSearchPanel({
   const [sourceLocation, setSourceLocation] =
     useState<SavedSourceLocation | null>(null);
   const sourceRequest = useRef(0);
+  const selectedPassage = useRef<{
+    runId: string | null;
+    occurrenceId: string;
+  } | null>(null);
   const [scopeOverride, setScopeOverride] = useState<{
     id: string;
     title: string;
@@ -525,7 +126,6 @@ export default function TextualSearchPanel({
   const [assessmentError, setAssessmentError] = useState("");
   const [onlyOpenDocument, setOnlyOpenDocument] = useState(false);
   const requestId = useRef(0);
-  const documentReviewCounts = useRef(new Map<string, ReviewCounts>());
   const minimum = Number(threshold);
   const validThreshold =
     threshold.trim() !== "" &&
@@ -589,12 +189,6 @@ export default function TextualSearchPanel({
       const next = await load();
       if (created) setHistoryGeneration((value) => value + 1);
       if (id === requestId.current) {
-        documentReviewCounts.current = new Map(
-          next.results.map((group) => [
-            group.document.document_id,
-            group.review_counts,
-          ]),
-        );
         if (next.run_id) {
           const url = new URL(window.location.href);
           url.searchParams.set("search_run", next.run_id);
@@ -697,24 +291,6 @@ export default function TextualSearchPanel({
     const id = new URLSearchParams(window.location.search).get("search_run");
     if (id) openSaved(id);
   }, []);
-  function updateReviewCounts(
-    documentId: string,
-    counts: ReviewCounts,
-    originRequestId: number,
-  ) {
-    if (originRequestId !== requestId.current) return;
-    const previous = documentReviewCounts.current.get(documentId);
-    if (!previous) return;
-    documentReviewCounts.current.set(documentId, counts);
-    setResponse((current) => {
-      if (!current || originRequestId !== requestId.current) return current;
-      const updated = { ...current.review_counts };
-      for (const state of Object.keys(reviewLabels) as ReviewDecision[]) {
-        updated[state] += counts[state] - previous[state];
-      }
-      return { ...current, review_counts: updated };
-    });
-  }
   function submit(event: FormEvent) {
     event.preventDefault();
     if (
@@ -770,114 +346,117 @@ export default function TextualSearchPanel({
         onOpen={openSaved}
         disabled={busy}
       />
-      <label htmlFor="search-name">Search name</label>
-      <div className="saved-run-actions">
-        <input
-          id="search-name"
-          maxLength={200}
-          disabled={restoring}
-          value={searchName}
-          onChange={(event) => setSearchName(event.target.value)}
-          placeholder="Optional name for the next search"
-        />
-        <button
-          className="secondary"
-          disabled={busy || !response?.run_id || !searchName.trim()}
-          onClick={() => void rename()}
-        >
-          Save name
-        </button>
-      </div>
-      <p className="fineprint">
-        Successful searches are saved automatically with all results. Pagination
-        and reopening use the saved snapshot.
-      </p>
-      <form className="search-form" onSubmit={submit}>
-        <div className="search-query">
-          <label htmlFor="textual-query">Text passage</label>
-          <textarea
-            id="textual-query"
+      <details className="search-parameters" open>
+        <summary>Search parameters</summary>
+        <label htmlFor="search-name">Search name</label>
+        <div className="saved-run-actions">
+          <input
+            id="search-name"
+            maxLength={200}
             disabled={restoring}
-            required
-            maxLength={500}
-            rows={2}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Enter the wording you want to compare"
+            value={searchName}
+            onChange={(event) => setSearchName(event.target.value)}
+            placeholder="Optional name for the next search"
           />
-        </div>
-        <div>
-          <label htmlFor="textual-mode">Text comparison mode</label>
-          <select
-            id="textual-mode"
-            disabled={restoring}
-            value={mode}
-            onChange={(event) => setMode(event.target.value as typeof mode)}
+          <button
+            className="secondary"
+            disabled={busy || !response?.run_id || !searchName.trim()}
+            onClick={() => void rename()}
           >
-            <option value="normalized">Normalized</option>
-            <option value="exact">Exact</option>
-          </select>
+            Save name
+          </button>
         </div>
-        <div>
-          <label htmlFor="textual-threshold">Minimum textual match</label>
-          <input
-            id="textual-threshold"
-            disabled={restoring}
-            type="number"
-            min={0}
-            max={100}
-            step="any"
-            required
-            value={threshold}
-            onChange={(event) => setThreshold(event.target.value)}
-            aria-describedby="textual-threshold-help"
-          />
-        </div>
-        <div>
-          <label htmlFor="semantic-threshold">Minimum semantic match</label>
-          <input
-            id="semantic-threshold"
-            type="number"
-            min={0}
-            max={100}
-            step="any"
-            value={semanticThreshold}
-            disabled={!semanticEnabled || restoring}
-            onChange={(event) => setSemanticThreshold(event.target.value)}
-            aria-describedby="semantic-threshold-help"
-          />
-        </div>
-        <div>
-          <label htmlFor="review-filter">Review status</label>
-          <select
-            id="review-filter"
-            disabled={restoring}
-            value={reviewFilter}
-            onChange={(event) =>
-              setReviewFilter(event.target.value as ReviewFilter)
+        <p className="fineprint">
+          Successful searches are saved automatically with all results.
+          Pagination and reopening use the saved snapshot.
+        </p>
+        <form className="search-form" onSubmit={submit}>
+          <div className="search-query">
+            <label htmlFor="textual-query">Text passage</label>
+            <textarea
+              id="textual-query"
+              disabled={restoring}
+              required
+              maxLength={500}
+              rows={2}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Enter the wording you want to compare"
+            />
+          </div>
+          <div>
+            <label htmlFor="textual-mode">Text comparison mode</label>
+            <select
+              id="textual-mode"
+              disabled={restoring}
+              value={mode}
+              onChange={(event) => setMode(event.target.value as typeof mode)}
+            >
+              <option value="normalized">Normalized</option>
+              <option value="exact">Exact</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="textual-threshold">Minimum textual match</label>
+            <input
+              id="textual-threshold"
+              disabled={restoring}
+              type="number"
+              min={0}
+              max={100}
+              step="any"
+              required
+              value={threshold}
+              onChange={(event) => setThreshold(event.target.value)}
+              aria-describedby="textual-threshold-help"
+            />
+          </div>
+          <div>
+            <label htmlFor="semantic-threshold">Minimum semantic match</label>
+            <input
+              id="semantic-threshold"
+              type="number"
+              min={0}
+              max={100}
+              step="any"
+              value={semanticThreshold}
+              disabled={!semanticEnabled || restoring}
+              onChange={(event) => setSemanticThreshold(event.target.value)}
+              aria-describedby="semantic-threshold-help"
+            />
+          </div>
+          <div>
+            <label htmlFor="review-filter">Review status</label>
+            <select
+              id="review-filter"
+              disabled={restoring}
+              value={reviewFilter}
+              onChange={(event) =>
+                setReviewFilter(event.target.value as ReviewFilter)
+              }
+            >
+              <option value="all">All review states</option>
+              {Object.entries(reviewLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="primary"
+            disabled={
+              busy ||
+              !query.trim() ||
+              !validThreshold ||
+              !validSemanticThreshold ||
+              (onlyOpenDocument && !scopeDocument)
             }
           >
-            <option value="all">All review states</option>
-            {Object.entries(reviewLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button
-          className="primary"
-          disabled={
-            busy ||
-            !query.trim() ||
-            !validThreshold ||
-            !validSemanticThreshold ||
-            (onlyOpenDocument && !scopeDocument)
-          }
-        >
-          {busy ? "Searching …" : "Find passages"}
-        </button>
-      </form>
+            {busy ? "Searching …" : "Find passages"}
+          </button>
+        </form>
+      </details>
       <label className="checkbox">
         <input
           type="checkbox"
@@ -962,12 +541,6 @@ export default function TextualSearchPanel({
         </p>
       )}
       {busy && <p role="status">Comparing selected document text …</p>}
-      {sourceLocation && (
-        <SavedSource
-          location={sourceLocation}
-          onClose={() => setSourceLocation(null)}
-        />
-      )}
       {response && (
         <div className="textual-response" aria-busy={busy}>
           <p className="fineprint search-duration">
@@ -1058,6 +631,31 @@ export default function TextualSearchPanel({
               ` · minimum semantic ${response.minimum_semantic_score}%`}
           </p>
           <section aria-label="Review counts" className="review-counts">
+            <label htmlFor="review-progress">
+              Final decisions:{" "}
+              {response.review_counts.keep + response.review_counts.dismiss} of{" "}
+              {Object.values(response.review_counts).reduce(
+                (sum, count) => sum + count,
+                0,
+              )}
+            </label>
+            <progress
+              id="review-progress"
+              aria-label="Final review decisions"
+              value={
+                response.review_counts.keep + response.review_counts.dismiss
+              }
+              max={
+                Object.values(response.review_counts).reduce(
+                  (sum, count) => sum + count,
+                  0,
+                ) || 1
+              }
+            />
+            <p className="fineprint">
+              Keep and Dismiss are final decisions. Decide later remains
+              pending.
+            </p>
             <p>
               {Object.entries(response.review_counts)
                 .map(
@@ -1073,10 +671,20 @@ export default function TextualSearchPanel({
               Decisions are shared in this local app.
             </p>
           </section>
-          <QueryGuidance
-            assessment={response.assessment}
-            title="Submitted search guidance"
-          />
+          <details className="search-provenance">
+            <summary>Submitted search guidance</summary>
+            <QueryGuidance
+              assessment={response.assessment}
+              title="Submitted search guidance"
+            />
+          </details>
+          {response.assessment.warnings.length > 0 && (
+            <ul className="message warning">
+              {response.assessment.warnings.map((notice) => (
+                <li key={notice.code}>{notice.message}</li>
+              ))}
+            </ul>
+          )}
           {response.result_warnings.length > 0 && (
             <ul className="message warning">
               {response.result_warnings.map((notice) => (
@@ -1115,93 +723,56 @@ export default function TextualSearchPanel({
             processing changes only when you want a new run.
           </p>
           <section aria-label="Similar passage results">
-            {response.results.length ? (
-              response.results.map((group) => (
-                <DocumentMatches
-                  key={`${responseRequestId}:${group.document.document_id}`}
-                  initial={group}
-                  onAbort={(details) => stop(details, responseRequestId)}
-                  disabled={busy}
-                  onReviewCounts={(counts) =>
-                    updateReviewCounts(
-                      group.document.document_id,
-                      counts,
-                      responseRequestId,
-                    )
-                  }
-                  onReviewSaved={(counts) => {
-                    if (responseRequestId !== requestId.current) return;
-                    if (response.review_filter !== "all") {
-                      // Refill filtered pages after a passage leaves the selected state.
-                      // Use submitted criteria; unrelated form edits remain unapplied.
-                      setResponse(null);
-                      void run(
-                        {
-                          query: response.query,
-                          mode: response.mode,
-                          minimum_score: response.minimum_score,
-                          minimum_semantic_score:
-                            response.minimum_semantic_score,
-                          review_filter: response.review_filter,
-                          document_id: response.document_id ?? undefined,
-                          limit: response.limit,
-                          unsearchable_limit: response.unsearchable_limit,
-                        },
-                        response.run_id ?? undefined,
-                      );
-                    } else {
-                      updateReviewCounts(
-                        group.document.document_id,
-                        counts,
-                        responseRequestId,
-                      );
-                    }
-                  }}
-                  response={response}
-                  onOpen={(target) => {
-                    if (response.run_id && target.processing_job_id)
-                      setSourceLocation({
-                        runId: response.run_id,
-                        jobId: target.processing_job_id,
-                        page: target.page_number ?? 1,
-                        requestId: ++sourceRequest.current,
-                      });
-                    else onOpen(target);
-                  }}
-                />
-              ))
-            ) : (
-              <p className="search-empty">
-                {response.total
-                  ? "This page is empty after an update. Go back or run the search again."
-                  : "No candidate passages for this selection. This is not proof of absence."}
-              </p>
-            )}
-            <nav className="pagination" aria-label="Similar document pages">
-              <button
-                className="secondary"
-                disabled={busy || response.offset === 0}
-                onClick={() => paginate("results", -response.limit)}
-              >
-                Previous documents
-              </button>
-              <span>
-                {response.results.length ? response.offset + 1 : 0}–
-                {response.results.length
-                  ? response.offset + response.results.length
-                  : 0}{" "}
-                of {response.total}
-              </span>
-              <button
-                className="secondary"
-                disabled={
-                  busy || response.offset + response.limit >= response.total
-                }
-                onClick={() => paginate("results", response.limit)}
-              >
-                Next documents
-              </button>
-            </nav>
+            <ReviewWorkspace
+              key={responseRequestId}
+              response={response}
+              disabled={busy}
+              onAbort={(details) => stop(details, responseRequestId)}
+              onChange={(next) => {
+                if (responseRequestId !== requestId.current) return;
+                setResponse((current) =>
+                  current
+                    ? {
+                        ...current,
+                        review_counts: next.review_counts,
+                        total: next.total,
+                        summary: next.summary,
+                      }
+                    : current,
+                );
+              }}
+              initialSelectedId={
+                selectedPassage.current?.runId === response.run_id
+                  ? selectedPassage.current.occurrenceId
+                  : null
+              }
+              onSelectionChange={(identity) => {
+                if (responseRequestId !== requestId.current) return;
+                selectedPassage.current = identity
+                  ? { runId: response.run_id, occurrenceId: identity }
+                  : null;
+                setSourceLocation(null);
+              }}
+              source={
+                sourceLocation ? (
+                  <SavedSource
+                    location={sourceLocation}
+                    onClose={() => setSourceLocation(null)}
+                  />
+                ) : null
+              }
+              onOpen={(target) => {
+                if (responseRequestId !== requestId.current) return;
+                if (response.run_id && target.processing_job_id)
+                  setSourceLocation({
+                    runId: response.run_id,
+                    jobId: target.processing_job_id,
+                    page: target.page_number ?? 1,
+                    requestId: ++sourceRequest.current,
+                  });
+                else onOpen(target);
+              }}
+            />
           </section>
           <section
             className="search-unknown"

@@ -86,7 +86,7 @@ test("a contract batch supports source inspection, material differences and save
     );
   }
   await find("confidentiality");
-  await expect(page.locator(".textual-document")).toHaveCount(10);
+  await expect(page.locator(".passage-choice")).toHaveCount(24);
   await expect(page.locator(".textual-response")).toContainText(
     "24 with candidate passages",
   );
@@ -101,10 +101,8 @@ test("a contract batch supports source inspection, material differences and save
   await expect(
     page.getByRole("region", { name: "Review counts", exact: true }),
   ).toContainText("Keep: 1");
-  await page
-    .getByRole("button", { name: "Next documents", exact: true })
-    .click();
-  await expect(page.locator(".textual-document")).toHaveCount(10);
+  await page.locator(".passage-choice").nth(11).click();
+  await expect(page.locator(".passage-choice")).toHaveCount(24);
   // One recent contract contains changed negation, amount, name and German negation.
   await page
     .locator(".document-row")
