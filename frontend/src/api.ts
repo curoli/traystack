@@ -73,7 +73,10 @@ async function fetchFromServer(
   }
 }
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+async function responseFromServer(
+  url: string,
+  init?: RequestInit,
+): Promise<Response> {
   const response = await fetchFromServer(url, init);
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
@@ -97,7 +100,11 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     }
     throw new Error(message);
   }
-  return response.json() as Promise<T>;
+  return response;
+}
+
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  return (await responseFromServer(url, init)).json() as Promise<T>;
 }
 
 export const listDocuments = (offset: number) =>
@@ -496,3 +503,19 @@ export const getSavedScope = (id: string, offset = 0) =>
     limit: number;
     offset: number;
   }>(`/api/search-runs/${id}/scope?offset=${offset}`);
+
+export async function exportSearchRun(
+  id: string,
+  format: "csv" | "json",
+  reviewFilter: ReviewFilter,
+  signal: AbortSignal,
+) {
+  const response = await responseFromServer(
+    `/api/search-runs/${id}/export?format=${format}&review_filter=${reviewFilter}`,
+    { signal },
+  );
+  return {
+    blob: await response.blob(),
+    filename: `traystack-search-${id}-${reviewFilter}.${format}`,
+  };
+}

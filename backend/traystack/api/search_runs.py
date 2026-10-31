@@ -1,7 +1,7 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -10,7 +10,8 @@ from traystack.models import SearchRun
 from traystack.review_schemas import ReviewFilter
 from traystack.run_schemas import RunCreate, RunName, RunSummary
 from traystack.schemas import TextContentOut
-from traystack.services.search_runs import archived_source, create_run, get_run, read_run
+from traystack.services.search_exports import csv_export, export_run
+from traystack.services.search_runs import archived_source, canonical, create_run, get_run, read_run
 from traystack.services.semantic import SemanticInputTooLong, SemanticUnavailable, get_engine
 from traystack.services.textual_matching import SearchTooBroad
 from traystack.textual_schemas import TextualSearchRequest, TextualSearchResponse
@@ -117,3 +118,22 @@ def rename(identity: UUID, payload: RunName, session: SessionDep):
 @router.get("/{identity}/sources/{job_id}", response_model=TextContentOut)
 def source(identity: UUID, job_id: UUID, session: SessionDep):
     return archived_source(session, identity, job_id)
+
+
+@router.get("/{identity}/export", response_class=Response)
+def export(
+    identity: UUID,
+    session: SessionDep,
+    file_format: Literal["csv", "json"] = Query(default="csv", alias="format"),
+    review_filter: ReviewFilter = "all",
+):
+    payload = export_run(session, identity, review_filter)
+    return Response(
+        content=csv_export(payload) if file_format == "csv" else canonical(payload) + b"\n",
+        media_type="text/csv" if file_format == "csv" else "application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="traystack-search-{identity}-'
+            f'{review_filter}.{file_format}"',
+            "Cache-Control": "no-store",
+        },
+    )

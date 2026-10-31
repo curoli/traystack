@@ -153,7 +153,7 @@ def get_run(session, identity):
     return run
 
 
-def read_run(session, identity, view=None, review_filter=None):
+def read_run(session, identity, view=None, review_filter=None, *, complete=False):
     run = get_run(session, identity)
     view = view or TextualSearchRequest.model_validate(run.request_json)
     state = review_filter or view.review_filter
@@ -201,9 +201,13 @@ def read_run(session, identity, view=None, review_filter=None):
                 occurrence_total=len(occurrences),
                 occurrence_limit=view.occurrence_limit,
                 occurrence_offset=view.occurrence_offset,
-                occurrences=occurrences[
-                    view.occurrence_offset : view.occurrence_offset + view.occurrence_limit
-                ],
+                occurrences=(
+                    occurrences
+                    if complete
+                    else occurrences[
+                        view.occurrence_offset : view.occurrence_offset + view.occurrence_limit
+                    ]
+                ),
             )
             retained.append(group)
     scope = [row for row in run.scope_json if not document_id or row["document_id"] == document_id]
@@ -222,10 +226,14 @@ def read_run(session, identity, view=None, review_filter=None):
         total=len(retained),
         limit=view.limit,
         offset=view.offset,
-        results=retained[view.offset : view.offset + view.limit],
-        unsearchable=unknown[
-            view.unsearchable_offset : view.unsearchable_offset + view.unsearchable_limit
-        ],
+        results=retained if complete else retained[view.offset : view.offset + view.limit],
+        unsearchable=(
+            unknown
+            if complete
+            else unknown[
+                view.unsearchable_offset : view.unsearchable_offset + view.unsearchable_limit
+            ]
+        ),
         unsearchable_total=len(unknown),
         unsearchable_limit=view.unsearchable_limit,
         unsearchable_offset=view.unsearchable_offset,

@@ -23,6 +23,7 @@ import {
 import { formatDate } from "../format";
 import SavedSearches, { SavedScope } from "./SavedSearches";
 import SavedSource, { type SavedSourceLocation } from "./SavedSource";
+import SearchRunExport from "./SearchRunExport";
 import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
 import { searchWarnings } from "./SearchPanel";
 
@@ -1041,6 +1042,10 @@ export default function TextualSearchPanel({
                 Refresh reviews
               </button>
               <SavedScope key={response.run_id} id={response.run_id} />
+              <SearchRunExport
+                key={`export:${response.run_id}`}
+                runId={response.run_id}
+              />
             </section>
           )}
           <p className="search-query-summary">

@@ -34,6 +34,9 @@ Treffern, Scores, damaligem Dokumentbestand und Quelltexten. **Saved searches**
 öffnet diese Ergebnisse ohne neue Suche; **Run again** erstellt einen eigenen
 Folgelauf. [Gespeicherte Suchläufe](docs/saved-search-runs.md) erklären den
 Unterschied zwischen festen Treffern und weiterhin bearbeitbaren Bewertungen.
+**Export results** lädt alle Treffer eines gespeicherten Laufs als CSV oder JSON,
+wahlweise nach aktueller Prüfentscheidung gefiltert. Details stehen im
+[Exportvertrag](docs/search-exports.md).
 Ein [reproduzierbarer Prüfbestand und Laufzeitbericht](docs/search-performance.md)
 vergleichen textuelle Suche, erste Embeddings und Cache-Nutzung. Die gemessenen
 Optimierungen erhalten Treffer und Scores; die Oberfläche zeigt Suchdauer und

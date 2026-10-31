@@ -53,6 +53,14 @@ same optimistic version checks, so one view cannot blindly overwrite another.
 A new processing run has new occurrence IDs and does not inherit old decisions.
 There are no reviewer accounts or complete review-event audit history.
 
+## Export
+
+**Export results** downloads the full run as CSV or JSON with an independent
+review-state filter. Current decisions are read in one export snapshot, while
+matching text, scores and source identities remain frozen. Unsearchable documents
+are always separate. See [search-exports.md](search-exports.md) for formats,
+provenance, spreadsheet handling and the API.
+
 ## Storage and consistency
 
 Migration `0004` adds `search_runs`, `archived_texts` and `search_run_sources`.
