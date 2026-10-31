@@ -80,3 +80,13 @@
   werden abgelehnt statt abgeschnitten. Feste Singleton-Eingaben verhindern, dass
   dynamische INT8-Quantisierung vom übrigen Batch oder Cache-Zustand abhängt.
   Grenzen und Messbeispiele stehen in [semantic-search.md](semantic-search.md).
+
+- **Prüfentscheidungen pro Fundstelle und Ausdruck:** Keep, Dismiss und Decide
+  later werden getrennt von Not reviewed gespeichert. Identität folgt dem
+  Verarbeitungslauf, Modus, effektiven Suchausdruck und den vorhandenen
+  Fundstellenregeln; Schwellen und semantisches Modell sind keine menschliche
+  Entscheidungsidentität. Explizite Resets behalten eine Versionsnummer gegen
+  veraltete Schreibversuche. Statusfilter wirken nach beiden Ähnlichkeitsfiltern
+  und vor Pagination; Zähler zeigen den Bestand vor dem Statusfilter. Ein neuer
+  Lauf erhält neue Fundstellenidentitäten. Die lokale Anwendung teilt aktuelle
+  Entscheidungen ohne Reviewer-Konten oder vollständiges Ereignis-Audit.

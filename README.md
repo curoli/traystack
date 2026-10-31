@@ -24,8 +24,11 @@ Edit-Budgets und kontrollierte Abbrüche begrenzen zu breite Suchen; 0 ist nicht
 zulässig. Mit **Search only the open document** lässt sich die Auswahl eingrenzen.
 Optional bewertet **Compare meaning with local embeddings** die tatsächlich gefundenen
 Passagen semantisch und zeigt beide Scores. Die [semantischen Regeln](docs/semantic-search.md)
-erklären die zweite Schwelle, lokales Modell, Cache und Grenzen. **Keep / Dismiss /
-Decide later** folgt in einem späteren Schritt.
+erklären die zweite Schwelle, lokales Modell, Cache und Grenzen.
+**Keep / Dismiss / Decide later** speichert Prüfentscheidungen pro Fundstelle.
+**Not reviewed**, Statusfilter und Zähler unterstützen den Prüfablauf;
+**Reset review** setzt eine Entscheidung zurück. Die [Review-Regeln](docs/passage-reviews.md)
+beschreiben Quellenbindung, Konflikte und das Verhalten nach Neuverarbeitung.
 
 ## Start
 

@@ -150,3 +150,12 @@ Modell-/Pipeline-Version, ohne einen vorab berechneten Dokumentindex einzuführe
 Semantische Filterung erfolgt vor Zählung und Pagination; Rangfolge, Textbezug und
 Quellennachweis bleiben erhalten. Modellfehler und zusätzliche Ressourcenbudgets
 liefern keine erfolgreiche Teilmenge. Die exakte Abwesenheitssuche ist unverändert.
+
+[Prüfentscheidungen](passage-reviews.md) liegen als aktuelle Zustände in
+`passage_reviews`, gebunden an Verarbeitungslauf, Vergleichsausdruck, Modus und
+konkrete Fundstelle. Quellfingerprint und Fremdschlüssel sichern den Textbezug.
+Ein eigener Schreib-Endpunkt prüft die noch ausgewählte Quelle, sperrt sie für den
+kurzen Schreibvorgang und verwendet eine erwartete Versionsnummer gegen verlorene
+Updates. Die Suche bleibt read-only: Sie liest Entscheidungen im selben Snapshot,
+zählt nach textueller/semantischer Filterung und filtert vor der Pagination nach
+Review-Status. Neuverarbeitung übernimmt keine alten Entscheidungen automatisch.

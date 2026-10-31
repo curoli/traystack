@@ -7,6 +7,10 @@ import {
   type SearchAbortDetails,
   type TextualAssessment,
   searchTextual,
+  saveReview,
+  type ReviewDecision,
+  type ReviewCounts,
+  type ReviewFilter,
   type SearchTarget,
   type TextualDocument,
   type TextualGroup,
@@ -113,11 +117,26 @@ function Provenance({ document }: { document: TextualDocument }) {
   );
 }
 
+const reviewLabels: Record<ReviewDecision, string> = {
+  unreviewed: "Not reviewed",
+  keep: "Keep",
+  dismiss: "Dismiss",
+  later: "Decide later",
+};
+
 function Occurrence({
   occurrence,
   mode,
   onOpen,
+  onReview,
+  reviewDisabled,
+  saving,
+  reviewError,
 }: {
+  onReview: (decision: ReviewDecision) => void;
+  reviewDisabled: boolean;
+  saving: boolean;
+  reviewError: string;
   occurrence: TextualOccurrence;
   mode: string;
   onOpen: () => void;
@@ -178,6 +197,48 @@ function Occurrence({
         Differences are marked in both texts. A high score can still hide a
         changed name, amount, deadline or negation.
       </p>
+      <fieldset className="review-actions" disabled={reviewDisabled}>
+        <legend>Review this passage</legend>
+        <p className="review-status" role="status">
+          {saving
+            ? "Saving decision …"
+            : `Review: ${reviewLabels[occurrence.review.decision]}`}
+          {occurrence.review.updated_at && !saving && (
+            <span className="fineprint">
+              {" · Saved "}
+              {formatDate(occurrence.review.updated_at)}
+            </span>
+          )}
+        </p>
+        <div className="review-buttons">
+          {(["keep", "dismiss", "later"] as const).map((decision) => (
+            <button
+              key={decision}
+              className="secondary"
+              type="button"
+              aria-pressed={occurrence.review.decision === decision}
+              disabled={occurrence.review.decision === decision}
+              onClick={() => onReview(decision)}
+            >
+              {reviewLabels[decision]}
+            </button>
+          ))}
+          {occurrence.review.decision !== "unreviewed" && (
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => onReview("unreviewed")}
+            >
+              Reset review
+            </button>
+          )}
+        </div>
+        {reviewError && (
+          <p role="alert" className="message error">
+            {reviewError}
+          </p>
+        )}
+      </fieldset>
       <button className="secondary" onClick={onOpen}>
         {occurrence.page_reference === "logical"
           ? "View source text"
@@ -202,7 +263,13 @@ function DocumentMatches({
   response,
   onOpen,
   onAbort,
+  onReviewSaved,
+  onReviewCounts,
+  disabled,
 }: {
+  disabled: boolean;
+  onReviewSaved: (counts: ReviewCounts) => void;
+  onReviewCounts: (counts: ReviewCounts) => void;
   onAbort: (details: SearchAbortDetails) => void;
   initial: TextualGroup;
   response: TextualSearchResponse;
@@ -212,6 +279,66 @@ function DocumentMatches({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [stale, setStale] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const saving = useRef(false);
+  const [reviewError, setReviewError] = useState<{
+    id: string;
+    message: string;
+  } | null>(null);
+  async function review(
+    occurrence: TextualOccurrence,
+    decision: ReviewDecision,
+  ) {
+    if (saving.current || busy || stale || disabled) return;
+    saving.current = true;
+    setSavingId(occurrence.occurrence_id);
+    setReviewError(null);
+    try {
+      const saved = await saveReview({
+        occurrence_id: occurrence.occurrence_id,
+        document_id: group.document.document_id,
+        revision_id: group.document.revision_id!,
+        processing_job_id: group.document.processing_job_id!,
+        source_artifact_id: group.document.artifact_id!,
+        normalization_version: group.document.normalization_version!,
+        query: response.query,
+        mode: response.mode,
+        scorer_version: response.scorer_version,
+        candidate_policy: response.candidate_policy,
+        start_offset: occurrence.start_offset,
+        end_offset: occurrence.end_offset,
+        matched_sha256: occurrence.matched_sha256,
+        expected_version: occurrence.review.version,
+        decision,
+      });
+      const counts = { ...group.review_counts };
+      if (occurrence.review.decision !== saved.decision) {
+        counts[occurrence.review.decision]--;
+        counts[saved.decision]++;
+      }
+      setGroup((current) => ({
+        ...current,
+        review_counts: counts,
+        occurrences: current.occurrences.map((item) =>
+          item.occurrence_id === occurrence.occurrence_id
+            ? { ...item, review: saved }
+            : item,
+        ),
+      }));
+      onReviewSaved(counts);
+    } catch (error) {
+      setReviewError({
+        id: occurrence.occurrence_id,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not save the review. Please try again.",
+      });
+    } finally {
+      saving.current = false;
+      setSavingId(null);
+    }
+  }
   async function pageMatches(delta: number) {
     setBusy(true);
     setError("");
@@ -221,6 +348,7 @@ function DocumentMatches({
         mode: response.mode,
         minimum_score: response.minimum_score,
         minimum_semantic_score: response.minimum_semantic_score,
+        review_filter: response.review_filter,
         document_id: initial.document.document_id,
         occurrence_limit: group.occurrence_limit,
         occurrence_offset: group.occurrence_offset + delta,
@@ -240,7 +368,10 @@ function DocumentMatches({
         setError(
           "The selected text, comparison method or result set has changed. Please run the search again.",
         );
-      } else setGroup(next);
+      } else {
+        setGroup(next);
+        onReviewCounts(next.review_counts);
+      }
     } catch (error) {
       if (error instanceof ApiError && error.details) {
         onAbort(error.details);
@@ -276,6 +407,14 @@ function DocumentMatches({
           key={occurrence.occurrence_id}
           occurrence={occurrence}
           mode={response.mode}
+          onReview={(decision) => void review(occurrence, decision)}
+          reviewDisabled={disabled || busy || stale || savingId !== null}
+          saving={savingId === occurrence.occurrence_id}
+          reviewError={
+            reviewError?.id === occurrence.occurrence_id
+              ? reviewError.message
+              : ""
+          }
           onOpen={() =>
             onOpen({
               document_id: group.document.document_id,
@@ -297,7 +436,13 @@ function DocumentMatches({
       >
         <button
           className="secondary"
-          disabled={busy || stale || group.occurrence_offset === 0}
+          disabled={
+            disabled ||
+            busy ||
+            stale ||
+            savingId !== null ||
+            group.occurrence_offset === 0
+          }
           onClick={() => void pageMatches(-group.occurrence_limit)}
         >
           Previous passages
@@ -312,7 +457,9 @@ function DocumentMatches({
         <button
           className="secondary"
           disabled={
+            disabled ||
             busy ||
+            savingId !== null ||
             stale ||
             group.occurrence_offset + group.occurrence_limit >=
               group.occurrence_total
@@ -334,6 +481,7 @@ export default function TextualSearchPanel({
   openDocument: Pick<Document, "id" | "title"> | null;
 }) {
   const [query, setQuery] = useState("");
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [mode, setMode] = useState<"exact" | "normalized">("normalized");
   const [semanticEnabled, setSemanticEnabled] = useState(false);
   const [semanticThreshold, setSemanticThreshold] = useState("0");
@@ -347,6 +495,7 @@ export default function TextualSearchPanel({
   const [assessmentError, setAssessmentError] = useState("");
   const [onlyOpenDocument, setOnlyOpenDocument] = useState(false);
   const requestId = useRef(0);
+  const documentReviewCounts = useRef(new Map<string, ReviewCounts>());
   const minimum = Number(threshold);
   const validThreshold =
     threshold.trim() !== "" &&
@@ -402,6 +551,12 @@ export default function TextualSearchPanel({
     try {
       const next = await searchTextual(payload);
       if (id === requestId.current) {
+        documentReviewCounts.current = new Map(
+          next.results.map((group) => [
+            group.document.document_id,
+            group.review_counts,
+          ]),
+        );
         setResponseRequestId(id);
         setResponse(next);
       }
@@ -414,6 +569,24 @@ export default function TextualSearchPanel({
     } finally {
       if (id === requestId.current) setBusy(false);
     }
+  }
+  function updateReviewCounts(
+    documentId: string,
+    counts: ReviewCounts,
+    originRequestId: number,
+  ) {
+    if (originRequestId !== requestId.current) return;
+    const previous = documentReviewCounts.current.get(documentId);
+    if (!previous) return;
+    documentReviewCounts.current.set(documentId, counts);
+    setResponse((current) => {
+      if (!current || originRequestId !== requestId.current) return current;
+      const updated = { ...current.review_counts };
+      for (const state of Object.keys(reviewLabels) as ReviewDecision[]) {
+        updated[state] += counts[state] - previous[state];
+      }
+      return { ...current, review_counts: updated };
+    });
   }
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -429,6 +602,7 @@ export default function TextualSearchPanel({
       mode,
       minimum_score: minimum,
       minimum_semantic_score: semanticEnabled ? semanticMinimum : null,
+      review_filter: reviewFilter,
       document_id: onlyOpenDocument ? openDocument!.id : undefined,
     });
   }
@@ -439,6 +613,7 @@ export default function TextualSearchPanel({
       mode: response.mode,
       minimum_score: response.minimum_score,
       minimum_semantic_score: response.minimum_semantic_score,
+      review_filter: response.review_filter,
       document_id: response.document_id ?? undefined,
       limit: response.limit,
       offset: response.offset + (group === "results" ? delta : 0),
@@ -510,6 +685,23 @@ export default function TextualSearchPanel({
             onChange={(event) => setSemanticThreshold(event.target.value)}
             aria-describedby="semantic-threshold-help"
           />
+        </div>
+        <div>
+          <label htmlFor="review-filter">Review status</label>
+          <select
+            id="review-filter"
+            value={reviewFilter}
+            onChange={(event) =>
+              setReviewFilter(event.target.value as ReviewFilter)
+            }
+          >
+            <option value="all">All review states</option>
+            {Object.entries(reviewLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           className="primary"
@@ -610,10 +802,29 @@ export default function TextualSearchPanel({
         <div className="textual-response" aria-busy={busy}>
           <p className="search-query-summary">
             Results for <strong>“{response.query}”</strong> · {response.mode} ·
-            minimum {response.minimum_score}% textual
+            minimum {response.minimum_score}% textual · review:{" "}
+            {response.review_filter === "all"
+              ? "All review states"
+              : reviewLabels[response.review_filter]}
             {response.minimum_semantic_score != null &&
               ` · minimum semantic ${response.minimum_semantic_score}%`}
           </p>
+          <section aria-label="Review counts" className="review-counts">
+            <p>
+              {Object.entries(response.review_counts)
+                .map(
+                  ([status, count]) =>
+                    `${reviewLabels[status as ReviewDecision]}: ${count}`,
+                )
+                .join(" · ")}
+            </p>
+            <p className="fineprint">
+              Counts cover all passages passing the submitted textual and
+              semantic thresholds, before the review filter. Your saves update
+              these counts; rerun to include changes from other views. Decisions
+              are shared in this local app.
+            </p>
+          </section>
           <QueryGuidance
             assessment={response.assessment}
             title="Submitted search guidance"
@@ -630,8 +841,8 @@ export default function TextualSearchPanel({
             {response.summary.documents_searched} documents searched ·{" "}
             {response.total} with candidate passages ·{" "}
             {response.summary.occurrences_total} passages ·{" "}
-            {response.summary.documents_without_matches} without a candidate
-            match · {response.unsearchable_total} unsearchable
+            {response.summary.documents_without_matches} without a match for
+            these filters · {response.unsearchable_total} unsearchable
           </p>
           {response.semantic && (
             <details className="search-provenance">
@@ -662,6 +873,38 @@ export default function TextualSearchPanel({
                   key={`${response.searched_at}:${group.document.document_id}`}
                   initial={group}
                   onAbort={(details) => stop(details, responseRequestId)}
+                  disabled={busy}
+                  onReviewCounts={(counts) =>
+                    updateReviewCounts(
+                      group.document.document_id,
+                      counts,
+                      responseRequestId,
+                    )
+                  }
+                  onReviewSaved={(counts) => {
+                    if (responseRequestId !== requestId.current) return;
+                    if (response.review_filter !== "all") {
+                      // Refill filtered pages after a passage leaves the selected state.
+                      // Use submitted criteria; unrelated form edits remain unapplied.
+                      setResponse(null);
+                      void run({
+                        query: response.query,
+                        mode: response.mode,
+                        minimum_score: response.minimum_score,
+                        minimum_semantic_score: response.minimum_semantic_score,
+                        review_filter: response.review_filter,
+                        document_id: response.document_id ?? undefined,
+                        limit: response.limit,
+                        unsearchable_limit: response.unsearchable_limit,
+                      });
+                    } else {
+                      updateReviewCounts(
+                        group.document.document_id,
+                        counts,
+                        responseRequestId,
+                      );
+                    }
+                  }}
                   response={response}
                   onOpen={onOpen}
                 />

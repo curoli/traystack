@@ -262,7 +262,40 @@ export interface SearchTarget {
   processing_job_id: string | null;
   page_number: number | null;
 }
+export type ReviewDecision = "unreviewed" | "keep" | "dismiss" | "later";
+export type ReviewFilter = "all" | ReviewDecision;
+export type ReviewCounts = Record<ReviewDecision, number>;
+export interface PassageReview {
+  decision: ReviewDecision;
+  version: number;
+  updated_at: string | null;
+}
+export interface ReviewWrite {
+  occurrence_id: string;
+  document_id: string;
+  revision_id: string;
+  processing_job_id: string;
+  source_artifact_id: string;
+  normalization_version: string;
+  query: string;
+  mode: "exact" | "normalized";
+  scorer_version: string;
+  candidate_policy: string;
+  start_offset: number;
+  end_offset: number;
+  matched_sha256: string;
+  decision: ReviewDecision;
+  expected_version: number;
+}
+export const saveReview = (payload: ReviewWrite) =>
+  request<PassageReview>("/api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
 export interface TextualSearchRequest {
+  review_filter?: ReviewFilter;
   minimum_semantic_score?: number | null;
   query: string;
   mode: "exact" | "normalized";
@@ -295,6 +328,8 @@ export type TextualDocument = Pick<
   | "latest_job"
 >;
 export interface TextualOccurrence {
+  matched_sha256: string;
+  review: PassageReview;
   occurrence_id: string;
   score: number;
   semantic_score: number | null;
@@ -313,6 +348,7 @@ export interface TextualOccurrence {
   }[];
 }
 export interface TextualGroup {
+  review_counts: ReviewCounts;
   document: TextualDocument;
   occurrences: TextualOccurrence[];
   occurrence_total: number;
@@ -320,6 +356,8 @@ export interface TextualGroup {
   occurrence_limit: number;
 }
 export interface TextualSearchResponse {
+  review_filter: ReviewFilter;
+  review_counts: ReviewCounts;
   minimum_semantic_score: number | null;
   textual_candidates_total: number;
   semantic: {

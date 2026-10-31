@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from traystack.review_schemas import ReviewCounts, ReviewFilter, ReviewOut
 from traystack.search_schemas import SearchJobOut, SearchRequest
 
 
@@ -21,6 +22,7 @@ class TextualAssessmentRequest(BaseModel):
 
 
 class TextualSearchRequest(TextualAssessmentRequest):
+    review_filter: ReviewFilter = "all"
     minimum_semantic_score: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
     scope: Literal["latest"] = "latest"
     document_id: UUID | None = None
@@ -65,6 +67,8 @@ class TextDifference(BaseModel):
 class TextualOccurrence(BaseModel):
     occurrence_id: str
     score: float
+    matched_sha256: str
+    review: ReviewOut = Field(default_factory=ReviewOut)
     semantic_score: float | None = None
     semantic_cosine: float | None = None
     start_offset: int
@@ -78,6 +82,7 @@ class TextualOccurrence(BaseModel):
 
 
 class TextualGroup(BaseModel):
+    review_counts: ReviewCounts
     document: TextualDocument
     occurrence_total: int
     occurrence_limit: int
@@ -117,6 +122,8 @@ class SemanticProvenance(BaseModel):
 
 
 class TextualSearchResponse(BaseModel):
+    review_filter: ReviewFilter = "all"
+    review_counts: ReviewCounts
     query: str
     effective_query: str
     mode: Literal["exact", "normalized"]
