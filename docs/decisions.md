@@ -90,3 +90,12 @@
   und vor Pagination; Zähler zeigen den Bestand vor dem Statusfilter. Ein neuer
   Lauf erhält neue Fundstellenidentitäten. Die lokale Anwendung teilt aktuelle
   Entscheidungen ohne Reviewer-Konten oder vollständiges Ereignis-Audit.
+
+- **Gemessene Optimierung mit unveränderter Treffersemantik:** Ein begrenzter
+  gemischter Bestand trennt textuelle Suche, Modellinitialisierung, neue Embeddings,
+  Cache-Treffer und HTTP-Gesamtzeit. Vorberechnete Wortpositionen und konservative
+  Längenprüfung sparen Arbeit in der Python-Schleife; vollständige Cache-Treffer
+  vermeiden einen Verzeichnisscan. Scores, Fundstellen und Budgetverbrauch werden
+  gegen den bisherigen Stand verglichen. Messung und Grenzen stehen in
+  [search-performance.md](search-performance.md); der gesamte Originalkorpus und
+  ein neuer Kandidatenindex sind damit noch nicht bewertet.

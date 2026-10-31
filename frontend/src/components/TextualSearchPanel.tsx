@@ -388,6 +388,7 @@ function DocumentMatches({
     <section
       className="search-result textual-document"
       aria-label={`Matches in ${group.document.title}`}
+      aria-busy={busy || savingId !== null}
     >
       <div className="section-heading">
         <h3>{group.document.title}</h3>
@@ -430,6 +431,7 @@ function DocumentMatches({
           {error}
         </p>
       )}
+      {busy && <p role="status">Loading passages …</p>}
       <nav
         className="pagination"
         aria-label={`Passages in ${group.document.title}`}
@@ -488,6 +490,7 @@ export default function TextualSearchPanel({
   const [threshold, setThreshold] = useState("85");
   const [response, setResponse] = useState<TextualSearchResponse | null>(null);
   const [responseRequestId, setResponseRequestId] = useState(0);
+  const [requestDurationMs, setRequestDurationMs] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [aborted, setAborted] = useState<SearchAbortDetails | null>(null);
@@ -545,6 +548,7 @@ export default function TextualSearchPanel({
   }
   async function run(payload: Parameters<typeof searchTextual>[0]) {
     const id = ++requestId.current;
+    const started = performance.now();
     setBusy(true);
     setError("");
     setAborted(null);
@@ -557,6 +561,7 @@ export default function TextualSearchPanel({
             group.review_counts,
           ]),
         );
+        setRequestDurationMs(performance.now() - started);
         setResponseRequestId(id);
         setResponse(next);
       }
@@ -800,6 +805,9 @@ export default function TextualSearchPanel({
       {busy && <p role="status">Comparing selected document text …</p>}
       {response && (
         <div className="textual-response" aria-busy={busy}>
+          <p className="fineprint search-duration">
+            Search completed in {(requestDurationMs / 1000).toFixed(2)} s.
+          </p>
           <p className="search-query-summary">
             Results for <strong>“{response.query}”</strong> · {response.mode} ·
             minimum {response.minimum_score}% textual · review:{" "}

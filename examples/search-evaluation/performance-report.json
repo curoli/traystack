@@ -1,0 +1,1563 @@
+{
+  "schema_version": 1,
+  "description": "Single-machine in-process workload measurements; not an SLA or held-out legal benchmark. No DB/HTTP timings included.",
+  "reference_revision": "45d49f3d92857a5502eabc8f62757dd25ee722ac",
+  "implementation_sha256": "77ad5f4eee437ea3d0c7611dcf2e532ca7221d1fcbc7f5c5bf86a215b44e92e1",
+  "semantic_implementation_sha256": "87282f22e269d2bd0fcf865936cf4c625eadbcd815e03319c444930911b1764f",
+  "benchmark_script_sha256": "3cb25e5c744735b0734f62ab606e659f54c89e9ccb714945178df5e3c35a75a9",
+  "environment": {
+    "python": "3.13.5",
+    "machine": "x86_64",
+    "logical_cpus": 16,
+    "rapidfuzz": "3.14.6",
+    "onnxruntime": "1.31.1",
+    "tokenizers": "0.23.3"
+  },
+  "selection": [
+    {
+      "root": "contracts",
+      "eligible_by_type": {
+        "text/plain": 151
+      },
+      "skipped": {
+        "size_limit": 1
+      }
+    },
+    {
+      "root": "contract-nli",
+      "eligible_by_type": {
+        "application/pdf": 347,
+        "text/html": 113,
+        "text/plain": 119
+      },
+      "skipped": {
+        "pdf_page_or_encryption_limit": 22,
+        "size_limit": 6
+      }
+    }
+  ],
+  "extraction": {
+    "documents": 10,
+    "status": {
+      "complete": 9,
+      "unavailable": 1
+    },
+    "quality": {
+      "needs_review": 9,
+      "no_known_issue": 1
+    },
+    "total_s": 5.294306337000307,
+    "page_methods": {
+      "plain_text": 4,
+      "embedded_pdf_text": 4,
+      "ocr": 3,
+      "html_text": 2
+    }
+  },
+  "profiles": [
+    {
+      "synthetic_documents": 16,
+      "local_and_ocr_documents": 10,
+      "characters": 532905,
+      "searchable_documents": 25,
+      "corpus_digest": "829c27925d83fa108841ef1b7e74077f4b66051de09cbecb58cec3ee00fff129",
+      "cases": [
+        {
+          "query_id": "confidentiality",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "5baf784079e80d19059ff28483dc9c51ee17558fff0e5c4a1caba67ce3dd58d3",
+            "passages": 12,
+            "remaining": {
+              "characters": 19467095,
+              "windows": 1098418,
+              "matches": 99961
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.8307963869992818,
+                0.8631000940004014,
+                0.8433050309995451,
+                0.851001398000335,
+                0.843142481000541
+              ],
+              "median_s": 0.8433050309995451,
+              "min_s": 0.8307963869992818,
+              "max_s": 0.8631000940004014
+            },
+            "optimized": {
+              "samples_s": [
+                0.6694357429996671,
+                0.6842443549994641,
+                0.6702891280001495,
+                0.6678818070004127,
+                0.6753144329995848
+              ],
+              "median_s": 0.6702891280001495,
+              "min_s": 0.6678818070004127,
+              "max_s": 0.6842443549994641
+            }
+          },
+          "speedup": 1.25812130284076,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6859841679997771,
+              "cold_cache_s": 0.06970500799980073,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.06548902199938311,
+              "warm_cache": {
+                "samples_s": [
+                  0.013669335000486171,
+                  0.013388749999649008,
+                  0.013574610999967263,
+                  0.013737369999944349,
+                  0.013642631999573496
+                ],
+                "median_s": 0.013642631999573496,
+                "min_s": 0.013388749999649008,
+                "max_s": 0.013737369999944349
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.5996361450006589,
+              "cold_cache_s": 0.07080360800046037,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.06669814599990787,
+              "warm_cache": {
+                "samples_s": [
+                  0.0009618369995223475,
+                  0.0007216329995571868,
+                  0.00068178000037733,
+                  0.0006670070006293827,
+                  0.0006858500000817003
+                ],
+                "median_s": 0.0006858500000817003,
+                "min_s": 0.0006670070006293827,
+                "max_s": 0.0009618369995223475
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_negation": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369
+              ]
+            },
+            "paraphrase": {
+              "documents": 2,
+              "target_overlap": 2,
+              "semantic_scores": [
+                97.42568731307983,
+                97.42568731307983
+              ]
+            },
+            "simulated_ocr": {
+              "documents": 2,
+              "target_overlap": 2,
+              "semantic_scores": [
+                93.95082592964172,
+                93.95082592964172
+              ]
+            },
+            "unrelated": {
+              "documents": 4,
+              "target_overlap": 0,
+              "semantic_scores": []
+            }
+          }
+        },
+        {
+          "query_id": "amount",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "ebf2d08c2c3f1bf1fbee7c400192d2a28cca780d8543671fd756f3541a196f84",
+            "passages": 16,
+            "remaining": {
+              "characters": 19467095,
+              "windows": 1098418,
+              "matches": 99956
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.7317415509996863,
+                0.7302060639995034,
+                0.7305361439994158,
+                0.7255491879996043,
+                0.7364266840004348
+              ],
+              "median_s": 0.7305361439994158,
+              "min_s": 0.7255491879996043,
+              "max_s": 0.7364266840004348
+            },
+            "optimized": {
+              "samples_s": [
+                0.5552050280002732,
+                0.5760727739998401,
+                0.5683710010007417,
+                0.56777250200048,
+                0.5624692470000809
+              ],
+              "median_s": 0.56777250200048,
+              "min_s": 0.5552050280002732,
+              "max_s": 0.5760727739998401
+            }
+          },
+          "speedup": 1.2866705263559914,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6117516899994371,
+              "cold_cache_s": 0.07475182599955588,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.07059670599937817,
+              "warm_cache": {
+                "samples_s": [
+                  0.01410467699952278,
+                  0.014859158000035677,
+                  0.014774825000131386,
+                  0.014493663999928685,
+                  0.01455357500071841
+                ],
+                "median_s": 0.01455357500071841,
+                "min_s": 0.01410467699952278,
+                "max_s": 0.014859158000035677
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.591229375999319,
+              "cold_cache_s": 0.07039385400003084,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.06658864099972561,
+              "warm_cache": {
+                "samples_s": [
+                  0.0009953329999916605,
+                  0.0007409070003632223,
+                  0.0006979689997024252,
+                  0.0006926169999132981,
+                  0.000688903000082064
+                ],
+                "median_s": 0.0006979689997024252,
+                "min_s": 0.000688903000082064,
+                "max_s": 0.0009953329999916605
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_amount": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638
+              ]
+            },
+            "changed_deadline": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748
+              ]
+            },
+            "simulated_ocr": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292
+              ]
+            }
+          }
+        },
+        {
+          "query_id": "name",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "06c78676422fa68b181da5bc74159d871d11f3f488c88aac99d88bab37ad5251",
+            "passages": 16,
+            "remaining": {
+              "characters": 19467095,
+              "windows": 1261892,
+              "matches": 99944
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.5202047000002494,
+                0.5059081769995828,
+                0.5053731429998152,
+                0.5094873930001995,
+                0.5063756689996808
+              ],
+              "median_s": 0.5063756689996808,
+              "min_s": 0.5053731429998152,
+              "max_s": 0.5202047000002494
+            },
+            "optimized": {
+              "samples_s": [
+                0.3770098000004509,
+                0.3762297450002734,
+                0.3687206579998019,
+                0.3799022089997379,
+                0.37511946099948545
+              ],
+              "median_s": 0.3762297450002734,
+              "min_s": 0.3687206579998019,
+              "max_s": 0.3799022089997379
+            }
+          },
+          "speedup": 1.3459214103321704,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.5913593169998421,
+              "cold_cache_s": 0.03911771699949895,
+              "cold_inference_calls": 2,
+              "cold_inference_s": 0.03710521100038022,
+              "warm_cache": {
+                "samples_s": [
+                  0.014102641000135918,
+                  0.014548075999300636,
+                  0.014277928000410611,
+                  0.014085969000007026,
+                  0.014901818999533134
+                ],
+                "median_s": 0.014277928000410611,
+                "min_s": 0.014085969000007026,
+                "max_s": 0.014901818999533134
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9998,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6013312940003743,
+              "cold_cache_s": 0.037965442999848165,
+              "cold_inference_calls": 2,
+              "cold_inference_s": 0.03585424900029466,
+              "warm_cache": {
+                "samples_s": [
+                  0.0006117530001574778,
+                  0.00040585900023870636,
+                  0.00037122800040378934,
+                  0.00037114099995960714,
+                  0.0003565520000847755
+                ],
+                "median_s": 0.00037122800040378934,
+                "min_s": 0.0003565520000847755,
+                "max_s": 0.0006117530001574778
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9998,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 8,
+              "target_overlap": 8,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_name": {
+              "documents": 8,
+              "target_overlap": 8,
+              "semantic_scores": [
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669
+              ]
+            }
+          }
+        },
+        {
+          "query_id": "german",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "f031a8eafe6d37d3ee3e7745f33268ea5de616de34ad5b6995dc2a08d8402482",
+            "passages": 16,
+            "remaining": {
+              "characters": 19467095,
+              "windows": 1261667,
+              "matches": 99976
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.5081389480001235,
+                0.4943568669996239,
+                0.4912486919993171,
+                0.500806504999673,
+                0.4904100929998094
+              ],
+              "median_s": 0.4943568669996239,
+              "min_s": 0.4904100929998094,
+              "max_s": 0.5081389480001235
+            },
+            "optimized": {
+              "samples_s": [
+                0.35177642600046966,
+                0.35925232599947776,
+                0.3581344939993869,
+                0.34144845199989504,
+                0.34840045100008865
+              ],
+              "median_s": 0.35177642600046966,
+              "min_s": 0.34144845199989504,
+              "max_s": 0.35925232599947776
+            }
+          },
+          "speedup": 1.4053155085467945,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.5983031759997175,
+              "cold_cache_s": 0.07656193999991956,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.07241270800022903,
+              "warm_cache": {
+                "samples_s": [
+                  0.014363342999786255,
+                  0.01537991500026692,
+                  0.015340504000050714,
+                  0.014696082999762439,
+                  0.014517648000037298
+                ],
+                "median_s": 0.014696082999762439,
+                "min_s": 0.014363342999786255,
+                "max_s": 0.01537991500026692
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6205664380004237,
+              "cold_cache_s": 0.07216825799969229,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.06823893600085285,
+              "warm_cache": {
+                "samples_s": [
+                  0.0009769629996299045,
+                  0.0007659389993932564,
+                  0.0007060389998514438,
+                  0.000689862999934121,
+                  0.0006894830003147945
+                ],
+                "median_s": 0.0007060389998514438,
+                "min_s": 0.0006894830003147945,
+                "max_s": 0.0009769629996299045
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_negation": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246
+              ]
+            },
+            "paraphrase": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313
+              ]
+            },
+            "simulated_ocr": {
+              "documents": 4,
+              "target_overlap": 4,
+              "semantic_scores": [
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201
+              ]
+            }
+          }
+        },
+        {
+          "query_id": "common_confidentiality",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "b3062481d3e1d9047f94e002b9e4cf4e4513eadc7058140c02aeb34a5f35ea60",
+            "passages": 1,
+            "remaining": {
+              "characters": 19467095,
+              "windows": 1261892,
+              "matches": 99996
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.5339330079996216,
+                0.5315682860000379,
+                0.5232933859997502,
+                0.5105821600000127,
+                0.5261549690003449
+              ],
+              "median_s": 0.5261549690003449,
+              "min_s": 0.5105821600000127,
+              "max_s": 0.5339330079996216
+            },
+            "optimized": {
+              "samples_s": [
+                0.38917258600031346,
+                0.3887850729997808,
+                0.3707958269997107,
+                0.3716567130004478,
+                0.4039646350001931
+              ],
+              "median_s": 0.3887850729997808,
+              "min_s": 0.3707958269997107,
+              "max_s": 0.4039646350001931
+            }
+          },
+          "speedup": 1.353331199010929,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6544744570001058,
+              "cold_cache_s": 0.019633326000075613,
+              "cold_inference_calls": 1,
+              "cold_inference_s": 0.01845368799968128,
+              "warm_cache": {
+                "samples_s": [
+                  0.014640995000263501,
+                  0.014494277000267175,
+                  0.014660378999906243,
+                  0.014513930999783042,
+                  0.014281078999374586
+                ],
+                "median_s": 0.014513930999783042,
+                "min_s": 0.014281078999374586,
+                "max_s": 0.014660378999906243
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9999,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6531134580000071,
+              "cold_cache_s": 0.019215239000004658,
+              "cold_inference_calls": 1,
+              "cold_inference_s": 0.018050478999612096,
+              "warm_cache": {
+                "samples_s": [
+                  0.00039371999991999473,
+                  0.00024709999979677377,
+                  0.00020529599987639813,
+                  0.000191221999557456,
+                  0.00018250899938720977
+                ],
+                "median_s": 0.00020529599987639813,
+                "min_s": 0.00018250899938720977,
+                "max_s": 0.00039371999991999473
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9999,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {}
+        }
+      ]
+    },
+    {
+      "synthetic_documents": 64,
+      "local_and_ocr_documents": 10,
+      "characters": 715887,
+      "searchable_documents": 73,
+      "corpus_digest": "e06fa846090e6f0a48c16541fe8d8bc82d4af138957e143f67db781f74ea0c1b",
+      "cases": [
+        {
+          "query_id": "confidentiality",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "6f2f06643a218bce433ea92087dc375662ea2ee573826fb151aed2f101e69942",
+            "passages": 48,
+            "remaining": {
+              "characters": 19284113,
+              "windows": 828742,
+              "matches": 99843
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                1.2397618189997957,
+                1.1598427979997723,
+                1.2132078649992764,
+                1.1582594209994568,
+                1.1783557759999894
+              ],
+              "median_s": 1.1783557759999894,
+              "min_s": 1.1582594209994568,
+              "max_s": 1.2397618189997957
+            },
+            "optimized": {
+              "samples_s": [
+                0.9764664499998617,
+                0.9323572780003815,
+                0.9329902660001608,
+                0.9889645319999545,
+                0.9247808870004519
+              ],
+              "median_s": 0.9329902660001608,
+              "min_s": 0.9247808870004519,
+              "max_s": 0.9889645319999545
+            }
+          },
+          "speedup": 1.2629882850243868,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6996505590004745,
+              "cold_cache_s": 0.07509488600044278,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.07101496199902613,
+              "warm_cache": {
+                "samples_s": [
+                  0.01486254200062831,
+                  0.014611686999160156,
+                  0.015123013000447827,
+                  0.01490127999932156,
+                  0.014558814999872993
+                ],
+                "median_s": 0.01486254200062831,
+                "min_s": 0.014558814999872993,
+                "max_s": 0.015123013000447827
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6868705389997558,
+              "cold_cache_s": 0.08808476500053075,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.0835636940000768,
+              "warm_cache": {
+                "samples_s": [
+                  0.0011647600003925618,
+                  0.0009121830007643439,
+                  0.0008419379992119502,
+                  0.0008359240000572754,
+                  0.0008127680002871784
+                ],
+                "median_s": 0.0008419379992119502,
+                "min_s": 0.0008127680002871784,
+                "max_s": 0.0011647600003925618
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_negation": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369,
+                57.64486789703369
+              ]
+            },
+            "paraphrase": {
+              "documents": 8,
+              "target_overlap": 8,
+              "semantic_scores": [
+                97.42568731307983,
+                97.42568731307983,
+                97.42568731307983,
+                97.42568731307983,
+                97.42568731307983,
+                97.42568731307983,
+                97.42568731307983,
+                97.42568731307983
+              ]
+            },
+            "simulated_ocr": {
+              "documents": 8,
+              "target_overlap": 8,
+              "semantic_scores": [
+                93.95082592964172,
+                93.95082592964172,
+                93.95082592964172,
+                93.95082592964172,
+                93.95082592964172,
+                93.95082592964172,
+                93.95082592964172,
+                93.95082592964172
+              ]
+            },
+            "unrelated": {
+              "documents": 16,
+              "target_overlap": 0,
+              "semantic_scores": []
+            }
+          }
+        },
+        {
+          "query_id": "amount",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "0512d671c967f0d7cbe5c8b6c4e32dc5b1aee6f03e831302e0dea6e83bd08785",
+            "passages": 64,
+            "remaining": {
+              "characters": 19284113,
+              "windows": 828742,
+              "matches": 99824
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.987757581000551,
+                1.0653359959997033,
+                0.9636374040001101,
+                0.9665238979996502,
+                0.9250456540003142
+              ],
+              "median_s": 0.9665238979996502,
+              "min_s": 0.9250456540003142,
+              "max_s": 1.0653359959997033
+            },
+            "optimized": {
+              "samples_s": [
+                0.7186070060006386,
+                0.7307342809999682,
+                0.7659860359999584,
+                0.7307312199991429,
+                0.7824229389998436
+              ],
+              "median_s": 0.7307342809999682,
+              "min_s": 0.7186070060006386,
+              "max_s": 0.7824229389998436
+            }
+          },
+          "speedup": 1.3226749081444726,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6419937170003323,
+              "cold_cache_s": 0.07725963199936814,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.0732012720000057,
+              "warm_cache": {
+                "samples_s": [
+                  0.01613156099938351,
+                  0.0151399019996461,
+                  0.015349716000855551,
+                  0.014807866999944963,
+                  0.015088277999893762
+                ],
+                "median_s": 0.0151399019996461,
+                "min_s": 0.014807866999944963,
+                "max_s": 0.01613156099938351
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6978020110000216,
+              "cold_cache_s": 0.08259973300027923,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.07832915900053194,
+              "warm_cache": {
+                "samples_s": [
+                  0.0011448420000306214,
+                  0.0008918470002754475,
+                  0.0008381059997191187,
+                  0.0008615779997853679,
+                  0.0008245560002251295
+                ],
+                "median_s": 0.0008615779997853679,
+                "min_s": 0.0008245560002251295,
+                "max_s": 0.0011448420000306214
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_amount": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638,
+                90.22511839866638
+              ]
+            },
+            "changed_deadline": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748,
+                83.9210033416748
+              ]
+            },
+            "simulated_ocr": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292,
+                95.65962553024292
+              ]
+            }
+          }
+        },
+        {
+          "query_id": "name",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "3e586effe8484459d73d835c08eef3135dd1216d4af6c1c98c7525b917a2617f",
+            "passages": 64,
+            "remaining": {
+              "characters": 19284113,
+              "windows": 1040384,
+              "matches": 99776
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.6598734389999663,
+                0.6456422750006823,
+                0.6828965380000227,
+                0.7192567380006949,
+                0.6565090570002212
+              ],
+              "median_s": 0.6598734389999663,
+              "min_s": 0.6456422750006823,
+              "max_s": 0.7192567380006949
+            },
+            "optimized": {
+              "samples_s": [
+                0.47982494799998676,
+                0.5034855410003729,
+                0.49662187499961874,
+                0.4862862440004392,
+                0.48362009300035425
+              ],
+              "median_s": 0.4862862440004392,
+              "min_s": 0.47982494799998676,
+              "max_s": 0.5034855410003729
+            }
+          },
+          "speedup": 1.3569650532811912,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6234597590000703,
+              "cold_cache_s": 0.03812529300012102,
+              "cold_inference_calls": 2,
+              "cold_inference_s": 0.03598936699927435,
+              "warm_cache": {
+                "samples_s": [
+                  0.014357388999997056,
+                  0.014441600999816728,
+                  0.01473370799976692,
+                  0.014247616999455204,
+                  0.014056772000003548
+                ],
+                "median_s": 0.014357388999997056,
+                "min_s": 0.014056772000003548,
+                "max_s": 0.01473370799976692
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9998,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6712240830001974,
+              "cold_cache_s": 0.04534883100041043,
+              "cold_inference_calls": 2,
+              "cold_inference_s": 0.043053539000538876,
+              "warm_cache": {
+                "samples_s": [
+                  0.0007043169998723897,
+                  0.00047493999954895116,
+                  0.0004458210005395813,
+                  0.0004480580000745249,
+                  0.00043619799998850795
+                ],
+                "median_s": 0.0004480580000745249,
+                "min_s": 0.00043619799998850795,
+                "max_s": 0.0007043169998723897
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9998,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 32,
+              "target_overlap": 32,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_name": {
+              "documents": 32,
+              "target_overlap": 32,
+              "semantic_scores": [
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669,
+                71.6529130935669
+              ]
+            }
+          }
+        },
+        {
+          "query_id": "german",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "49d396f382e854f662c84b67a2790acd0f9f3fee66513a568900f8cc271e253c",
+            "passages": 64,
+            "remaining": {
+              "characters": 19284113,
+              "windows": 1039727,
+              "matches": 99904
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.6909526150002421,
+                0.6929839149997861,
+                0.6466356310002084,
+                0.6248156980000203,
+                0.6200736599994343
+              ],
+              "median_s": 0.6466356310002084,
+              "min_s": 0.6200736599994343,
+              "max_s": 0.6929839149997861
+            },
+            "optimized": {
+              "samples_s": [
+                0.4526483889994779,
+                0.4427695290005431,
+                0.44700735099922895,
+                0.4635560180004177,
+                0.48856271499971626
+              ],
+              "median_s": 0.4526483889994779,
+              "min_s": 0.4427695290005431,
+              "max_s": 0.48856271499971626
+            }
+          },
+          "speedup": 1.428560548794871,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6563162030006424,
+              "cold_cache_s": 0.08533377399999154,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.08127761099967756,
+              "warm_cache": {
+                "samples_s": [
+                  0.014960860999963188,
+                  0.014807145000304445,
+                  0.014594682999813813,
+                  0.014454011999987415,
+                  0.014580510000087088
+                ],
+                "median_s": 0.014594682999813813,
+                "min_s": 0.014454011999987415,
+                "max_s": 0.014960860999963188
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.677767765999306,
+              "cold_cache_s": 0.07758787800048594,
+              "cold_inference_calls": 4,
+              "cold_inference_s": 0.07344571400062705,
+              "warm_cache": {
+                "samples_s": [
+                  0.001081657000213454,
+                  0.0008639249999760068,
+                  0.0008256760002041119,
+                  0.0007969520002006902,
+                  0.0007984079993548221
+                ],
+                "median_s": 0.0008256760002041119,
+                "min_s": 0.0007969520002006902,
+                "max_s": 0.001081657000213454
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9996,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {
+            "identity": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                100.0
+              ]
+            },
+            "changed_negation": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246,
+                51.38564109802246
+              ]
+            },
+            "paraphrase": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313,
+                92.43200421333313
+              ]
+            },
+            "simulated_ocr": {
+              "documents": 16,
+              "target_overlap": 16,
+              "semantic_scores": [
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201,
+                90.76564311981201
+              ]
+            }
+          }
+        },
+        {
+          "query_id": "common_confidentiality",
+          "minimum_score": 85,
+          "outcome": {
+            "status": "complete",
+            "digest": "196e39e8ee49475b0622a2e6c223f61f41c276595eee28f086111a703d7541f0",
+            "passages": 1,
+            "remaining": {
+              "characters": 19284113,
+              "windows": 1040384,
+              "matches": 99996
+            }
+          },
+          "textual": {
+            "reference": {
+              "samples_s": [
+                0.6769231769994803,
+                0.6399687200000699,
+                0.6665577159992608,
+                0.67495505900024,
+                0.6767099849994338
+              ],
+              "median_s": 0.67495505900024,
+              "min_s": 0.6399687200000699,
+              "max_s": 0.6769231769994803
+            },
+            "optimized": {
+              "samples_s": [
+                0.49248725899997225,
+                0.46296704199994565,
+                0.520075650999388,
+                0.4817350149996855,
+                0.4640239180007484
+              ],
+              "median_s": 0.4817350149996855,
+              "min_s": 0.46296704199994565,
+              "max_s": 0.520075650999388
+            }
+          },
+          "speedup": 1.4010919654671161,
+          "semantic": {
+            "reference": {
+              "status": "complete",
+              "model_initialization_s": 0.6202090669994504,
+              "cold_cache_s": 0.02132350600004429,
+              "cold_inference_calls": 1,
+              "cold_inference_s": 0.02014540100026352,
+              "warm_cache": {
+                "samples_s": [
+                  0.014275253000050725,
+                  0.013984952000100748,
+                  0.013937437999629765,
+                  0.014198327000485733,
+                  0.014143925000098534
+                ],
+                "median_s": 0.014143925000098534,
+                "min_s": 0.013937437999629765,
+                "max_s": 0.014275253000050725
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9999,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            },
+            "optimized": {
+              "status": "complete",
+              "model_initialization_s": 0.6423062090007079,
+              "cold_cache_s": 0.019069163000494882,
+              "cold_inference_calls": 1,
+              "cold_inference_s": 0.017880077999507193,
+              "warm_cache": {
+                "samples_s": [
+                  0.00039565299994137604,
+                  0.000259120000009716,
+                  0.00019647199951577932,
+                  0.0001859399999375455,
+                  0.00018840600023395382
+                ],
+                "median_s": 0.00019647199951577932,
+                "min_s": 0.0001859399999375455,
+                "max_s": 0.00039565299994137604
+              },
+              "warm_inference_calls": 0,
+              "directory_placeholders": 9999,
+              "cache_entries": 10000,
+              "pipeline": {
+                "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900",
+                "pipeline": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2c4055b12046f11709e9df2c122e59ffbdc2f900|minilm-int8-singleton-masked-mean-l2-128-v2|ort=1.31.1|tok=0.23.3",
+                "score_version": "positive-cosine-exact-100-v1",
+                "max_tokens": 128
+              }
+            }
+          },
+          "synthetic_location_checks": {}
+        }
+      ]
+    }
+  ]
+}

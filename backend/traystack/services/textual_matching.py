@@ -139,23 +139,35 @@ def find_passages(
         passage_budget.check(len(candidates), len(text), minimum)
         position = end  # Explicitly return non-overlapping literal occurrences.
     if minimum < 100:
-        words = list(re.finditer(r"\S+", text))
+        words = [(word.start(), word.end()) for word in re.finditer(r"\S+", text)]
+        query_length = len(query)
+        # Conservative integer bounds avoid slicing/ratio work for impossible
+        # lengths. Padding protects floating-point boundaries; the original
+        # ratio and scorer still decide every possible match below.
+        minimum_length = max(1, math.floor(query_length * minimum / 100) - 1)
+        upper = 100 * query_length / minimum
+        maximum_length = math.ceil(upper) + 1 if math.isfinite(upper) else len(text)
         query_words = max(1, len(query.split()))
         tolerance = max(2, (query_words + 1) // 2)
         shortest = min(len(words), max(1, query_words - tolerance))
         longest = query_words + tolerance
-        for index, word in enumerate(words):
+        for index, (start, _) in enumerate(words):
             best = None
             for length in range(shortest, min(longest, len(words) - index) + 1):
                 budget.consume("windows")
-                start, end = word.start(), words[index + length - 1].end()
+                end = words[index + length - 1][1]
+                passage_length = end - start
+                if passage_length < minimum_length or passage_length > maximum_length:
+                    continue
                 if (start, end) in candidates:
                     continue
-                passage = text[start:end]
-                # A cheap length bound avoids computing an impossible score.
-                if 100 * min(len(query), len(passage)) / max(len(query), len(passage)) < minimum:
+                # Keep the existing boundary calculation and full-precision score.
+                if (
+                    100 * min(query_length, passage_length) / max(query_length, passage_length)
+                    < minimum
+                ):
                     continue
-                score = 100 * Levenshtein.normalized_similarity(query, passage)
+                score = 100 * Levenshtein.normalized_similarity(query, text[start:end])
                 if score >= minimum and (best is None or score > best.score):
                     best = Candidate(start, end, score)
             if best is not None:

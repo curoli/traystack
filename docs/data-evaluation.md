@@ -3,8 +3,10 @@
 Implemented after the English UI. This increment adds real TXT/HTML ingestion,
 a local source inventory, a repeatable synthetic image corpus, import tooling and
 an OCR baseline. The subsequent [textual similarity workflow](textual-search.md)
-now evaluates positive candidates against this data. Semantic thresholds,
-embeddings, per-occurrence review states and revision-management UI remain later work.
+now evaluates positive candidates against this data. Local semantic comparison and
+saved passage reviews are implemented; revision-management UI remains later work.
+The [mixed workload evaluation](search-performance.md) adds bounded real-source,
+synthetic, OCR, model-cache and actual HTTP measurements.
 
 ## Local source inventory
 

@@ -130,7 +130,9 @@ class SemanticEngine:
             else:
                 missing.append((text, encoding))
         # Bounded cache: full caches still permit successful inference without new writes.
-        cache_slots = max(0, 10_000 - sum(1 for _ in self.cache_path.glob("*.json")))
+        cache_slots = (
+            max(0, 10_000 - sum(1 for _ in self.cache_path.glob("*.json"))) if missing else 0
+        )
         # Dynamic INT8 quantization depends on the batch contents. A singleton
         # with fixed padding makes a text's vector independent of its neighbours
         # and whether other texts were already cached.
