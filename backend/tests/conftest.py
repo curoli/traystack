@@ -43,6 +43,7 @@ def engine(database_url):
             "processing_jobs",
             "revision_texts",
             "page_texts",
+            "passage_reviews",
         }:
             pytest.fail("Unexpected tables in test database; use a dedicated test database")
     config = Config(str(ROOT / "backend" / "alembic.ini"))

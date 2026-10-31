@@ -1,13 +1,15 @@
-import hashlib
+from collections import Counter
 from datetime import UTC, datetime
 from importlib.metadata import version
 
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from traystack.models import Document, PageText, RevisionText
+from traystack.models import Document, PageText, PassageReview, RevisionText
+from traystack.review_schemas import ReviewCounts, ReviewOut
 from traystack.search_schemas import SearchRequest
 from traystack.services.normalization import NORMALIZATION_VERSION
+from traystack.services.passage_identity import occurrence_identity, text_fingerprint
 from traystack.services.query_guidance import assess_query
 from traystack.services.search import classify, selected_scope
 from traystack.services.textual_matching import (
@@ -105,6 +107,50 @@ def textual_snapshot(
             if retained:
                 filtered.append((document, content, retained))
         matches = filtered
+    jobs = [document.processing_job_id for document, _, _ in matches]
+    reviews = (
+        {
+            item.occurrence_id: item
+            for item in session.scalars(
+                select(PassageReview).where(
+                    PassageReview.processing_job_id.in_(jobs),
+                    PassageReview.effective_query == phrase,
+                    PassageReview.mode == request.mode,
+                    PassageReview.scorer_version == SCORER_VERSION,
+                    PassageReview.candidate_policy == CANDIDATE_POLICY,
+                )
+            )
+        }
+        if jobs
+        else {}
+    )
+    review_counts = Counter()
+    document_review_counts = {}
+    review_matches = []
+    for document, content, passages in matches:
+        retained = []
+        document_counts = Counter()
+        for candidate in passages:
+            identity = occurrence_identity(
+                document.processing_job_id, request.mode, phrase, candidate.start, candidate.end
+            )
+            review = reviews.get(identity)
+            if review is not None and (
+                review.matched_sha256 != text_fingerprint(content[candidate.start : candidate.end])
+                or review.source_artifact_id != document.artifact_id
+                or review.normalization_version != document.normalization_version
+            ):
+                reviews.pop(identity)
+                review = None
+            decision = review.decision if review is not None else "unreviewed"
+            review_counts[decision] += 1
+            document_counts[decision] += 1
+            if request.review_filter == "all" or request.review_filter == decision:
+                retained.append(candidate)
+        document_review_counts[document.document_id] = ReviewCounts(**document_counts)
+        if retained:
+            review_matches.append((document, content, retained))
+    matches = review_matches
     # Stable ties retain the scope's document recency/ID ordering.
     matches.sort(key=lambda item: -item[2][0].score)
     groups = []
@@ -131,14 +177,19 @@ def textual_snapshot(
                 raw_start += len(page.text) + len("\n\f\n")
             snippet_start = max(0, candidate.start - 100)
             matched = content[candidate.start : candidate.end]
-            occurrence_id = hashlib.sha256(
-                f"{document.processing_job_id}|{request.mode}|{SCORER_VERSION}|{CANDIDATE_POLICY}|"
-                f"{phrase}|{candidate.start}|{candidate.end}".encode()
-            ).hexdigest()
+            occurrence_id = occurrence_identity(
+                document.processing_job_id, request.mode, phrase, candidate.start, candidate.end
+            )
             occurrences.append(
                 TextualOccurrence(
                     occurrence_id=occurrence_id,
                     score=round(candidate.score, 4),
+                    matched_sha256=text_fingerprint(matched),
+                    review=(
+                        ReviewOut.model_validate(reviews[occurrence_id])
+                        if occurrence_id in reviews
+                        else ReviewOut()
+                    ),
                     semantic_score=(
                         round(
                             semantic_values[document.document_id, candidate.start, candidate.end][
@@ -168,6 +219,7 @@ def textual_snapshot(
             )
         groups.append(
             TextualGroup(
+                review_counts=document_review_counts[document.document_id],
                 document=document,
                 occurrences=occurrences,
                 occurrence_total=len(passages),
@@ -213,6 +265,8 @@ def textual_snapshot(
             )
     warnings = [notice.code for notice in [*assessment.warnings, *result_warnings]]
     return TextualSearchResponse(
+        review_filter=request.review_filter,
+        review_counts=ReviewCounts(**review_counts),
         query=request.query,
         effective_query=phrase,
         mode=request.mode,

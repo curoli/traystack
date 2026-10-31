@@ -244,3 +244,49 @@ class PageText(Base):
     quality_warnings: Mapped[list[str]] = mapped_column(JSONB)
     confidence: Mapped[float | None] = mapped_column(Float)
     layout_metadata: Mapped[dict[str, Any]] = mapped_column(JSONB)
+
+
+class PassageReview(Base):
+    __tablename__ = "passage_reviews"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["processing_job_id", "revision_id"],
+            ["processing_jobs.id", "processing_jobs.revision_id"],
+            name="fk_review_job_revision",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["source_artifact_id", "revision_id"],
+            ["artifacts.id", "artifacts.revision_id"],
+            name="fk_review_source_revision",
+            ondelete="RESTRICT",
+        ),
+        CheckConstraint("occurrence_id ~ '^[0-9a-f]{64}$'", name="ck_review_identity"),
+        CheckConstraint("matched_sha256 ~ '^[0-9a-f]{64}$'", name="ck_review_hash"),
+        CheckConstraint("mode IN ('exact','normalized')", name="ck_review_mode"),
+        CheckConstraint(
+            "decision IN ('unreviewed','keep','dismiss','later')", name="ck_review_decision"
+        ),
+        CheckConstraint("version > 0", name="ck_review_version"),
+        CheckConstraint(
+            "start_offset >= 0 AND end_offset > start_offset", name="ck_review_offsets"
+        ),
+        Index("ix_passage_reviews_query", "processing_job_id", "mode"),
+    )
+
+    occurrence_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    revision_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("revisions.id", ondelete="RESTRICT"))
+    processing_job_id: Mapped[uuid.UUID] = mapped_column()
+    source_artifact_id: Mapped[uuid.UUID] = mapped_column()
+    normalization_version: Mapped[str] = mapped_column(String(100))
+    mode: Mapped[str] = mapped_column(String(20))
+    effective_query: Mapped[str] = mapped_column(Text)
+    scorer_version: Mapped[str] = mapped_column(String(100))
+    candidate_policy: Mapped[str] = mapped_column(String(150))
+    start_offset: Mapped[int] = mapped_column(Integer)
+    end_offset: Mapped[int] = mapped_column(Integer)
+    matched_sha256: Mapped[str] = mapped_column(String(64))
+    decision: Mapped[str] = mapped_column(String(20))
+    version: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

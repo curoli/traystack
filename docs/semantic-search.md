@@ -5,6 +5,8 @@ expression using local embeddings. Enable **Compare meaning with local embedding
 and set **Minimum semantic match**. Textual search remains the first stage; a
 semantically related expression that fails the textual threshold is not retrieved.
 The existing **Literal search** absence workflow is unchanged.
+[Saved reviews](passage-reviews.md) can filter the passages that pass both thresholds;
+review counts are computed after semantic filtering and before the review filter.
 
 ## Score contract
 

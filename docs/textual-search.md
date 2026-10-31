@@ -3,8 +3,9 @@
 The **Similar passages** workflow is positive candidate retrieval, separate from
 **Literal search** and its exact/normalized absence checks. An optional
 [semantic comparison stage](semantic-search.md) now scores and filters these
-textual candidates. Review decisions remain a future step. Neither similarity
-stage establishes clause absence.
+textual candidates. [Saved reviews](passage-reviews.md) add per-occurrence
+decisions, status filters and counters after similarity filtering. Neither
+similarity stage nor review state establishes clause absence.
 
 ## User workflow
 
