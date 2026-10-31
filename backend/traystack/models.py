@@ -290,3 +290,63 @@ class PassageReview(Base):
     version: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SearchRun(Base):
+    __tablename__ = "search_runs"
+    __table_args__ = (
+        CheckConstraint("snapshot_version = 1", name="ck_search_run_version"),
+        CheckConstraint("length(trim(name)) > 0", name="ck_search_run_name"),
+        CheckConstraint(
+            "result_documents >= 0 AND result_passages >= 0", name="ck_search_run_counts"
+        ),
+        Index("ix_search_runs_created", "created_at", "id"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200))
+    query: Mapped[str] = mapped_column(Text)
+    parent_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("search_runs.id", ondelete="RESTRICT")
+    )
+    snapshot_version: Mapped[int] = mapped_column(Integer, default=1)
+    request_json: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    result_json: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    scope_json: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
+    snapshot_sha256: Mapped[str] = mapped_column(String(64))
+    result_documents: Mapped[int] = mapped_column(Integer)
+    result_passages: Mapped[int] = mapped_column(Integer)
+    searched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ArchivedText(Base):
+    __tablename__ = "archived_texts"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["processing_job_id", "revision_id"],
+            ["processing_jobs.id", "processing_jobs.revision_id"],
+            name="fk_archived_text_job_revision",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["source_artifact_id", "revision_id"],
+            ["artifacts.id", "artifacts.revision_id"],
+            name="fk_archived_text_source_revision",
+            ondelete="RESTRICT",
+        ),
+    )
+    processing_job_id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    revision_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("revisions.id", ondelete="RESTRICT"))
+    source_artifact_id: Mapped[uuid.UUID] = mapped_column()
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    sha256: Mapped[str] = mapped_column(String(64))
+
+
+class SearchRunSource(Base):
+    __tablename__ = "search_run_sources"
+    run_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("search_runs.id", ondelete="RESTRICT"), primary_key=True
+    )
+    processing_job_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("archived_texts.processing_job_id", ondelete="RESTRICT"), primary_key=True
+    )

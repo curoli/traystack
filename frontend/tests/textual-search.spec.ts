@@ -50,7 +50,7 @@ test("textual matches show differences, page through occurrences and retain subm
   );
   await card.getByRole("button", { name: "View source text" }).first().click();
   const viewer = page.getByRole("region", {
-    name: "Extracted page text",
+    name: "Saved source text",
     exact: true,
   });
   await expect(viewer).toBeFocused();
@@ -64,12 +64,15 @@ test("textual matches show differences, page through occurrences and retain subm
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  // A page of matches from another run must not be mixed into the old result snapshot.
+  // A saved run retains its original source and pages after reprocessing.
+  const archivedIdentity = await viewer.locator(".identifier").textContent();
   await process(page, document.revisions[0].id);
   await card.getByRole("button", { name: "Previous passages" }).click();
-  await expect(card.getByRole("alert")).toContainText(
-    "Please run the search again",
-  );
+  await expect(card.locator(".textual-occurrence")).toHaveCount(5);
+  await expect(card.getByRole("alert")).toHaveCount(0);
+  await card.getByRole("button", { name: "View source text" }).first().click();
+  await expect(viewer).toBeFocused();
+  await expect(viewer.locator(".identifier")).toHaveText(archivedIdentity!);
 });
 
 test("zero is blocked, scope can be narrowed, and exact mode is preserved", async ({
@@ -194,8 +197,12 @@ test("an occurrence-pagination abort clears the old complete snapshot", async ({
     .click();
   await expect(page.locator(".textual-occurrence")).toHaveCount(5);
   // Isolated error-rendering contract; successful search above uses the real API.
-  await page.route("**/api/search/textual", async (route) => {
-    if (route.request().postDataJSON().occurrence_offset > 0) {
+  await page.route(/\/api\/search-runs\/[^/?]+\?/, async (route) => {
+    if (
+      Number(
+        new URL(route.request().url()).searchParams.get("occurrence_offset"),
+      ) > 0
+    ) {
       await route.fulfill({
         status: 422,
         json: {
@@ -256,8 +263,12 @@ test("a delayed pagination abort cannot clear a newer search", async ({
   const pagingStarted = new Promise<void>((resolve) => {
     notifyPaging = resolve;
   });
-  await page.route("**/api/search/textual", async (route) => {
-    if (route.request().postDataJSON().occurrence_offset > 0) {
+  await page.route(/\/api\/search-runs\/[^/?]+\?/, async (route) => {
+    if (
+      Number(
+        new URL(route.request().url()).searchParams.get("occurrence_offset"),
+      ) > 0
+    ) {
       notifyPaging();
       await delayedAbort;
       await route.fulfill({
@@ -295,8 +306,7 @@ test("a delayed pagination abort cannot clear a newer search", async ({
 
   const oldResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith("/api/search/textual") &&
-      response.status() === 422,
+      response.url().includes("/api/search-runs/") && response.status() === 422,
   );
   releaseAbort();
   await (await oldResponse).finished();
@@ -390,7 +400,7 @@ test("local semantic scores filter actual passages and preserve submitted pagina
     "Negations, names and amounts",
   );
   // A server/model update must not mix a new scoring method into an old card.
-  await page.route("**/api/search/textual", async (route) => {
+  await page.route(/\/api\/search-runs\/[^/?]+\?/, async (route) => {
     const result = await route.fetch();
     const body = await result.json();
     body.semantic.pipeline += "-changed";
@@ -422,8 +432,10 @@ test("semantic validation and unavailable-model errors never show textual result
     "semantic threshold from 0 to 100",
   );
   await page.getByLabel("Minimum semantic match").fill("60");
-  await page.route("**/api/search/textual", async (route) => {
-    expect(route.request().postDataJSON().minimum_semantic_score).toBe(60);
+  await page.route("**/api/search-runs", async (route) => {
+    expect(route.request().postDataJSON().search.minimum_semantic_score).toBe(
+      60,
+    );
     await route.fulfill({
       status: 503,
       json: {

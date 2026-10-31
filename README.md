@@ -29,6 +29,11 @@ erklären die zweite Schwelle, lokales Modell, Cache und Grenzen.
 **Not reviewed**, Statusfilter und Zähler unterstützen den Prüfablauf;
 **Reset review** setzt eine Entscheidung zurück. Die [Review-Regeln](docs/passage-reviews.md)
 beschreiben Quellenbindung, Konflikte und das Verhalten nach Neuverarbeitung.
+**Similar passages** speichert jeden erfolgreichen Suchlauf mit vollständigen
+Treffern, Scores, damaligem Dokumentbestand und Quelltexten. **Saved searches**
+öffnet diese Ergebnisse ohne neue Suche; **Run again** erstellt einen eigenen
+Folgelauf. [Gespeicherte Suchläufe](docs/saved-search-runs.md) erklären den
+Unterschied zwischen festen Treffern und weiterhin bearbeitbaren Bewertungen.
 Ein [reproduzierbarer Prüfbestand und Laufzeitbericht](docs/search-performance.md)
 vergleichen textuelle Suche, erste Embeddings und Cache-Nutzung. Die gemessenen
 Optimierungen erhalten Treffer und Scores; die Oberfläche zeigt Suchdauer und
@@ -192,9 +197,9 @@ Client und leitet API-Aufrufe weiter.
 [Präsentation](docs/presentation.md) und [Produktionskonzept](docs/production.md)
 trennen gelieferte Funktionen von Azure-Vorschlag, Technologieevaluation und Pilot.
 Die [Implementierungsanleitung](TrayStack_Codex_Instructions.md) enthält den
-weiteren Plan: Textuelle Ähnlichkeit ist als eigener positiver Suchablauf umgesetzt;
-semantische Suche, gespeicherte Fundstellenentscheidungen und komfortable
-Revisionsverwaltung folgen nach dem abgeschlossenen Core.
+weiteren Plan. Textuelle und semantische Passagenvergleiche, gespeicherte
+Fundstellenentscheidungen und persistente Suchläufe sind umgesetzt; komfortable
+Revisionsverwaltung bleibt eine mögliche Erweiterung.
 Der [Suchvertrag](docs/search.md) erklärt Literalität, Qualität, Pagination,
 Seitenoffsets und konsistente Momentaufnahmen.
 

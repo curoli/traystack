@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session, selectinload, sessionmaker
 from traystack.api.processing import router as processing_router
 from traystack.api.reviews import router as reviews_router
 from traystack.api.search import router as search_router
+from traystack.api.search_runs import router as search_runs_router
 from traystack.config import Settings
 from traystack.db import get_session
 from traystack.models import Artifact, Document, Revision
@@ -63,6 +64,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = config
     app.include_router(processing_router)
     app.include_router(search_router)
+    app.include_router(search_runs_router)
     app.include_router(reviews_router)
     app.mount(
         "/api/docs-assets",

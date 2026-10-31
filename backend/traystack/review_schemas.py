@@ -25,6 +25,7 @@ class ReviewCounts(BaseModel):
 
 
 class ReviewWrite(BaseModel):
+    search_run_id: UUID | None = None
     model_config = ConfigDict(extra="forbid")
     occurrence_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     document_id: UUID

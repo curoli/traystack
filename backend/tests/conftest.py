@@ -44,6 +44,9 @@ def engine(database_url):
             "revision_texts",
             "page_texts",
             "passage_reviews",
+            "search_runs",
+            "archived_texts",
+            "search_run_sources",
         }:
             pytest.fail("Unexpected tables in test database; use a dedicated test database")
     config = Config(str(ROOT / "backend" / "alembic.ini"))
@@ -65,7 +68,7 @@ def client(engine, database_url, tmp_path):
     with engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE page_texts, revision_texts, processing_jobs, "
+                "TRUNCATE search_runs, page_texts, revision_texts, processing_jobs, "
                 "artifacts, revisions, documents CASCADE"
             )
         )

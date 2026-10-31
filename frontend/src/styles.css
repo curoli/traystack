@@ -822,3 +822,29 @@ select {
 .review-counts {
   margin: 1rem 0;
 }
+
+.saved-searches,
+.saved-run-info {
+  margin: 1rem 0;
+}
+.saved-search-row {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border, #dce5df);
+  overflow-wrap: anywhere;
+}
+.saved-run-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+}
+.saved-run-actions input {
+  flex: 1;
+  min-width: 0;
+}
+.saved-source {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border, #dce5df);
+  border-radius: 0.5rem;
+}

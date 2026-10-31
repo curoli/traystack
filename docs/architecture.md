@@ -156,7 +156,7 @@ liefern keine erfolgreiche Teilmenge. Die exakte Abwesenheitssuche ist unveränd
 konkrete Fundstelle. Quellfingerprint und Fremdschlüssel sichern den Textbezug.
 Ein eigener Schreib-Endpunkt prüft die noch ausgewählte Quelle, sperrt sie für den
 kurzen Schreibvorgang und verwendet eine erwartete Versionsnummer gegen verlorene
-Updates. Die Suche bleibt read-only: Sie liest Entscheidungen im selben Snapshot,
+Updates. Die ephemeren Such-Endpunkte bleiben read-only: Sie lesen Entscheidungen im selben Snapshot,
 zählt nach textueller/semantischer Filterung und filtert vor der Pagination nach
 Review-Status. Neuverarbeitung übernimmt keine alten Entscheidungen automatisch.
 
@@ -165,3 +165,12 @@ und tatsächliche HTTP-Anfragen. Optimierte Wortfenster behalten dieselben Score
 Fundstellen und Ressourcenbudgets; vollständige Embedding-Cache-Treffer benötigen
 keinen Verzeichnisscan. Ein zusätzlicher Index oder eine Such-Snapshot-Warteschlange
 wird durch diesen begrenzten Messbestand nicht eingeführt.
+
+[Gespeicherte Suchläufe](saved-search-runs.md) erfassen die gesamte positive
+Treffermenge und den damaligen Dokumentbestand im selben Read-Snapshot und
+persistieren sie anschließend atomar. Quelltexte werden pro Verarbeitungslauf
+archiviert; Hash-Prüfungen verhindern unbemerkte Substitution. Wiederöffnen und
+Pagination benötigen weder Matcher noch Modell. Aktuelle Bewertungen werden
+überlagert, während ihr Zustand zur Erfassung zusätzlich erhalten bleibt.
+Historische Review-Schreibvorgänge validieren die archivierte Fundstelle; neue
+Verarbeitungsläufe übernehmen die Entscheidungen weiterhin nicht automatisch.

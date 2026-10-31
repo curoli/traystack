@@ -7,6 +7,9 @@ import {
   type SearchAbortDetails,
   type TextualAssessment,
   searchTextual,
+  createSearchRun,
+  getSearchRun,
+  renameSearchRun,
   saveReview,
   type ReviewDecision,
   type ReviewCounts,
@@ -18,6 +21,8 @@ import {
   type TextualSearchResponse,
 } from "../api";
 import { formatDate } from "../format";
+import SavedSearches, { SavedScope } from "./SavedSearches";
+import SavedSource, { type SavedSourceLocation } from "./SavedSource";
 import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
 import { searchWarnings } from "./SearchPanel";
 
@@ -56,6 +61,8 @@ function SearchStopped({ details }: { details: SearchAbortDetails }) {
     characters: "source characters",
     windows: "candidate comparisons",
     matches: "candidate intervals",
+    snapshot_bytes: "bytes in the complete snapshot",
+    snapshot_documents: "documents in the saved scope",
     semantic_passages: "passages for semantic comparison",
     semantic_tokens: "model tokens",
     semantic_seconds: "seconds in semantic comparison",
@@ -295,6 +302,7 @@ function DocumentMatches({
     setReviewError(null);
     try {
       const saved = await saveReview({
+        search_run_id: response.run_id ?? undefined,
         occurrence_id: occurrence.occurrence_id,
         document_id: group.document.document_id,
         revision_id: group.document.revision_id!,
@@ -343,7 +351,7 @@ function DocumentMatches({
     setBusy(true);
     setError("");
     try {
-      const result = await searchTextual({
+      const request = {
         query: response.query,
         mode: response.mode,
         minimum_score: response.minimum_score,
@@ -352,7 +360,10 @@ function DocumentMatches({
         document_id: initial.document.document_id,
         occurrence_limit: group.occurrence_limit,
         occurrence_offset: group.occurrence_offset + delta,
-      });
+      };
+      const result = response.run_id
+        ? await getSearchRun(response.run_id, request)
+        : await searchTextual(request);
       const next = result.results[0];
       if (
         !next ||
@@ -483,6 +494,21 @@ export default function TextualSearchPanel({
   openDocument: Pick<Document, "id" | "title"> | null;
 }) {
   const [query, setQuery] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [historyGeneration, setHistoryGeneration] = useState(0);
+  const [sourceLocation, setSourceLocation] =
+    useState<SavedSourceLocation | null>(null);
+  const sourceRequest = useRef(0);
+  const [scopeOverride, setScopeOverride] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [loadedSaved, setLoadedSaved] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const scopeDocument = scopeOverride ?? openDocument;
+  useEffect(() => {
+    setScopeOverride(null);
+  }, [openDocument?.id]);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [mode, setMode] = useState<"exact" | "normalized">("normalized");
   const [semanticEnabled, setSemanticEnabled] = useState(false);
@@ -544,16 +570,23 @@ export default function TextualSearchPanel({
     setResponse(null);
     setAborted(details);
     setBusy(false);
+    setRestoring(false);
     setError("");
   }
-  async function run(payload: Parameters<typeof searchTextual>[0]) {
+  async function perform(
+    load: () => Promise<TextualSearchResponse>,
+    restore = false,
+    created = false,
+  ) {
     const id = ++requestId.current;
     const started = performance.now();
+    setRestoring(restore);
     setBusy(true);
     setError("");
     setAborted(null);
     try {
-      const next = await searchTextual(payload);
+      const next = await load();
+      if (created) setHistoryGeneration((value) => value + 1);
       if (id === requestId.current) {
         documentReviewCounts.current = new Map(
           next.results.map((group) => [
@@ -561,6 +594,30 @@ export default function TextualSearchPanel({
             group.review_counts,
           ]),
         );
+        if (next.run_id) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("search_run", next.run_id);
+          window.history.replaceState(null, "", url);
+        }
+        setLoadedSaved(!created);
+        if (restore) {
+          setQuery(next.query);
+          setMode(next.mode);
+          setThreshold(String(next.minimum_score));
+          setSemanticEnabled(next.minimum_semantic_score !== null);
+          setSemanticThreshold(String(next.minimum_semantic_score ?? 0));
+          setReviewFilter(next.review_filter);
+          setSearchName(next.run_name ?? "");
+          setOnlyOpenDocument(!!next.document_id);
+          setScopeOverride(
+            next.document_id
+              ? {
+                  id: next.document_id,
+                  title: next.results[0]?.document.title ?? "Saved document",
+                }
+              : null,
+          );
+        }
         setRequestDurationMs(performance.now() - started);
         setResponseRequestId(id);
         setResponse(next);
@@ -572,9 +629,73 @@ export default function TextualSearchPanel({
           setError(error instanceof Error ? error.message : "Search failed.");
       }
     } finally {
-      if (id === requestId.current) setBusy(false);
+      if (id === requestId.current) {
+        setBusy(false);
+        setRestoring(false);
+      }
     }
   }
+  function run(payload: Parameters<typeof searchTextual>[0], savedId?: string) {
+    return perform(
+      () =>
+        savedId
+          ? getSearchRun(savedId, payload)
+          : createSearchRun(payload, searchName.trim() || undefined),
+      false,
+      !savedId,
+    );
+  }
+  function openSaved(id: string) {
+    setResponse(null);
+    setSourceLocation(null);
+    void perform(() => getSearchRun(id), true);
+  }
+  async function rename() {
+    if (!response?.run_id || !searchName.trim()) return;
+    const origin = requestId.current;
+    setError("");
+    try {
+      const result = await renameSearchRun(response.run_id, searchName.trim());
+      setHistoryGeneration((value) => value + 1);
+      if (origin === requestId.current)
+        setResponse((current) =>
+          current ? { ...current, run_name: result.name } : current,
+        );
+    } catch (error) {
+      if (origin === requestId.current)
+        setError(
+          error instanceof Error ? error.message : "Could not save the name.",
+        );
+    }
+  }
+  function rerun() {
+    if (!response?.run_id) return;
+    const captured = response;
+    setResponse(null);
+    setSourceLocation(null);
+    void perform(
+      () =>
+        createSearchRun(
+          {
+            query: captured.query,
+            mode: captured.mode,
+            minimum_score: captured.minimum_score,
+            minimum_semantic_score: captured.minimum_semantic_score,
+            review_filter:
+              captured.captured_review_filter ?? captured.review_filter,
+            document_id: captured.document_id ?? undefined,
+          },
+          `${captured.run_name ?? "Search"} (rerun)`.slice(0, 200),
+          captured.run_id!,
+        ),
+      true,
+      true,
+    );
+  }
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("search_run");
+    if (id) openSaved(id);
+  }, []);
   function updateReviewCounts(
     documentId: string,
     counts: ReviewCounts,
@@ -598,34 +719,38 @@ export default function TextualSearchPanel({
     if (
       !validThreshold ||
       !validSemanticThreshold ||
-      (onlyOpenDocument && !openDocument)
+      (onlyOpenDocument && !scopeDocument)
     )
       return;
     setResponse(null);
+    setSourceLocation(null);
     void run({
       query,
       mode,
       minimum_score: minimum,
       minimum_semantic_score: semanticEnabled ? semanticMinimum : null,
       review_filter: reviewFilter,
-      document_id: onlyOpenDocument ? openDocument!.id : undefined,
+      document_id: onlyOpenDocument ? scopeDocument!.id : undefined,
     });
   }
   function paginate(group: "results" | "unsearchable", delta: number) {
     if (!response) return;
-    void run({
-      query: response.query,
-      mode: response.mode,
-      minimum_score: response.minimum_score,
-      minimum_semantic_score: response.minimum_semantic_score,
-      review_filter: response.review_filter,
-      document_id: response.document_id ?? undefined,
-      limit: response.limit,
-      offset: response.offset + (group === "results" ? delta : 0),
-      unsearchable_limit: response.unsearchable_limit,
-      unsearchable_offset:
-        response.unsearchable_offset + (group === "unsearchable" ? delta : 0),
-    });
+    void run(
+      {
+        query: response.query,
+        mode: response.mode,
+        minimum_score: response.minimum_score,
+        minimum_semantic_score: response.minimum_semantic_score,
+        review_filter: response.review_filter,
+        document_id: response.document_id ?? undefined,
+        limit: response.limit,
+        offset: response.offset + (group === "results" ? delta : 0),
+        unsearchable_limit: response.unsearchable_limit,
+        unsearchable_offset:
+          response.unsearchable_offset + (group === "unsearchable" ? delta : 0),
+      },
+      response.run_id ?? undefined,
+    );
   }
   return (
     <section
@@ -639,11 +764,39 @@ export default function TextualSearchPanel({
         </div>
         <span className="scope-tag">Latest revision per document</span>
       </div>
+      <SavedSearches
+        generation={historyGeneration}
+        onOpen={openSaved}
+        disabled={busy}
+      />
+      <label htmlFor="search-name">Search name</label>
+      <div className="saved-run-actions">
+        <input
+          id="search-name"
+          maxLength={200}
+          disabled={restoring}
+          value={searchName}
+          onChange={(event) => setSearchName(event.target.value)}
+          placeholder="Optional name for the next search"
+        />
+        <button
+          className="secondary"
+          disabled={busy || !response?.run_id || !searchName.trim()}
+          onClick={() => void rename()}
+        >
+          Save name
+        </button>
+      </div>
+      <p className="fineprint">
+        Successful searches are saved automatically with all results. Pagination
+        and reopening use the saved snapshot.
+      </p>
       <form className="search-form" onSubmit={submit}>
         <div className="search-query">
           <label htmlFor="textual-query">Text passage</label>
           <textarea
             id="textual-query"
+            disabled={restoring}
             required
             maxLength={500}
             rows={2}
@@ -656,6 +809,7 @@ export default function TextualSearchPanel({
           <label htmlFor="textual-mode">Text comparison mode</label>
           <select
             id="textual-mode"
+            disabled={restoring}
             value={mode}
             onChange={(event) => setMode(event.target.value as typeof mode)}
           >
@@ -667,6 +821,7 @@ export default function TextualSearchPanel({
           <label htmlFor="textual-threshold">Minimum textual match</label>
           <input
             id="textual-threshold"
+            disabled={restoring}
             type="number"
             min={0}
             max={100}
@@ -686,7 +841,7 @@ export default function TextualSearchPanel({
             max={100}
             step="any"
             value={semanticThreshold}
-            disabled={!semanticEnabled}
+            disabled={!semanticEnabled || restoring}
             onChange={(event) => setSemanticThreshold(event.target.value)}
             aria-describedby="semantic-threshold-help"
           />
@@ -695,6 +850,7 @@ export default function TextualSearchPanel({
           <label htmlFor="review-filter">Review status</label>
           <select
             id="review-filter"
+            disabled={restoring}
             value={reviewFilter}
             onChange={(event) =>
               setReviewFilter(event.target.value as ReviewFilter)
@@ -715,7 +871,7 @@ export default function TextualSearchPanel({
             !query.trim() ||
             !validThreshold ||
             !validSemanticThreshold ||
-            (onlyOpenDocument && !openDocument)
+            (onlyOpenDocument && !scopeDocument)
           }
         >
           {busy ? "Searching …" : "Find passages"}
@@ -725,6 +881,7 @@ export default function TextualSearchPanel({
         <input
           type="checkbox"
           checked={semanticEnabled}
+          disabled={restoring}
           onChange={(event) => setSemanticEnabled(event.target.checked)}
         />
         <span>Compare meaning with local embeddings</span>
@@ -756,13 +913,14 @@ export default function TextualSearchPanel({
         <input
           type="checkbox"
           checked={onlyOpenDocument}
+          disabled={restoring}
           onChange={(event) => setOnlyOpenDocument(event.target.checked)}
         />
         <span>
           Search only the open document
           <small>
-            {openDocument
-              ? openDocument.title
+            {scopeDocument
+              ? scopeDocument.title
               : "Open a document in the library to narrow the selection."}
           </small>
         </span>
@@ -803,11 +961,88 @@ export default function TextualSearchPanel({
         </p>
       )}
       {busy && <p role="status">Comparing selected document text …</p>}
+      {sourceLocation && (
+        <SavedSource
+          location={sourceLocation}
+          onClose={() => setSourceLocation(null)}
+        />
+      )}
       {response && (
         <div className="textual-response" aria-busy={busy}>
           <p className="fineprint search-duration">
-            Search completed in {(requestDurationMs / 1000).toFixed(2)} s.
+            {loadedSaved ? "Saved results loaded" : "Search completed"} in{" "}
+            {(requestDurationMs / 1000).toFixed(2)} s.
           </p>
+          {response.run_id && (
+            <section className="saved-run-info" aria-label="Saved search run">
+              <h3>{response.run_name}</h3>
+              <p className="message warning">
+                Frozen matching results from {formatDate(response.searched_at)}.
+                Later document changes do not alter this run. Review decisions
+                show their current state.
+              </p>
+              <p className="fineprint">
+                Review filters act on the preserved candidate set. Run again
+                creates a separate snapshot using the current library.
+              </p>
+              {response.parent_run_id && (
+                <button
+                  className="secondary"
+                  disabled={busy}
+                  onClick={() => openSaved(response.parent_run_id!)}
+                >
+                  Open previous run
+                </button>
+              )}
+              <button className="secondary" disabled={busy} onClick={rerun}>
+                Run again
+              </button>
+              <label htmlFor="saved-review-filter">Review saved results</label>
+              <select
+                id="saved-review-filter"
+                value={response.review_filter}
+                disabled={busy}
+                onChange={(event) =>
+                  void run(
+                    {
+                      query: response.query,
+                      mode: response.mode,
+                      minimum_score: response.minimum_score,
+                      document_id: response.document_id ?? undefined,
+                      review_filter: event.target.value as ReviewFilter,
+                    },
+                    response.run_id!,
+                  )
+                }
+              >
+                <option value="all">All review states</option>
+                {Object.entries(reviewLabels).map(([value, label]) => (
+                  <option value={value} key={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="secondary"
+                disabled={busy}
+                onClick={() =>
+                  void run(
+                    {
+                      query: response.query,
+                      mode: response.mode,
+                      minimum_score: response.minimum_score,
+                      document_id: response.document_id ?? undefined,
+                      review_filter: response.review_filter,
+                    },
+                    response.run_id!,
+                  )
+                }
+              >
+                Refresh reviews
+              </button>
+              <SavedScope key={response.run_id} id={response.run_id} />
+            </section>
+          )}
           <p className="search-query-summary">
             Results for <strong>“{response.query}”</strong> · {response.mode} ·
             minimum {response.minimum_score}% textual · review:{" "}
@@ -829,8 +1064,8 @@ export default function TextualSearchPanel({
             <p className="fineprint">
               Counts cover all passages passing the submitted textual and
               semantic thresholds, before the review filter. Your saves update
-              these counts; rerun to include changes from other views. Decisions
-              are shared in this local app.
+              these counts; refresh reviews to include changes from other views.
+              Decisions are shared in this local app.
             </p>
           </section>
           <QueryGuidance
@@ -872,13 +1107,13 @@ export default function TextualSearchPanel({
           )}
           <p className="fineprint">
             Snapshot taken at {formatDate(response.searched_at)}. Rerun after
-            processing changes.
+            processing changes only when you want a new run.
           </p>
           <section aria-label="Similar passage results">
             {response.results.length ? (
               response.results.map((group) => (
                 <DocumentMatches
-                  key={`${response.searched_at}:${group.document.document_id}`}
+                  key={`${responseRequestId}:${group.document.document_id}`}
                   initial={group}
                   onAbort={(details) => stop(details, responseRequestId)}
                   disabled={busy}
@@ -895,16 +1130,20 @@ export default function TextualSearchPanel({
                       // Refill filtered pages after a passage leaves the selected state.
                       // Use submitted criteria; unrelated form edits remain unapplied.
                       setResponse(null);
-                      void run({
-                        query: response.query,
-                        mode: response.mode,
-                        minimum_score: response.minimum_score,
-                        minimum_semantic_score: response.minimum_semantic_score,
-                        review_filter: response.review_filter,
-                        document_id: response.document_id ?? undefined,
-                        limit: response.limit,
-                        unsearchable_limit: response.unsearchable_limit,
-                      });
+                      void run(
+                        {
+                          query: response.query,
+                          mode: response.mode,
+                          minimum_score: response.minimum_score,
+                          minimum_semantic_score:
+                            response.minimum_semantic_score,
+                          review_filter: response.review_filter,
+                          document_id: response.document_id ?? undefined,
+                          limit: response.limit,
+                          unsearchable_limit: response.unsearchable_limit,
+                        },
+                        response.run_id ?? undefined,
+                      );
                     } else {
                       updateReviewCounts(
                         group.document.document_id,
@@ -914,7 +1153,16 @@ export default function TextualSearchPanel({
                     }
                   }}
                   response={response}
-                  onOpen={onOpen}
+                  onOpen={(target) => {
+                    if (response.run_id && target.processing_job_id)
+                      setSourceLocation({
+                        runId: response.run_id,
+                        jobId: target.processing_job_id,
+                        page: target.page_number ?? 1,
+                        requestId: ++sourceRequest.current,
+                      });
+                    else onOpen(target);
+                  }}
                 />
               ))
             ) : (
@@ -970,7 +1218,7 @@ export default function TextualSearchPanel({
                   className="secondary"
                   onClick={() => onOpen({ ...document, page_number: null })}
                 >
-                  Open document
+                  {response.run_id ? "Open current document" : "Open document"}
                 </button>
               </article>
             ))}

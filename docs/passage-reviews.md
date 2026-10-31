@@ -13,7 +13,7 @@ this local app, rather than assigned to separate reviewer accounts.
 3. Choose a decision in **Review this passage**. The UI displays the new state and
    saved timestamp only after the API confirms the write. Failures leave the prior
    displayed decision intact and show an error beside that passage.
-4. Set **Review status** and choose **Find passages** to filter the result list.
+4. Use **Review saved results** to filter the stored result list without a new search.
    All states, Not reviewed, Keep, Dismiss and Decide later are separate choices.
 5. Change a decision or choose **Reset review** whenever needed.
 
@@ -26,9 +26,9 @@ turns a missing positive candidate into proof of absence.
 With **All review states**, saving keeps the current occurrence page and updates
 the counters. Fresh per-document counts are also reconciled after occurrence
 pagination, so a decision changed elsewhere does not yield a negative counter
-when the user next edits it. Other documents retain their search snapshot until
-visited or searched again; this is not live synchronization across all views.
-After a save in a filtered view, the search refills from the first result page
+when the user next edits it. Other documents retain their displayed review state until
+visited or **Refresh reviews** is used; this is not live synchronization across all views.
+After a save in a filtered view, the saved result view refills from the first result page
 using the **submitted** query, thresholds, scope and review filter. Unsubmitted
 form edits are not applied. This also avoids leaving an empty page after its last
 matching passage changes state. Saves and pagination callbacks from superseded
@@ -94,12 +94,16 @@ start/end offsets, matched SHA-256, target `decision` and `expected_version`.
 All identity fields come from the search response. Successful writes return
 `{decision, version, updated_at}` after commit.
 
-The API validates the latest revision, still-selected processing run, comparison
+Without `search_run_id`, the API validates the latest revision, still-selected processing run, comparison
 method, bounds, text fingerprint and occurrence identity. It validates an explicit
 source span rather than rerunning textual/semantic retrieval for every click.
 Document/selected-text row locks serialize a write with source replacement. A
 pending newer processing job has not replaced the selected text yet, so the prior
 selected run remains reviewable until publication.
+
+For a [saved search run](saved-search-runs.md), the UI includes `search_run_id`.
+The API then validates membership, provenance and archived text, allowing reviews
+of historical passages after reprocessing without applying them to newer sources.
 
 Writes use optimistic concurrency:
 
@@ -110,9 +114,9 @@ Writes use optimistic concurrency:
 - A changed source/method/span or stale review version returns actionable HTTP 409.
   Invalid input returns 422. These responses do not overwrite a newer decision.
 
-The UI asks users to rerun after a conflict. It does not automatically retry with
-an updated version. If a network error obscures a successful commit, rerunning
-reveals the stored state; optimistic concurrency still prevents blind overwrites.
+The UI asks users to refresh reviews after a conflict. It does not automatically
+retry with an updated version. If a network error obscures a successful commit,
+refreshing the saved view reveals the stored state; optimistic concurrency still prevents blind overwrites.
 There is no offline write queue or automatic transfer of annotations to new runs.
 
 ## Storage and operation
@@ -128,7 +132,8 @@ the decision to the selected span.
 No new service, external call or dependency is needed. The table stores the latest
 decision, version and creation/update timestamps, not a complete event history or
 reviewer audit trail. Historical rows for replaced processing runs remain in the
-table, but a historical-review browser/export is outside this increment.
+table. Saved runs now expose their historical passages for review; a standalone
+review export remains outside the current implementation.
 Downgrading to `0002` removes the review table; original documents, processing
 records and artifacts remain. Migration upgrade/downgrade was checked only against
 the disposable test database; the normal app was upgraded without a downgrade.
