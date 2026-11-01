@@ -5,49 +5,11 @@ import type {
   ReviewDecision,
 } from "../api";
 import { formatDate } from "../format";
-import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
-import { searchWarnings } from "./SearchPanel";
-
-export function Provenance({ document }: { document: TextualDocument }) {
-  return (
-    <>
-      {document.warnings.length > 0 && (
-        <ul className="search-warnings">
-          {document.warnings.map((reason) => (
-            <li key={reason}>
-              {searchWarnings[reason] || warningLabel(reason)}
-            </li>
-          ))}
-        </ul>
-      )}
-      <details className="search-provenance">
-        <summary>Source and processing status</summary>
-        <p>
-          {document.coverage
-            ? coverageLabel[document.coverage]
-            : "Not processed"}{" "}
-          ·{" "}
-          {document.quality_status
-            ? qualityLabel[document.quality_status]
-            : "Quality not assessed"}
-        </p>
-        <p className="identifier">
-          Selected run: {document.processing_job_id || "None"}
-          <br />
-          Source: {document.artifact_id || "None"}
-          <br />
-          Normalization: {document.normalization_version || "Not available"}
-        </p>
-      </details>
-    </>
-  );
-}
-
 export const reviewLabels: Record<ReviewDecision, string> = {
-  unreviewed: "Not reviewed",
-  keep: "Keep",
-  dismiss: "Dismiss",
-  later: "Decide later",
+  unreviewed: "Unreviewed",
+  keep: "Confirm match",
+  dismiss: "Dismiss match",
+  later: "Unreviewed",
 };
 
 export function Occurrence({
@@ -103,27 +65,26 @@ export function Occurrence({
           )}
         </p>
         <div className="review-buttons">
-          {(["keep", "dismiss", "later"] as const).map((decision) => (
+          {(["keep", "dismiss", "unreviewed"] as const).map((decision) => (
             <button
               key={decision}
               className="secondary"
               type="button"
-              aria-pressed={occurrence.review.decision === decision}
-              disabled={occurrence.review.decision === decision}
+              aria-pressed={
+                (occurrence.review.decision === "later"
+                  ? "unreviewed"
+                  : occurrence.review.decision) === decision
+              }
+              disabled={
+                (occurrence.review.decision === "later"
+                  ? "unreviewed"
+                  : occurrence.review.decision) === decision
+              }
               onClick={() => onReview(decision)}
             >
               {reviewLabels[decision]}
             </button>
           ))}
-          {occurrence.review.decision !== "unreviewed" && (
-            <button
-              className="secondary"
-              type="button"
-              onClick={() => onReview("unreviewed")}
-            >
-              Reset review
-            </button>
-          )}
         </div>
         {reviewError && (
           <p role="alert" className="message error">

@@ -1,5 +1,10 @@
 # Passage review workspace
 
+The current interface is described in [Unified document search and review](unified-review.md).
+It uses category selection, always-on semantic scoring, three passage states and
+optional automatic confirmation. Older UI descriptions and validation counts below
+are historical; API behavior remains documented for compatibility.
+
 **Similar passages** now presents a compact list on the left and one selected
 passage on the right. Each list entry identifies the document, review state and
 both available scores. The detail pane shows context, highlighted matched text,

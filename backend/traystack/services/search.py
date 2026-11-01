@@ -3,7 +3,7 @@
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
 
-from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import and_, case, func, or_, select, text
 from sqlalchemy.orm import Session, aliased
 
 from traystack.models import Artifact, Document, PageText, ProcessingJob, Revision, RevisionText
@@ -94,6 +94,13 @@ def selected_scope(phrase, column, *, ready_only=False):
         select(
             Document.id.label("document_id"),
             Document.title,
+            case(
+                (
+                    func.jsonb_typeof(Document.metadata_json["category"]) == "string",
+                    Document.metadata_json["category"].as_string(),
+                ),
+                else_=None,
+            ).label("category"),
             Revision.id.label("revision_id"),
             Revision.revision_number,
             RevisionText.source_artifact_id,
@@ -191,6 +198,7 @@ def classify(row, request: SearchRequest) -> SearchResult:
     return SearchResult(
         document_id=row["document_id"],
         title=row["title"],
+        category=row.get("category"),
         revision_id=row["revision_id"],
         revision_number=row["revision_number"],
         artifact_id=row["source_artifact_id"],

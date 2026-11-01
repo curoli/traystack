@@ -13,6 +13,7 @@ from sqlalchemy.dialects.postgresql import insert
 from traystack.models import ArchivedText, PassageReview, SearchRun, SearchRunSource
 from traystack.review_schemas import ReviewCounts, ReviewOut
 from traystack.schemas import PageOut, TextSummaryOut
+from traystack.services.match_states import project_review
 from traystack.services.textual_matching import SearchTooBroad
 from traystack.services.textual_search import textual_snapshot
 from traystack.textual_schemas import TextualSearchRequest, TextualSearchResponse
@@ -91,6 +92,11 @@ def create_run(factory, payload, semantic_provider, max_bytes=64_000_000, max_do
     with factory() as session:
         result = textual_snapshot(session, query, semantic_provider, capture=capture)
         body = result.model_dump(mode="json")
+        for group in body["results"]:
+            for item in group["occurrences"]:
+                item["review"], item["auto_confirmed"] = project_review(
+                    item["review"], item, payload.search.model_dump()
+                )
         capture.charge(body)
     request = payload.search.model_dump(mode="json")
     fingerprint = digest({"request": request, "scope": capture.scope, "result": body})
@@ -153,7 +159,9 @@ def get_run(session, identity):
     return run
 
 
-def read_run(session, identity, view=None, review_filter=None, *, complete=False):
+def read_run(
+    session, identity, view=None, review_filter=None, *, complete=False, three_state=False
+):
     run = get_run(session, identity)
     view = view or TextualSearchRequest.model_validate(run.request_json)
     state = review_filter or view.review_filter
@@ -180,6 +188,7 @@ def read_run(session, identity, view=None, review_filter=None, *, complete=False
         else {}
     )
     counts, retained = Counter(), []
+    states = {}
     for group in groups:
         local, occurrences = Counter(), []
         for item in group["occurrences"]:
@@ -190,11 +199,24 @@ def read_run(session, identity, view=None, review_filter=None, *, complete=False
                 if row is not None and row.matched_sha256 == item["matched_sha256"]
                 else ReviewOut().model_dump(mode="json")
             )
+            if three_state or run.request_json.get("auto_confirm_textual") is not None:
+                item["review"], item["auto_confirmed"] = project_review(
+                    item["review"], item, run.request_json
+                )
+            else:
+                item["auto_confirmed"] = False
             decision = item["review"]["decision"]
             local[decision] += 1
             counts[decision] += 1
             if state == "all" or state == decision:
                 occurrences.append(item)
+        states[group["document"]["document_id"]] = (
+            "confirmed"
+            if local["keep"]
+            else "unreviewed"
+            if local["unreviewed"] or local["later"]
+            else "no_active_match"
+        )
         if occurrences:
             group.update(
                 review_counts=ReviewCounts(**local).model_dump(),
@@ -215,6 +237,15 @@ def read_run(session, identity, view=None, review_filter=None, *, complete=False
         row for row in body["unsearchable"] if not document_id or row["document_id"] == document_id
     ]
     body.update(
+        category=run.request_json.get("category"),
+        uncategorized=run.request_json.get("uncategorized", False),
+        auto_confirm_textual=run.request_json.get("auto_confirm_textual"),
+        auto_confirm_semantic=run.request_json.get("auto_confirm_semantic"),
+        document_outcomes=[
+            {"document": row, "state": states.get(row["document_id"], "no_active_match")}
+            for row in scope
+            if row["searchable"]
+        ],
         captured_review_filter=run.request_json["review_filter"],
         run_id=str(run.id),
         run_name=run.name,

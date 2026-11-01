@@ -126,8 +126,9 @@ def export(
     session: SessionDep,
     file_format: Literal["csv", "json"] = Query(default="csv", alias="format"),
     review_filter: ReviewFilter = "all",
+    three_state: bool = False,
 ):
-    payload = export_run(session, identity, review_filter)
+    payload = export_run(session, identity, review_filter, three_state=three_state)
     return Response(
         content=csv_export(payload) if file_format == "csv" else canonical(payload) + b"\n",
         media_type="text/csv" if file_format == "csv" else "application/json",
@@ -148,7 +149,9 @@ def workspace(
     # every document and passage without rerunning matching or embeddings.
     session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
     session.execute(text("SET TRANSACTION READ ONLY"))
-    result = read_run(session, identity, review_filter=review_filter, complete=True)
+    result = read_run(
+        session, identity, review_filter=review_filter, complete=True, three_state=True
+    )
     return result.model_copy(
         update={
             "limit": max(result.total, 1),

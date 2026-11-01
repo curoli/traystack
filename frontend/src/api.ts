@@ -304,6 +304,10 @@ export const saveReview = (payload: ReviewWrite) =>
   });
 
 export interface TextualSearchRequest {
+  category?: string;
+  uncategorized?: boolean;
+  auto_confirm_textual?: number | null;
+  auto_confirm_semantic?: number | null;
   ready_only?: boolean;
   review_filter?: ReviewFilter;
   minimum_semantic_score?: number | null;
@@ -338,6 +342,7 @@ export type TextualDocument = Pick<
   | "latest_job"
 >;
 export interface TextualOccurrence {
+  auto_confirmed: boolean;
   review_at_capture?: PassageReview | null;
   matched_sha256: string;
   review: PassageReview;
@@ -367,6 +372,14 @@ export interface TextualGroup {
   occurrence_limit: number;
 }
 export interface TextualSearchResponse {
+  document_outcomes: {
+    document: TextualDocument;
+    state: "confirmed" | "unreviewed" | "no_active_match";
+  }[];
+  category: string | null;
+  uncategorized: boolean;
+  auto_confirm_textual: number | null;
+  auto_confirm_semantic: number | null;
   captured_review_filter: ReviewFilter | null;
   run_id: string | null;
   run_name: string | null;
@@ -517,7 +530,7 @@ export async function exportSearchRun(
   signal: AbortSignal,
 ) {
   const response = await responseFromServer(
-    `/api/search-runs/${id}/export?format=${format}&review_filter=${reviewFilter}`,
+    `/api/search-runs/${id}/export?format=${format}&review_filter=${reviewFilter}&three_state=true`,
     { signal },
   );
   return {
@@ -535,3 +548,12 @@ export const getReviewWorkspace = (
     `/api/search-runs/${id}/workspace?review_filter=${filter}`,
     { signal },
   );
+
+export const getCategories = () =>
+  request<{ items: string[] }>("/api/categories");
+export const setDocumentCategory = (id: string, category: string | null) =>
+  request<Document>(`/api/documents/${id}/category`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category }),
+  });

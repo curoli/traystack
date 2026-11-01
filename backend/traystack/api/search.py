@@ -31,6 +31,8 @@ def textual_search(
     request: Request,
     session: Annotated[Session, Depends(get_session)],
 ):
+    if payload.auto_confirm_textual is not None:
+        raise HTTPException(422, "Automatic confirmation requires a saved search run")
     try:
         config = request.app.state.settings
         return textual_snapshot(

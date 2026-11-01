@@ -15,6 +15,7 @@ import {
   type SearchTarget,
   type TextualSearchResponse,
 } from "../api";
+import DocumentGroups from "./DocumentGroups";
 import { Occurrence, reviewLabels } from "./PassageDetails";
 
 export default function ReviewWorkspace({
@@ -38,6 +39,9 @@ export default function ReviewWorkspace({
 }) {
   const [data, setData] = useState<TextualSearchResponse | null>(null);
   const [selected, setSelected] = useState(0);
+  const [showAutoConfirmed, setShowAutoConfirmed] = useState(false);
+  const [navigationMessage, setNavigationMessage] = useState("");
+  const [emptyDocumentId, setEmptyDocumentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reviewError, setReviewError] = useState("");
@@ -75,7 +79,19 @@ export default function ReviewWorkspace({
             "The saved comparison metadata has changed. Refresh saved results before reviewing.",
           );
         }
-        const flat = next.results.flatMap((group) => group.occurrences);
+        // Old deferred annotations are pending, not a fourth UI state.
+        next.review_counts.unreviewed += next.review_counts.later;
+        next.review_counts.later = 0;
+        for (const group of next.results) {
+          group.review_counts.unreviewed += group.review_counts.later;
+          group.review_counts.later = 0;
+          for (const item of group.occurrences)
+            if (item.review.decision === "later")
+              item.review.decision = "unreviewed";
+        }
+        const flat = next.results
+          .flatMap((group) => group.occurrences)
+          .filter((item) => !item.auto_confirmed);
         const retained = flat.findIndex(
           (item) => item.occurrence_id === initialSelectedId,
         );
@@ -105,25 +121,113 @@ export default function ReviewWorkspace({
     // update counts without restarting the captured workspace request.
   }, [generation]);
 
-  const entries =
+  const allEntries =
     data?.results.flatMap((group) =>
       group.occurrences.map((occurrence) => ({
         document: group.document,
         occurrence,
       })),
     ) ?? [];
-  const active = entries[selected];
+  const entries = allEntries.filter(
+    (item) => showAutoConfirmed || !item.occurrence.auto_confirmed,
+  );
+  const automaticCount = allEntries.filter(
+    (item) => item.occurrence.auto_confirmed,
+  ).length;
+  const active = emptyDocumentId ? undefined : entries[selected];
+  const emptyDocument = data?.document_outcomes.find(
+    (item) => item.document.document_id === emptyDocumentId,
+  )?.document;
   const locked = disabled || loading || saving;
-  const nextUnreviewed = [...entries.keys()]
-    .slice(selected + 1)
-    .concat([...entries.keys()].slice(0, selected))
-    .find(
-      (index) => entries[index].occurrence.review.decision === "unreviewed",
+  const nextDocument = (direction: number, unreviewed: boolean) => {
+    if (!active) return undefined;
+    for (
+      let i = selected + direction;
+      i >= 0 && i < entries.length;
+      i += direction
+    ) {
+      if (
+        entries[i].document.document_id !== active.document.document_id &&
+        (!unreviewed || entries[i].occurrence.review.decision === "unreviewed")
+      )
+        return i;
+    }
+    return undefined;
+  };
+  const previous = nextDocument(-1, false);
+  const next = nextDocument(1, false);
+  const previousUnreviewed = nextDocument(-1, true);
+  const nextUnreviewed = nextDocument(1, true);
+  function toggleAutomatic(show: boolean) {
+    setEmptyDocumentId(null);
+    const visible = allEntries.filter(
+      (item) => show || !item.occurrence.auto_confirmed,
     );
+    const index = Math.max(
+      0,
+      visible.findIndex(
+        (item) =>
+          item.occurrence.occurrence_id === active?.occurrence.occurrence_id,
+      ),
+    );
+    setShowAutoConfirmed(show);
+    setSelected(index);
+    onSelectionChange(visible[index]?.occurrence.occurrence_id ?? null);
+  }
+  function selectDocument(id: string) {
+    if (locked) return;
+    const state = data?.document_outcomes.find(
+      (item) => item.document.document_id === id,
+    )?.state;
+    const index = allEntries.findIndex(
+      (item) =>
+        item.document.document_id === id &&
+        (state === "confirmed"
+          ? item.occurrence.review.decision === "keep"
+          : state === "unreviewed"
+            ? item.occurrence.review.decision === "unreviewed"
+            : true),
+    );
+    if (index < 0) {
+      setEmptyDocumentId(id);
+      onSelectionChange(null);
+      requestAnimationFrame(() => {
+        detail.current?.focus();
+        detail.current?.scrollIntoView({ block: "start" });
+      });
+      setNavigationMessage(
+        "No candidate passages were found for this document at the search thresholds.",
+      );
+      return;
+    }
+    setEmptyDocumentId(null);
+    const target = allEntries[index];
+    const visible = allEntries.filter(
+      (item) =>
+        showAutoConfirmed ||
+        target.occurrence.auto_confirmed ||
+        !item.occurrence.auto_confirmed,
+    );
+    if (target.occurrence.auto_confirmed) setShowAutoConfirmed(true);
+    setSelected(
+      visible.findIndex(
+        (item) =>
+          item.occurrence.occurrence_id === target.occurrence.occurrence_id,
+      ),
+    );
+    onSelectionChange(target.occurrence.occurrence_id);
+    setNavigationMessage("");
+    requestAnimationFrame(() => {
+      detail.current?.focus();
+      detail.current?.scrollIntoView({ block: "start" });
+    });
+  }
   function select(index: number, focusList = false) {
     if (locked || index < 0 || index >= entries.length) return;
+    setEmptyDocumentId(null);
     setSelected(index);
     setReviewError("");
+    setNavigationMessage("");
     onSelectionChange(entries[index].occurrence.occurrence_id);
     if (focusList)
       requestAnimationFrame(() =>
@@ -191,7 +295,7 @@ export default function ReviewWorkspace({
           const occurrences = group.occurrences
             .map((item) =>
               item.occurrence_id === occurrence.occurrence_id
-                ? { ...item, review: saved }
+                ? { ...item, review: saved, auto_confirmed: false }
                 : item,
             )
             .filter(
@@ -224,21 +328,38 @@ export default function ReviewWorkspace({
           occurrences_total: remaining,
         },
       };
+      const groupStates = new Map(
+        next.results.map(
+          (group) =>
+            [
+              group.document.document_id,
+              group.occurrences.some((item) => item.review.decision === "keep")
+                ? "confirmed"
+                : group.occurrences.some(
+                      (item) => item.review.decision === "unreviewed",
+                    )
+                  ? "unreviewed"
+                  : "no_active_match",
+            ] as const,
+        ),
+      );
+      next.document_outcomes = data.document_outcomes.map((item) => ({
+        ...item,
+        state: groupStates.get(item.document.document_id) ?? "no_active_match",
+      }));
+      const visible = next.results
+        .flatMap((group) => group.occurrences)
+        .filter((item) => showAutoConfirmed || !item.auto_confirmed);
+      setSelected(
+        Math.max(
+          0,
+          visible.findIndex(
+            (item) => item.occurrence_id === occurrence.occurrence_id,
+          ),
+        ),
+      );
       setData(next);
       onChange(next);
-      if (data.review_filter === "all" || decision !== data.review_filter) {
-        const nextIndex =
-          data.review_filter === "all"
-            ? Math.min(selected + 1, remaining - 1)
-            : Math.min(selected, Math.max(0, remaining - 1));
-        setSelected(Math.max(0, nextIndex));
-        const flat = results.flatMap((group) => group.occurrences);
-        onSelectionChange(flat[Math.max(0, nextIndex)]?.occurrence_id ?? null);
-        requestAnimationFrame(() => {
-          detail.current?.focus({ preventScroll: true });
-          detail.current?.scrollIntoView({ block: "start" });
-        });
-      }
     } catch (error) {
       if (alive.current)
         setReviewError(
@@ -264,124 +385,173 @@ export default function ReviewWorkspace({
       </div>
     );
   return (
-    <div className="review-workspace" aria-busy={locked}>
-      <nav className="passage-list" aria-label="Passage list" ref={list}>
-        <h3>Passages ({entries.length})</h3>
-        <p className="fineprint">
-          Use ↑ / ↓ or Home / End in this list. Tab to the review controls.
-        </p>
-        {entries.map(({ document, occurrence }, index) => (
-          <button
-            key={occurrence.occurrence_id}
-            className="passage-choice"
-            tabIndex={selected === index ? 0 : -1}
-            aria-controls="selected-passage"
-            data-index={index}
-            aria-label={`Passage ${index + 1} in ${document.title}`}
-            aria-current={selected === index ? "true" : undefined}
-            disabled={locked}
-            onClick={() => select(index)}
-            onKeyDown={(event) => listKey(event, index)}
-          >
-            <strong>{document.title}</strong>
-            <span className="passage-preview">{occurrence.matched_text}</span>
-            <span>
-              Passage {index + 1} · {reviewLabels[occurrence.review.decision]}
-            </span>
-            <span>
-              Textual {occurrence.score.toFixed(2)}%
-              {occurrence.semantic_score !== null &&
-                ` · Semantic ${occurrence.semantic_score.toFixed(2)}%`}
-            </span>
-          </button>
-        ))}
-        {!entries.length && (
-          <p>
-            No candidate passages for this selection. This is not proof of
-            absence.
+    <>
+      <p role="status">
+        Automatically confirmed: {automaticCount}{" "}
+        {automaticCount === 1 ? "passage" : "passages"}.
+      </p>
+      <label className="checkbox">
+        <input
+          type="checkbox"
+          checked={showAutoConfirmed}
+          disabled={locked}
+          onChange={(event) => toggleAutomatic(event.target.checked)}
+        />
+        Show automatically confirmed passages for review
+      </label>
+      <div className="review-workspace" aria-busy={locked}>
+        <nav className="passage-list" aria-label="Passage list" ref={list}>
+          <h3>Passages ({entries.length})</h3>
+          <p className="fineprint">
+            Select a passage, or use ↑ / ↓ and Home / End. Review states change
+            only when you choose a state button.
           </p>
-        )}
-      </nav>
-      <section
-        id="selected-passage"
-        className="passage-detail"
-        ref={detail}
-        tabIndex={-1}
-        aria-label={
-          active ? `Matches in ${active.document.title}` : "Passage details"
-        }
-      >
-        <nav className="passage-navigation" aria-label="Passage navigation">
-          <button
-            className="secondary"
-            disabled={locked || !active || selected === 0}
-            onClick={() => select(selected - 1)}
-          >
-            Previous passage
-          </button>
-          <span role="status">
-            {active
-              ? `Passage ${selected + 1} of ${entries.length}`
-              : "No passage selected"}
-          </span>
-          <button
-            className="secondary"
-            disabled={locked || !active || selected + 1 >= entries.length}
-            onClick={() => select(selected + 1)}
-          >
-            Next passage
-          </button>
-          <button
-            className="secondary"
-            disabled={locked || nextUnreviewed === undefined}
-            onClick={() =>
-              nextUnreviewed !== undefined && select(nextUnreviewed)
-            }
-          >
-            Next unreviewed
-          </button>
-        </nav>
-        <p className="fineprint">
-          Navigation follows the current review filter. Next unreviewed wraps
-          within this view.
-        </p>
-        {active && (
-          <>
-            <h3>{active.document.title}</h3>
-            <p className="fineprint">
-              Revision {active.document.revision_number} ·{" "}
-              {active.occurrence.page_reference === "logical"
-                ? "Logical text section"
-                : `Pages: ${active.occurrence.page_numbers.join(", ") || "unavailable"}`}
+          {entries.map(({ document, occurrence }, index) => (
+            <button
+              key={occurrence.occurrence_id}
+              className="passage-choice"
+              tabIndex={selected === index ? 0 : -1}
+              aria-controls="selected-passage"
+              data-index={index}
+              aria-label={`Passage ${index + 1} in ${document.title}`}
+              aria-current={selected === index ? "true" : undefined}
+              disabled={locked}
+              onClick={() => select(index)}
+              onKeyDown={(event) => listKey(event, index)}
+            >
+              <strong>{document.title}</strong>
+              <span className="passage-preview">{occurrence.matched_text}</span>
+              <span>
+                Passage {index + 1} · {reviewLabels[occurrence.review.decision]}
+              </span>
+              <span>
+                Textual {occurrence.score.toFixed(2)}%
+                {occurrence.semantic_score !== null &&
+                  ` · Semantic ${occurrence.semantic_score.toFixed(2)}%`}
+              </span>
+            </button>
+          ))}
+          {!entries.length && (
+            <p>
+              {automaticCount > 0 && !showAutoConfirmed
+                ? "All candidate passages are automatically confirmed. Show them to review their states."
+                : "No candidate passages for this selection. This is not proof of absence."}
             </p>
-            <Occurrence
-              occurrence={active.occurrence}
-              mode={response.mode}
-              onReview={(decision) => void review(decision)}
-              reviewDisabled={locked}
-              saving={saving}
-              reviewError={reviewError}
-              source={source}
-              onOpen={() =>
-                onOpen({
-                  document_id: active.document.document_id,
-                  revision_id: active.document.revision_id,
-                  processing_job_id: active.document.processing_job_id,
-                  page_number: active.occurrence.page_numbers[0] ?? null,
-                })
+          )}
+        </nav>
+        <section
+          id="selected-passage"
+          className="passage-detail"
+          ref={detail}
+          tabIndex={-1}
+          aria-label={
+            active ? `Matches in ${active.document.title}` : "Passage details"
+          }
+        >
+          <nav className="passage-navigation" aria-label="Passage navigation">
+            <button
+              className="secondary"
+              disabled={locked || previousUnreviewed === undefined}
+              onClick={() =>
+                previousUnreviewed !== undefined && select(previousUnreviewed)
               }
-            />
-            {active.document.artifact_id && (
-              <a
-                className="download"
-                href={artifactUrl(active.document.artifact_id)}
-              >
-                Download original ↓
-              </a>
-            )}
-          </>
-        )}
-      </section>
-    </div>
+            >
+              Previous unreviewed
+            </button>
+            <button
+              className="secondary"
+              disabled={locked || previous === undefined}
+              onClick={() => previous !== undefined && select(previous)}
+            >
+              Previous
+            </button>
+            <span role="status">
+              {active
+                ? `Passage ${selected + 1} of ${entries.length}`
+                : "No passage selected"}
+            </span>
+            <button
+              className="secondary"
+              disabled={locked || next === undefined}
+              onClick={() => next !== undefined && select(next)}
+            >
+              Next
+            </button>
+            <button
+              className="secondary"
+              disabled={locked || nextUnreviewed === undefined}
+              onClick={() =>
+                nextUnreviewed !== undefined && select(nextUnreviewed)
+              }
+            >
+              Next unreviewed
+            </button>
+          </nav>
+          <p className="fineprint">
+            Navigation changes documents without changing passage states. Select
+            individual passages in the list.
+          </p>
+          {!active && emptyDocument && (
+            <>
+              <h3>{emptyDocument.title}</h3>
+              <p>
+                No candidate passages passed the search thresholds for this
+                document.
+              </p>
+              {emptyDocument.artifact_id && (
+                <a
+                  className="download"
+                  href={artifactUrl(emptyDocument.artifact_id)}
+                >
+                  Download original ↓
+                </a>
+              )}
+            </>
+          )}
+          {active && (
+            <>
+              <h3>{active.document.title}</h3>
+              <p className="fineprint">
+                Revision {active.document.revision_number} ·{" "}
+                {active.occurrence.page_reference === "logical"
+                  ? "Logical text section"
+                  : `Pages: ${active.occurrence.page_numbers.join(", ") || "unavailable"}`}
+              </p>
+              <Occurrence
+                occurrence={active.occurrence}
+                mode={response.mode}
+                onReview={(decision) => void review(decision)}
+                reviewDisabled={locked}
+                saving={saving}
+                reviewError={reviewError}
+                source={source}
+                onOpen={() =>
+                  onOpen({
+                    document_id: active.document.document_id,
+                    revision_id: active.document.revision_id,
+                    processing_job_id: active.document.processing_job_id,
+                    page_number: active.occurrence.page_numbers[0] ?? null,
+                  })
+                }
+              />
+              {active.document.artifact_id && (
+                <a
+                  className="download"
+                  href={artifactUrl(active.document.artifact_id)}
+                >
+                  Download original ↓
+                </a>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+      {navigationMessage && <p role="status">{navigationMessage}</p>}
+      <DocumentGroups
+        outcomes={data?.document_outcomes ?? []}
+        disabled={locked}
+        onSelect={selectDocument}
+      />
+    </>
   );
 }

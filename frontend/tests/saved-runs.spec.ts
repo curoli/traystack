@@ -32,8 +32,8 @@ test("a bookmarked run preserves every result, scope and historical source while
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Search name", { exact: true }).fill(name);
   await page.getByLabel("Text passage", { exact: true }).fill(token);
   await page.getByLabel("Minimum textual match").fill("100");
@@ -119,20 +119,11 @@ test("a bookmarked run preserves every result, scope and historical source while
   await card
     .locator(".textual-occurrence")
     .first()
-    .getByRole("button", { name: "Decide later", exact: true })
+    .getByRole("button", { name: "Dismiss match", exact: true })
     .click();
   await expect(page.locator(".passage-choice").first()).toContainText(
-    "Decide later",
+    "Dismiss match",
   );
-  await page
-    .getByLabel("Review saved results", { exact: true })
-    .selectOption("later");
-  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
-  await expect(page).toHaveURL(new RegExp(`search_run=${run.run_id}`));
-  await page
-    .getByLabel("Review saved results", { exact: true })
-    .selectOption("all");
-  await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await page.getByLabel("Search name", { exact: true }).fill(`${name} renamed`);
   await page.getByRole("button", { name: "Save name", exact: true }).click();
   await expect(
@@ -150,7 +141,7 @@ test("a bookmarked run preserves every result, scope and historical source while
   expect(fresh.parent_run_id).toBe(run.run_id);
   expect(fresh.run_id).not.toBe(run.run_id);
   expect(fresh.summary.occurrences_total).toBe(1);
-  expect(fresh.review_counts.later).toBe(0);
+  expect(fresh.review_counts.dismiss).toBe(0);
   await expect(page).toHaveURL(new RegExp(`search_run=${fresh.run_id}`));
   await page
     .getByRole("button", { name: "Open previous run", exact: true })
@@ -159,7 +150,7 @@ test("a bookmarked run preserves every result, scope and historical source while
   await expect(page.locator(".textual-response")).toContainText("7 passages");
   await expect(
     page.getByRole("region", { name: "Review counts", exact: true }),
-  ).toContainText("Decide later: 1");
+  ).toContainText("Dismissed: 1");
 });
 
 test("saved semantic results reopen without the search service and list names remain usable", async ({
@@ -175,16 +166,14 @@ test("saved semantic results reopen without the search service and list names re
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Search name", { exact: true }).fill(name);
   await page
     .getByLabel("Text passage", { exact: true })
     .fill(`${token} shall pay EUR 5000 within thirty days.`);
   await page.getByLabel("Minimum textual match").fill("85");
-  await page
-    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
-    .check();
+
   await page
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
@@ -194,8 +183,8 @@ test("saved semantic results reopen without the search service and list names re
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByText(/^Saved searches \(/).click();
   await page.route("**/api/search-runs", (route) => route.abort());
   await page.route("**/api/search/textual", (route) => route.abort());

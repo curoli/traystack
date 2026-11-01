@@ -58,10 +58,9 @@ export default function SearchRunExport({ runId }: { runId: string }) {
         onChange={(event) => setFilter(event.target.value as ReviewFilter)}
       >
         <option value="all">All review states</option>
-        <option value="keep">Keep</option>
-        <option value="dismiss">Dismiss</option>
-        <option value="later">Decide later</option>
-        <option value="unreviewed">Not reviewed</option>
+        <option value="keep">Confirmed matches</option>
+        <option value="dismiss">Dismissed matches</option>
+        <option value="unreviewed">Unreviewed matches</option>
       </select>
       <div className="saved-run-actions">
         <button

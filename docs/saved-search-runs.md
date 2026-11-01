@@ -1,5 +1,10 @@
 # Saved search runs
 
+The current interface is described in [Unified document search and review](unified-review.md).
+It uses category selection, always-on semantic scoring, three passage states and
+optional automatic confirmation. Older UI descriptions and validation counts below
+are historical; API behavior remains documented for compatibility.
+
 **Similar passages → Find passages** automatically saves each successful search
 with its full result set. **Search name** is optional; an unnamed run uses the
 query as its name. **Saved searches** lists runs newest first. Opening one, or

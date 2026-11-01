@@ -22,13 +22,11 @@ test("CSV and JSON download complete saved results with current filters and froz
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Text passage", { exact: true }).fill(query);
   await page.getByLabel("Minimum textual match").fill("85");
-  await page
-    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
-    .check();
+
   const created = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/search-runs") &&
@@ -47,9 +45,11 @@ test("CSV and JSON download complete saved results with current filters and froz
   await card
     .locator(".textual-occurrence")
     .first()
-    .getByRole("button", { name: "Keep", exact: true })
+    .getByRole("button", { name: "Confirm match", exact: true })
     .click();
-  await expect(page.locator(".passage-choice").first()).toContainText("Keep");
+  await expect(page.locator(".passage-choice").first()).toContainText(
+    "Confirm match",
+  );
   // Unsubmitted edits and the visible occurrence page must never define the export.
   await page
     .getByLabel("Text passage", { exact: true })
@@ -122,8 +122,8 @@ test("failed exports retain results and a superseded export cannot download into
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Text passage", { exact: true }).fill(token);
   await page.getByLabel("Minimum textual match").fill("100");
   await page

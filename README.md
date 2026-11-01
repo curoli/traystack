@@ -15,19 +15,15 @@ The interface and documentation are English. Dates use English month names and
 24-hour time in the browser's timezone. Uploaded document contents, titles,
 metadata and multilingual evaluation examples retain their original language.
 
-**Similar passages** adds textual similarity, context and highlighted differences.
-An optional local semantic stage compares only the textually retrieved passages.
-Scores are not legal confidence or equivalence. Expression-specific guidance and
-runtime budgets constrain broad queries; textual zero is not allowed.
-**Search only the open document** narrows scope.
-
-**Keep / Dismiss / Decide later** saves decisions per occurrence. Not reviewed is
-separate; Reset review restores it. Successful Similar passages searches save
-complete matches, scores, captured scope and historical text. Saved searches reopen
-without retrieval; Run again creates a separate linked run. CSV/JSON exports cover
-all selected results, with independent review filtering. The review workspace
-combines a compact list with one selected detail pane, cross-document navigation,
-keyboard controls and final-decision progress.
+One [unified search and review workflow](docs/unified-review.md) supports exact
+text at textual 100, always-on semantic scoring and category selection. Three
+passage state buttons — **Confirm match**, **Dismiss match**, **Unreviewed** — are
+separate from document navigation. Strong matches default to automatic confirmation
+at 100 textual / 100 semantic; they are counted and can be revealed for review.
+Manual decisions take precedence. Three expandable document groups summarize
+confirmed, pending and no-active-match documents across the complete captured scope.
+Saved runs preserve results, policy and historical sources; CSV/JSON exports remain
+available. The literal API remains for integrations, without a separate UI.
 
 Technical contracts and evidence:
 
@@ -90,9 +86,9 @@ loopback. Default credentials are for the local demo only.
    after processing and cannot be cleared merely by another OCR run.
 7. Reprocess A: new artifacts are published and selected; old artifacts remain.
    Failed runs can be retried as new runs and retain previously selected text.
-8. Under Literal search, enter the confidentiality phrase and choose Run search.
-   Switch between Contains the passage and Not found in extracted text. The
-   unverifiable group stays separate; positive results open source page text.
+8. Enter the confidentiality phrase and choose Find passages.
+   Set textual 100 for exact wording, reveal automatic confirmations and inspect
+   the three document groups. Ineligible documents stay outside customer search.
 
 [Demo fixtures](examples/synthetic-contracts/README.md) are synthetic; their manifest
 records hashes and expectations. Processing and retrieval results are not fabricated.

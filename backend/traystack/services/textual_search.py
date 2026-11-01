@@ -2,7 +2,7 @@ from collections import Counter
 from datetime import UTC, datetime
 from importlib.metadata import version
 
-from sqlalchemy import select, text
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.orm import Session
 
 from traystack.models import Document, PageText, PassageReview, RevisionText
@@ -46,6 +46,18 @@ def textual_snapshot(
     statement = selected_scope(phrase, column, ready_only=request.ready_only).add_columns(
         column.label("search_text")
     )
+    if request.category is not None:
+        statement = statement.where(
+            Document.metadata_json["category"].as_string() == request.category
+        )
+    if request.uncategorized:
+        statement = statement.where(
+            or_(
+                Document.metadata_json["category"].as_string().is_(None),
+                func.jsonb_typeof(Document.metadata_json["category"]) != "string",
+                Document.metadata_json["category"].as_string() == "",
+            )
+        )
     if request.document_id is not None:
         statement = statement.where(Document.id == request.document_id)
     legacy_request = SearchRequest(query=request.query, mode=request.mode)
@@ -198,6 +210,12 @@ def textual_snapshot(
             occurrences.append(
                 TextualOccurrence(
                     occurrence_id=occurrence_id,
+                    raw_textual_score=candidate.score,
+                    raw_semantic_score=(
+                        semantic_values[document.document_id, candidate.start, candidate.end][0]
+                        if semantic is not None
+                        else None
+                    ),
                     score=round(candidate.score, 4),
                     matched_sha256=text_fingerprint(matched),
                     review=(
@@ -280,6 +298,10 @@ def textual_snapshot(
             )
     warnings = [notice.code for notice in [*assessment.warnings, *result_warnings]]
     return TextualSearchResponse(
+        category=request.category,
+        uncategorized=request.uncategorized,
+        auto_confirm_textual=request.auto_confirm_textual,
+        auto_confirm_semantic=request.auto_confirm_semantic,
         review_filter=request.review_filter,
         review_counts=ReviewCounts(**review_counts),
         query=request.query,

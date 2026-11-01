@@ -1,5 +1,10 @@
 # Exporting saved passage searches
 
+The current interface is described in [Unified document search and review](unified-review.md).
+It uses category selection, always-on semantic scoring, three passage states and
+optional automatic confirmation. Older UI descriptions and validation counts below
+are historical; API behavior remains documented for compatibility.
+
 Open a saved run in **Similar passages**, expand **Export results**, select
 **Export review status**, then choose **Download CSV** or **Download JSON**.
 The independent export selector offers All review states, Keep, Dismiss, Decide
