@@ -956,3 +956,38 @@ select {
 .search-goal input {
   width: auto;
 }
+.auto-confirm-settings {
+  border: 1px solid #dce5df;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-width: 0;
+}
+.document-groups {
+  margin-top: 1.5rem;
+}
+.document-groups details {
+  border-top: 1px solid #dce5df;
+  padding: 1rem 0;
+}
+.document-groups summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.document-outcome {
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.auto-confirm-settings {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+}
+.auto-confirm-settings > .checkbox,
+.auto-confirm-settings > p {
+  grid-column: 1 / -1;
+}
+.review-buttons button[aria-pressed="true"] {
+  opacity: 1;
+  border: 2px solid #246252;
+}

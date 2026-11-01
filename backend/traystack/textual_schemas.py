@@ -22,6 +22,10 @@ class TextualAssessmentRequest(BaseModel):
 
 
 class TextualSearchRequest(TextualAssessmentRequest):
+    category: str | None = Field(default=None, min_length=1, max_length=100)
+    uncategorized: bool = False
+    auto_confirm_textual: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
+    auto_confirm_semantic: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
     ready_only: bool = False
     review_filter: ReviewFilter = "all"
     minimum_semantic_score: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
@@ -36,12 +40,19 @@ class TextualSearchRequest(TextualAssessmentRequest):
 
     @model_validator(mode="after")
     def occurrence_paging(self):
+        if self.category and self.uncategorized:
+            raise ValueError("Choose a category or uncategorized documents")
+        if (self.auto_confirm_textual is None) != (self.auto_confirm_semantic is None):
+            raise ValueError("Both auto-confirm thresholds must be set together")
+        if self.auto_confirm_textual is not None and self.minimum_semantic_score is None:
+            raise ValueError("Auto-confirm requires semantic scores")
         if self.occurrence_offset and self.document_id is None:
             raise ValueError("Occurrence paging requires document_id")
         return self
 
 
 class TextualDocument(BaseModel):
+    category: str | None = None
     document_id: UUID
     title: str
     revision_id: UUID | None
@@ -66,6 +77,9 @@ class TextDifference(BaseModel):
 
 
 class TextualOccurrence(BaseModel):
+    raw_textual_score: float | None = None
+    raw_semantic_score: float | None = None
+    auto_confirmed: bool = False
     occurrence_id: str
     score: float
     matched_sha256: str
@@ -123,7 +137,17 @@ class SemanticProvenance(BaseModel):
     max_tokens: int
 
 
+class DocumentOutcome(BaseModel):
+    document: TextualDocument
+    state: Literal["confirmed", "unreviewed", "no_active_match"]
+
+
 class TextualSearchResponse(BaseModel):
+    document_outcomes: list[DocumentOutcome] = Field(default_factory=list)
+    category: str | None = None
+    uncategorized: bool = False
+    auto_confirm_textual: float | None = None
+    auto_confirm_semantic: float | None = None
     captured_review_filter: ReviewFilter | None = None
     run_id: UUID | None = None
     run_name: str | None = None

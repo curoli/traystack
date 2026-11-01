@@ -18,6 +18,11 @@ FORMULA_PREFIX = re.compile(r"^[\s\ufeff]*[=+\-@]")
 
 CSV_FIELDS = [
     "row_type",
+    "auto_confirmed",
+    "raw_textual_score",
+    "raw_semantic_score",
+    "auto_confirm_textual",
+    "auto_confirm_semantic",
     "schema_version",
     "notice",
     "run_id",
@@ -26,6 +31,9 @@ CSV_FIELDS = [
     "exported_at",
     "review_filter",
     "query",
+    "category",
+    "uncategorized",
+    "document_category",
     "effective_query",
     "mode",
     "minimum_textual_score",
@@ -73,14 +81,18 @@ CSV_FIELDS = [
 ]
 
 
-def export_run(session: Session, identity: UUID, review_filter: ReviewFilter) -> dict[str, Any]:
+def export_run(
+    session: Session, identity: UUID, review_filter: ReviewFilter, three_state=False
+) -> dict[str, Any]:
     # First operation on the fresh request session: names, matches and all review
     # decisions belong to one snapshot, even if another view saves while exporting.
     session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
     session.execute(text("SET TRANSACTION READ ONLY"))
     exported_at = datetime.now(UTC)
     run = get_run(session, identity)
-    result = read_run(session, identity, review_filter=review_filter, complete=True)
+    result = read_run(
+        session, identity, review_filter=review_filter, complete=True, three_state=three_state
+    )
     body = result.model_dump(mode="json")
     for key in (
         "limit",
@@ -125,6 +137,8 @@ def csv_export(payload: dict[str, Any]) -> bytes:
     semantic = result["semantic"] or {}
     common = {
         "schema_version": payload["schema_version"],
+        "auto_confirm_textual": result.get("auto_confirm_textual"),
+        "auto_confirm_semantic": result.get("auto_confirm_semantic"),
         "notice": payload["notice"],
         "run_id": result["run_id"],
         "run_name": result["run_name"],
@@ -132,6 +146,8 @@ def csv_export(payload: dict[str, Any]) -> bytes:
         "exported_at": payload["exported_at"],
         "review_filter": result["review_filter"],
         "query": result["query"],
+        "category": result.get("category"),
+        "uncategorized": result.get("uncategorized", False),
         "effective_query": result["effective_query"],
         "mode": result["mode"],
         "minimum_textual_score": result["minimum_score"],
@@ -162,6 +178,7 @@ def csv_export(payload: dict[str, Any]) -> bytes:
         return {
             "document_id": document["document_id"],
             "document_title": document["title"],
+            "document_category": document.get("category"),
             **{
                 key: document[key]
                 for key in (
@@ -184,6 +201,9 @@ def csv_export(payload: dict[str, Any]) -> bytes:
             write(
                 {
                     "row_type": "passage",
+                    "auto_confirmed": item.get("auto_confirmed", False),
+                    "raw_textual_score": item.get("raw_textual_score"),
+                    "raw_semantic_score": item.get("raw_semantic_score"),
                     **document_fields(group["document"]),
                     **{
                         key: item[key]

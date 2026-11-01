@@ -10,7 +10,7 @@ import {
 
 import { formatDate } from "./format";
 
-import SearchPanel from "./components/SearchPanel";
+import CategoryEditor from "./components/CategoryEditor";
 import TextualSearchPanel from "./components/TextualSearchPanel";
 import ArtifactCard from "./components/ArtifactCard";
 import ProcessingDetails from "./components/ProcessingDetails";
@@ -21,11 +21,6 @@ const errorText = (error: unknown) =>
 
 export default function App() {
   const [managementOpen, setManagementOpen] = useState(false);
-  const [searchWorkflow, setSearchWorkflow] = useState<"literal" | "textual">(
-    new URLSearchParams(window.location.search).has("search_run")
-      ? "textual"
-      : "literal",
-  );
   const [documents, setDocuments] = useState<Document[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -133,6 +128,7 @@ export default function App() {
       setDetailNavigation((value) => value + 1);
       setOffset(0);
       setGeneration((value) => value + 1);
+      window.dispatchEvent(new Event("categories-changed"));
       setNotice(
         `“${document.title}” was saved. The original is ready to download.`,
       );
@@ -187,20 +183,10 @@ export default function App() {
       <main>
         <div className="intro">
           <p className="eyebrow">CONTRACT LIBRARY</p>
-          <h1>
-            Keep your originals.
-            <br />
-            Trace every result.
-          </h1>
+          <h1>Store and search documents.</h1>
           <p className="lead">
-            Contracts and scans in one place, with unchanged original files and
-            traceable file information.
+            Find matching passages and review your contracts.
           </p>
-        </div>
-        <div className="scope-note">
-          <strong>Find the contracts you need.</strong> Search ready documents
-          for a phrase, or find documents that do not contain it. Uploads and
-          processing are available separately under Manage documents.
         </div>
         {notice && (
           <div role="status" className="message success">
@@ -212,36 +198,12 @@ export default function App() {
             {error}
           </div>
         )}
-        <div
-          className="search-workflows"
-          role="group"
-          aria-label="Search workflow"
-        >
-          <button
-            className={searchWorkflow === "literal" ? "primary" : "secondary"}
-            aria-pressed={searchWorkflow === "literal"}
-            onClick={() => setSearchWorkflow("literal")}
-          >
-            Literal search
-          </button>
-          <button
-            className={searchWorkflow === "textual" ? "primary" : "secondary"}
-            aria-pressed={searchWorkflow === "textual"}
-            onClick={() => setSearchWorkflow("textual")}
-          >
-            Similar passages
-          </button>
-        </div>
-        {searchWorkflow === "literal" ? (
-          <SearchPanel />
-        ) : (
-          <TextualSearchPanel
-            openDocument={selected}
-            onOpen={(result) => {
-              void openDocument(result.document_id, result);
-            }}
-          />
-        )}
+        <TextualSearchPanel
+          openDocument={selected}
+          onOpen={(result) => {
+            void openDocument(result.document_id, result);
+          }}
+        />
         <details
           className="document-management"
           open={managementOpen}
@@ -261,6 +223,13 @@ export default function App() {
                   required
                   maxLength={300}
                   placeholder="e.g. Confidentiality agreement"
+                />
+                <label htmlFor="upload-category">Category (optional)</label>
+                <input
+                  id="upload-category"
+                  name="category"
+                  maxLength={100}
+                  placeholder="e.g. Supply agreements"
                 />
                 <label htmlFor="file">Original file</label>
                 <div className="file-field">
@@ -454,6 +423,10 @@ export default function App() {
                   <pre>{JSON.stringify(selected.metadata, null, 2)}</pre>
                 </details>
               )}
+              <CategoryEditor
+                document={selected}
+                onSaved={() => refreshDocument(selected.id)}
+              />
               {selected.revisions.map((revision) => (
                 <div className="revision" key={revision.id}>
                   <h3>

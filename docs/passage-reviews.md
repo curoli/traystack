@@ -8,31 +8,22 @@ this local app, rather than assigned to separate reviewer accounts.
 
 ## Workflow
 
-1. Run a textual search, optionally with the semantic filter enabled.
-2. Inspect the matched passage, surrounding context, source and text differences.
-3. Choose a decision in **Review this passage**. The UI displays the new state and
-   saved timestamp only after the API confirms the write. Failures leave the prior
-   displayed decision intact and show an error beside that passage.
-4. Use **Review saved results** to filter the stored result list without a new search.
-   All states, Not reviewed, Keep, Dismiss and Decide later are separate choices.
-5. Change a decision or choose **Reset review** whenever needed.
+The current [unified interface](unified-review.md) has three passage states:
+**Confirm match**, **Dismiss match** and **Unreviewed**. Exactly one is selected.
+Choosing a state does not navigate. Previous/Next and their unreviewed variants
+navigate between documents independently. Select passages within a document from
+the list. There is no review-state filter in the search form; export filtering
+still operates on passages.
 
-The four counters cover every passage passing the submitted textual and semantic
-thresholds in the selected scope, **before** the review filter and pagination.
-Document/occurrence totals and result pages describe passages passing the review
-filter too. Unsearchable documents remain a separate group. A status filter never
-turns a missing positive candidate into proof of absence.
+Auto-confirmation defaults to textual/semantic 100/100, hides automatic matches
+until requested, and never overrides an explicit decision. Its immutable policy
+and unrounded scores belong to the saved run. Confirmation has precedence in the
+three document groups; pending and no-active-match groups cover the rest of the
+ready captured scope, including documents with no candidates.
 
-The [review workspace](review-workspace.md) loads every stored matching passage
-into a compact list with one selected detail view. With **All review states**, a
-confirmed save advances to the next passage and updates its counters. In a filtered view,
-a passage leaving the filter is removed and the next remaining item is selected.
-Unsubmitted form edits are not applied. Navigation and review callbacks from a
-superseded search cannot modify newer results or their counters.
-
-Other views' decisions are reconciled with **Refresh reviews**, preserving the
-selected occurrence when it remains in the filter. This is not live synchronization.
-Keep and Dismiss count toward **Final decisions**; Decide later remains pending.
+Internal `keep`, `dismiss` and `unreviewed` values remain compatible. Historical
+`later` records appear as Unreviewed in the workspace and UI exports without
+rewriting capture-time evidence. Diagnostic API representation is retained.
 
 ## Identity and source binding
 

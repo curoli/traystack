@@ -9,6 +9,7 @@ import {
   searchTextual,
   createSearchRun,
   getSearchRun,
+  getCategories,
   renameSearchRun,
   type ReviewFilter,
   type SearchTarget,
@@ -101,19 +102,51 @@ export default function TextualSearchPanel({
     runId: string | null;
     occurrenceId: string;
   } | null>(null);
-  const [scopeOverride, setScopeOverride] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
   const [loadedSaved, setLoadedSaved] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const scopeDocument = scopeOverride ?? openDocument;
-  useEffect(() => {
-    setScopeOverride(null);
-  }, [openDocument?.id]);
-  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [mode, setMode] = useState<"exact" | "normalized">("normalized");
-  const [semanticEnabled, setSemanticEnabled] = useState(false);
+  const semanticEnabled = true;
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryError, setCategoryError] = useState("");
+  const [autoConfirm, setAutoConfirm] = useState(true);
+  const [autoText, setAutoText] = useState("100");
+  const [autoSemantic, setAutoSemantic] = useState("100");
+  const validAuto =
+    !autoConfirm ||
+    [autoText, autoSemantic].every(
+      (value) =>
+        value.trim() !== "" &&
+        Number.isFinite(Number(value)) &&
+        Number(value) >= 0 &&
+        Number(value) <= 100,
+    );
+  useEffect(() => {
+    let active = true,
+      version = 0;
+    const refresh = () => {
+      const current = ++version;
+      getCategories()
+        .then((result) => {
+          if (active && current === version) {
+            setCategories(result.items);
+            setCategoryError("");
+          }
+        })
+        .catch(() => {
+          if (active && current === version)
+            setCategoryError(
+              "Categories could not be loaded. All documents remains available.",
+            );
+        });
+    };
+    refresh();
+    window.addEventListener("categories-changed", refresh);
+    return () => {
+      active = false;
+      window.removeEventListener("categories-changed", refresh);
+    };
+  }, []);
   const [semanticThreshold, setSemanticThreshold] = useState("0");
   const [threshold, setThreshold] = useState("85");
   const [response, setResponse] = useState<TextualSearchResponse | null>(null);
@@ -124,7 +157,6 @@ export default function TextualSearchPanel({
   const [aborted, setAborted] = useState<SearchAbortDetails | null>(null);
   const [assessment, setAssessment] = useState<TextualAssessment | null>(null);
   const [assessmentError, setAssessmentError] = useState("");
-  const [onlyOpenDocument, setOnlyOpenDocument] = useState(false);
   const requestId = useRef(0);
   const minimum = Number(threshold);
   const validThreshold =
@@ -199,19 +231,18 @@ export default function TextualSearchPanel({
           setQuery(next.query);
           setMode(next.mode);
           setThreshold(String(next.minimum_score));
-          setSemanticEnabled(next.minimum_semantic_score !== null);
           setSemanticThreshold(String(next.minimum_semantic_score ?? 0));
-          setReviewFilter(next.review_filter);
           setSearchName(next.run_name ?? "");
-          setOnlyOpenDocument(!!next.document_id);
-          setScopeOverride(
-            next.document_id
-              ? {
-                  id: next.document_id,
-                  title: next.results[0]?.document.title ?? "Saved document",
-                }
-              : null,
+          setCategory(
+            next.uncategorized
+              ? "__uncategorized__"
+              : next.category
+                ? `category:${next.category}`
+                : "",
           );
+          setAutoConfirm(next.auto_confirm_textual !== null);
+          setAutoText(String(next.auto_confirm_textual ?? 100));
+          setAutoSemantic(String(next.auto_confirm_semantic ?? 100));
         }
         setRequestDurationMs(performance.now() - started);
         setResponseRequestId(id);
@@ -243,7 +274,7 @@ export default function TextualSearchPanel({
   function openSaved(id: string) {
     setResponse(null);
     setSourceLocation(null);
-    void perform(() => getSearchRun(id), true);
+    void perform(() => getSearchRun(id, { review_filter: "all" }), true);
   }
   async function rename() {
     if (!response?.run_id || !searchName.trim()) return;
@@ -275,9 +306,12 @@ export default function TextualSearchPanel({
             query: captured.query,
             mode: captured.mode,
             minimum_score: captured.minimum_score,
-            minimum_semantic_score: captured.minimum_semantic_score,
-            review_filter:
-              captured.captured_review_filter ?? captured.review_filter,
+            minimum_semantic_score: captured.minimum_semantic_score ?? 0,
+            review_filter: "all",
+            category: captured.category ?? undefined,
+            uncategorized: captured.uncategorized,
+            auto_confirm_textual: captured.auto_confirm_textual,
+            auto_confirm_semantic: captured.auto_confirm_semantic,
             document_id: captured.document_id ?? undefined,
           },
           `${captured.run_name ?? "Search"} (rerun)`.slice(0, 200),
@@ -293,12 +327,7 @@ export default function TextualSearchPanel({
   }, []);
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (
-      !validThreshold ||
-      !validSemanticThreshold ||
-      (onlyOpenDocument && !scopeDocument)
-    )
-      return;
+    if (!validThreshold || !validSemanticThreshold || !validAuto) return;
     setResponse(null);
     setSourceLocation(null);
     void run({
@@ -306,8 +335,13 @@ export default function TextualSearchPanel({
       mode,
       minimum_score: minimum,
       minimum_semantic_score: semanticEnabled ? semanticMinimum : null,
-      review_filter: reviewFilter,
-      document_id: onlyOpenDocument ? scopeDocument!.id : undefined,
+      review_filter: "all",
+      category: category.startsWith("category:")
+        ? category.slice(9)
+        : undefined,
+      uncategorized: category === "__uncategorized__",
+      auto_confirm_textual: autoConfirm ? Number(autoText) : null,
+      auto_confirm_semantic: autoConfirm ? Number(autoSemantic) : null,
     });
   }
   return (
@@ -401,29 +435,79 @@ export default function TextualSearchPanel({
               max={100}
               step="any"
               value={semanticThreshold}
-              disabled={!semanticEnabled || restoring}
+              disabled={restoring}
               onChange={(event) => setSemanticThreshold(event.target.value)}
               aria-describedby="semantic-threshold-help"
             />
           </div>
           <div>
-            <label htmlFor="review-filter">Review status</label>
+            <label htmlFor="search-category">Document category</label>
             <select
-              id="review-filter"
+              id="search-category"
+              value={category}
               disabled={restoring}
-              value={reviewFilter}
-              onChange={(event) =>
-                setReviewFilter(event.target.value as ReviewFilter)
-              }
+              onChange={(event) => setCategory(event.target.value)}
             >
-              <option value="all">All review states</option>
-              {Object.entries(reviewLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+              <option value="">All documents</option>
+              <option value="__uncategorized__">Uncategorized documents</option>
+              {[
+                ...new Set([
+                  ...categories,
+                  ...(category.startsWith("category:")
+                    ? [category.slice(9)]
+                    : []),
+                ]),
+              ].map((name) => (
+                <option key={name} value={`category:${name}`}>
+                  {name}
                 </option>
               ))}
             </select>
+            {categoryError && <p role="status">{categoryError}</p>}
           </div>
+          <fieldset className="auto-confirm-settings">
+            <legend>Skip review for strong matches</legend>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={autoConfirm}
+                disabled={restoring}
+                onChange={(event) => setAutoConfirm(event.target.checked)}
+              />
+              Auto-confirm strong matches
+            </label>
+            <label htmlFor="auto-text">Auto-confirm textual minimum</label>
+            <input
+              id="auto-text"
+              type="number"
+              min={0}
+              max={100}
+              step="any"
+              value={autoText}
+              disabled={!autoConfirm || restoring}
+              onChange={(event) => setAutoText(event.target.value)}
+            />
+            <label htmlFor="auto-semantic">Auto-confirm semantic minimum</label>
+            <input
+              id="auto-semantic"
+              type="number"
+              min={0}
+              max={100}
+              step="any"
+              value={autoSemantic}
+              disabled={!autoConfirm || restoring}
+              onChange={(event) => setAutoSemantic(event.target.value)}
+            />
+            <p className="fineprint">
+              Both thresholds must pass. Explicit review decisions always take
+              precedence.
+            </p>
+            {!validAuto && (
+              <p role="alert">
+                Auto-confirm thresholds must be between 0 and 100.
+              </p>
+            )}
+          </fieldset>
           <button
             className="primary"
             disabled={
@@ -431,22 +515,13 @@ export default function TextualSearchPanel({
               !query.trim() ||
               !validThreshold ||
               !validSemanticThreshold ||
-              (onlyOpenDocument && !scopeDocument)
+              !validAuto
             }
           >
             {busy ? "Searching …" : "Find passages"}
           </button>
         </form>
       </details>
-      <label className="checkbox">
-        <input
-          type="checkbox"
-          checked={semanticEnabled}
-          disabled={restoring}
-          onChange={(event) => setSemanticEnabled(event.target.checked)}
-        />
-        <span>Compare meaning with local embeddings</span>
-      </label>
       <p id="semantic-threshold-help" className="fineprint">
         Semantic comparison scores only the passages found by the textual
         filter. 0 retains all textual candidates; 100 requires identical
@@ -470,22 +545,6 @@ export default function TextualSearchPanel({
           threshold of 100 is sufficient for this purpose.
         </p>
       )}
-      <label className="checkbox">
-        <input
-          type="checkbox"
-          checked={onlyOpenDocument}
-          disabled={restoring}
-          onChange={(event) => setOnlyOpenDocument(event.target.checked)}
-        />
-        <span>
-          Search only the open document
-          <small>
-            {scopeDocument
-              ? scopeDocument.title
-              : "Open a document in the library to narrow the selection."}
-          </small>
-        </span>
-      </label>
       <p id="textual-threshold-help" className="fineprint">
         Choose a threshold greater than 0 and at most 100. 100 requires
         identical text in the selected mode. Normalized mode ignores case and
@@ -511,9 +570,9 @@ export default function TextualSearchPanel({
       )}
       <p className="search-notice">
         Candidate passages are word windows; overlapping candidates are
-        consolidated. Missing candidates do not establish clause absence. Use
-        Literal search for the separate exact absence workflow. Semantic scores
-        do not verify clause absence.
+        consolidated. Document groups summarize the reviewed candidates, not
+        proof of legal clause absence. Semantic scores do not verify clause
+        absence.
       </p>
       {aborted && <SearchStopped details={aborted} />}
       {error && (
@@ -552,31 +611,6 @@ export default function TextualSearchPanel({
               <button className="secondary" disabled={busy} onClick={rerun}>
                 Run again
               </button>
-              <label htmlFor="saved-review-filter">Review saved results</label>
-              <select
-                id="saved-review-filter"
-                value={response.review_filter}
-                disabled={busy}
-                onChange={(event) =>
-                  void run(
-                    {
-                      query: response.query,
-                      mode: response.mode,
-                      minimum_score: response.minimum_score,
-                      document_id: response.document_id ?? undefined,
-                      review_filter: event.target.value as ReviewFilter,
-                    },
-                    response.run_id!,
-                  )
-                }
-              >
-                <option value="all">All review states</option>
-                {Object.entries(reviewLabels).map(([value, label]) => (
-                  <option value={value} key={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
               <button
                 className="secondary"
                 disabled={busy}
@@ -603,12 +637,14 @@ export default function TextualSearchPanel({
           )}
           <p className="search-query-summary">
             Results for <strong>“{response.query}”</strong> · {response.mode} ·
-            minimum {response.minimum_score}% textual · review:{" "}
-            {response.review_filter === "all"
-              ? "All review states"
-              : reviewLabels[response.review_filter]}
-            {response.minimum_semantic_score != null &&
-              ` · minimum semantic ${response.minimum_semantic_score}%`}
+            minimum {response.minimum_score}% textual · minimum semantic{" "}
+            {response.minimum_semantic_score ??
+              "not computed in this historical run"}
+            % ·{" "}
+            {response.category ??
+              (response.uncategorized
+                ? "Uncategorized documents"
+                : "All documents")}
           </p>
           <section aria-label="Review counts" className="review-counts">
             <label htmlFor="review-progress">
@@ -633,16 +669,14 @@ export default function TextualSearchPanel({
               }
             />
             <p className="fineprint">
-              Keep and Dismiss are final decisions. Decide later remains
-              pending.
+              Review states belong to passages. Document groups below summarize
+              the complete search scope.
             </p>
             <p>
-              {Object.entries(response.review_counts)
-                .map(
-                  ([status, count]) =>
-                    `${reviewLabels[status as ReviewDecision]}: ${count}`,
-                )
-                .join(" · ")}
+              Unreviewed:{" "}
+              {response.review_counts.unreviewed + response.review_counts.later}{" "}
+              · Confirmed: {response.review_counts.keep} · Dismissed:{" "}
+              {response.review_counts.dismiss}
             </p>
             <p className="fineprint">
               Counts cover all passages passing the submitted textual and
@@ -717,6 +751,7 @@ export default function TextualSearchPanel({
                         review_counts: next.review_counts,
                         total: next.total,
                         summary: next.summary,
+                        document_outcomes: next.document_outcomes,
                       }
                     : current,
                 );

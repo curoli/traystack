@@ -1,3 +1,4 @@
+import { scopeToDocument } from "./support/unified";
 import { expect, test } from "@playwright/test";
 import { uploadAndProcess, process } from "./support/textual";
 
@@ -14,12 +15,10 @@ test("textual matches show differences, navigate occurrences and retain submitte
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.locator(".document-row").filter({ hasText: title }).click();
-  await page
-    .getByRole("checkbox", { name: "Search only the open document" })
-    .check();
+  await scopeToDocument(page, title);
   await page.getByLabel("Text passage", { exact: true }).fill(query);
   await page.getByLabel("Minimum textual match").fill("85");
   await page
@@ -93,8 +92,8 @@ test("zero is blocked, scope can be narrowed, and exact mode is preserved", asyn
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page
     .getByLabel("Text passage", { exact: true })
     .fill("Completely different target wording");
@@ -104,9 +103,7 @@ test("zero is blocked, scope can be narrowed, and exact mode is preserved", asyn
     page.getByRole("button", { name: "Find passages", exact: true }),
   ).toBeDisabled();
   await page.locator(".document-row").filter({ hasText: title }).click();
-  await page
-    .getByRole("checkbox", { name: "Search only the open document" })
-    .check();
+  await scopeToDocument(page, title);
   await page.getByLabel("Minimum textual match").fill("1");
   await page
     .getByRole("button", { name: "Find passages", exact: true })
@@ -163,8 +160,8 @@ test("too many real passages abort without partial results and can be refined", 
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Text passage", { exact: true }).fill(token);
   await page.getByLabel("Minimum textual match").fill("100");
   await page
@@ -197,8 +194,8 @@ test("a failed workspace load offers retry without showing partial passages", as
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Text passage", { exact: true }).fill(token);
   await page.getByLabel("Minimum textual match").fill("100");
   await page.route("**/workspace?**", (route) =>
@@ -230,8 +227,8 @@ test("a delayed workspace failure cannot clear a newer search", async ({
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   let release!: () => void;
   let entered!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -296,17 +293,13 @@ test("local semantic scores filter actual passages and preserve submitted naviga
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.locator(".document-row").filter({ hasText: title }).click();
-  await page
-    .getByRole("checkbox", { name: "Search only the open document" })
-    .check();
+  await scopeToDocument(page, title);
   await page.getByLabel("Text passage", { exact: true }).fill(query);
   await page.getByLabel("Minimum textual match").fill("85");
-  await page
-    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
-    .check();
+
   await page.getByLabel("Minimum semantic match").fill("0");
   await page
     .getByRole("button", { name: "Find passages", exact: true })
@@ -376,14 +369,12 @@ test("semantic validation and unavailable-model errors never show textual result
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page
     .getByLabel("Text passage", { exact: true })
     .fill("Confidential information");
-  await page
-    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
-    .check();
+
   await page.getByLabel("Minimum semantic match").fill("101");
   await expect(
     page.getByRole("button", { name: "Find passages", exact: true }),

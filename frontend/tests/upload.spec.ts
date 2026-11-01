@@ -26,7 +26,7 @@ test("upload, inspect, reload and download identical original bytes", async ({
   await page
     .getByLabel("Original file", { exact: true })
     .setInputFiles(filename);
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox", { name: /Manual review required/ }).check();
   const uploadResponse = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/documents/upload") &&
@@ -127,7 +127,7 @@ test("network and validation failures have English fallback messages", async ({
 }) => {
   // Isolate transport/validation failures; normal workflows above use the live API.
   await page.route("**/api/documents?*", (route) => route.abort());
-  await page.route("**/api/search", (route) =>
+  await page.route("**/api/search-runs", (route) =>
     route.fulfill({
       status: 422,
       json: { detail: [{ type: "string_too_long", loc: ["body", "query"] }] },
@@ -139,7 +139,7 @@ test("network and validation failures have English fallback messages", async ({
     "Unable to reach the server. Please check your connection and try again.",
   );
   await page.getByLabel("Text passage", { exact: true }).fill("target");
-  await page.getByRole("button", { name: "Run search" }).click();
+  await page.getByRole("button", { name: "Find passages" }).click();
   await expect(page.locator(".search-panel").getByRole("alert")).toHaveText(
     "Please check your input and file format.",
   );

@@ -39,6 +39,7 @@ class SearchJobOut(BaseModel):
 
 
 class SearchResult(BaseModel):
+    category: str | None = None
     document_id: UUID
     title: str
     revision_id: UUID | None

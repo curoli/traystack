@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload, sessionmaker
@@ -21,6 +22,7 @@ from traystack.api.processing import router as processing_router
 from traystack.api.reviews import router as reviews_router
 from traystack.api.search import router as search_router
 from traystack.api.search_runs import router as search_runs_router
+from traystack.category_schemas import CategoryWrite
 from traystack.config import Settings
 from traystack.db import get_session
 from traystack.models import Artifact, Document, Revision
@@ -136,6 +138,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title: Annotated[str, Form(min_length=1, max_length=300)],
         metadata: Annotated[str, Form(max_length=16384)] = "{}",
         requires_manual_review: Annotated[bool, Form()] = False,
+        category: Annotated[str | None, Form(max_length=100)] = None,
     ):
         title = title.strip()
         if not title or "\x00" in title:
@@ -148,6 +151,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(422, "Metadata must be a JSON object") from None
         if not isinstance(values, dict):
             raise HTTPException(422, "Metadata must be a JSON object")
+        try:
+            selected_category = CategoryWrite(
+                category=category if category is not None else values.get("category")
+            ).category
+        except (ValidationError, UnicodeError):
+            raise HTTPException(422, "Category must be text of at most 100 characters") from None
+        if selected_category is None:
+            values.pop("category", None)
+        else:
+            values["category"] = selected_category
         # PostgreSQL JSONB rejects U+0000, including nested values and keys.
         pending: list[object] = [values]
         while pending:
@@ -217,6 +230,39 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             limit=limit,
             offset=offset,
         )
+
+    @app.get("/api/categories")
+    def categories(session: SessionDep):
+        value = Document.metadata_json["category"].as_string()
+        return {
+            "items": list(
+                session.scalars(
+                    select(value)
+                    .where(
+                        func.jsonb_typeof(Document.metadata_json["category"]) == "string",
+                        value != "",
+                    )
+                    .distinct()
+                    .order_by(value)
+                )
+            )
+        }
+
+    @app.patch("/api/documents/{document_id}/category", response_model=DocumentOut)
+    def set_category(document_id: UUID, payload: CategoryWrite, session: SessionDep):
+        document = session.scalar(
+            select(Document).where(Document.id == document_id).with_for_update()
+        )
+        if document is None:
+            raise HTTPException(404, "Document not found")
+        metadata = dict(document.metadata_json)
+        if payload.category is None:
+            metadata.pop("category", None)
+        else:
+            metadata["category"] = payload.category
+        document.metadata_json = metadata
+        session.commit()
+        return serialize_document(document)
 
     @app.get("/api/documents/{document_id}", response_model=DocumentOut)
     def document(document_id: UUID, session: SessionDep):

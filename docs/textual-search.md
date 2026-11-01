@@ -1,5 +1,10 @@
 # Textual similarity and multiple occurrences
 
+The current interface is described in [Unified document search and review](unified-review.md).
+It uses category selection, always-on semantic scoring, three passage states and
+optional automatic confirmation. Older UI descriptions and validation counts below
+are historical; API behavior remains documented for compatibility.
+
 The **Similar passages** workflow is positive candidate retrieval, separate from
 **Literal search** and its exact/normalized absence checks. An optional
 [semantic comparison stage](semantic-search.md) now scores and filters these

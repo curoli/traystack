@@ -1,5 +1,10 @@
 # Semantic comparison of textual candidates
 
+The current interface is described in [Unified document search and review](unified-review.md).
+It uses category selection, always-on semantic scoring, three passage states and
+optional automatic confirmation. Older UI descriptions and validation counts below
+are historical; API behavior remains documented for compatibility.
+
 **Similar passages** optionally compares each retrieved passage with the search
 expression using local embeddings. Enable **Compare meaning with local embeddings**
 and set **Minimum semantic match**. Textual search remains the first stage; a

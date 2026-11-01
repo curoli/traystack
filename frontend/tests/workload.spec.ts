@@ -1,3 +1,4 @@
+import { scopeToDocument } from "./support/unified";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -71,8 +72,8 @@ test("a contract batch supports source inspection, material differences and save
   await page.goto("/");
   await page.getByText("Manage documents", { exact: true }).click();
   await page
-    .getByRole("button", { name: "Similar passages", exact: true })
-    .click();
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
   await page.getByLabel("Minimum textual match").fill("85");
   const query = (family: string) =>
     corpus.queries[family].replaceAll(corpus.marker, marker);
@@ -98,10 +99,12 @@ test("a contract batch supports source inspection, material differences and save
   await expect(
     page.getByRole("region", { name: "Saved source text", exact: true }),
   ).toBeFocused();
-  await first.getByRole("button", { name: "Keep", exact: true }).click();
+  await first
+    .getByRole("button", { name: "Confirm match", exact: true })
+    .click();
   await expect(
     page.getByRole("region", { name: "Review counts", exact: true }),
-  ).toContainText("Keep: 1");
+  ).toContainText("Confirmed: 1");
   await page.locator(".passage-choice").nth(11).click();
   await expect(page.locator(".passage-choice")).toHaveCount(24);
   // One recent contract contains changed negation, amount, name and German negation.
@@ -109,18 +112,16 @@ test("a contract batch supports source inspection, material differences and save
     .locator(".document-row")
     .filter({ hasText: rows[29].title })
     .click();
-  await page
-    .getByRole("checkbox", { name: "Search only the open document" })
-    .check();
-  await page
-    .getByRole("checkbox", { name: "Compare meaning with local embeddings" })
-    .check();
+  await scopeToDocument(page, rows[29].title);
+
   await find("confidentiality");
   await expect(page.locator(".textual-occurrence")).toHaveCount(1);
   await expect(page.locator(".text-comparison del")).toContainText(["not"]);
-  await first.getByRole("button", { name: "Dismiss", exact: true }).click();
+  await first
+    .getByRole("button", { name: "Dismiss match", exact: true })
+    .click();
   await expect(first.locator(".review-status")).toContainText(
-    "Review: Dismiss",
+    "Review: Dismiss match",
   );
   await find("amount");
   await expect(page.locator(".text-comparison ins")).toContainText(["5000"]);
@@ -128,10 +129,12 @@ test("a contract batch supports source inspection, material differences and save
     "Semantic match: 100.00%",
   );
   await first
-    .getByRole("button", { name: "Decide later", exact: true })
+    .getByRole("button", { name: "Confirm match", exact: true })
     .click();
+  await expect(first.locator(".review-status")).toContainText("Confirm match");
+  await first.getByRole("button", { name: "Unreviewed", exact: true }).click();
   await expect(first.locator(".review-status")).toContainText(
-    "Review: Decide later",
+    "Review: Unreviewed",
   );
   await find("name");
   await expect(page.locator(".text-comparison ins")).toContainText(["beta"]);
@@ -139,7 +142,7 @@ test("a contract batch supports source inspection, material differences and save
   await expect(page.locator(".text-comparison ins")).toContainText(["nicht"]);
   await find("amount");
   await expect(first.locator(".review-status")).toContainText(
-    "Review: Decide later",
+    "Review: Unreviewed",
   );
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
