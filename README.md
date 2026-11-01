@@ -1,5 +1,10 @@
 # TrayStack
 
+**Zur Benutzung:** Das [ausführliche Benutzerhandbuch](docs/benutzerhandbuch.md)
+erklärt Start, Komponenten, Upload und Dateiverarbeitung, die Suche nach
+vorhandenen bzw. nicht gefundenen Phrasen sowie Prüfung, Speicherung und Export
+der Ergebnisse. Die Schritte verwenden die englischen Beschriftungen der App.
+
 Lokaler Prototyp für nachvollziehbare Vertragsablage und Volltextsuche.
 **Meilensteine 1–4 sind umgesetzt:** PDF/JPEG/PNG und UTF-8-TXT/HTML hochladen, Originalbytes
 herunterladen und Dokumente im Hintergrund auslesen. Ein eigener Worker erzeugt
