@@ -3,6 +3,7 @@
 **Getting started:** The [user guide](docs/user-guide.md) explains startup,
 components, uploads, file processing, contains/absence searches, passage review,
 saved searches and export using the interface's English labels.
+The [technology inventory](techstack.md) lists versions, roles and tradeoffs.
 
 TrayStack is a local prototype for traceable contract storage and full-text search.
 **Milestones 1–4 are implemented:** upload PDF/JPEG/PNG and UTF-8 TXT/HTML, download
@@ -18,7 +19,7 @@ metadata and multilingual evaluation examples retain their original language.
 One [unified search and review workflow](docs/unified-review.md) supports exact
 text at textual 100, always-on semantic scoring and category selection. Three
 passage state buttons — **Confirm match**, **Dismiss match**, **Unreviewed** — are
-separate from document navigation. Strong matches default to automatic confirmation
+separate from passage navigation. Strong matches default to automatic confirmation
 at 100 textual / 100 semantic; they are counted and can be revealed for review.
 Manual decisions take precedence. Three expandable document groups summarize
 confirmed, pending and no-active-match documents across the complete captured scope.
