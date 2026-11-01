@@ -32,6 +32,7 @@ for (const viewport of [
     const document = await response.json();
     await page.setViewportSize(viewport);
     await page.goto("/");
+    await page.getByText("Manage documents", { exact: true }).click();
     const row = page.locator(".document-row").filter({ hasText: title });
     const heading = page.getByRole("heading", { name: title, exact: true });
 

@@ -20,6 +20,7 @@ test("CSV and JSON download complete saved results with current filters and froz
     `${token} shall pay EUR 500 within thirty days. `.repeat(7),
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -48,9 +49,7 @@ test("CSV and JSON download complete saved results with current filters and froz
     .first()
     .getByRole("button", { name: "Keep", exact: true })
     .click();
-  await expect(card.locator(".review-status").first()).toContainText(
-    "Review: Keep",
-  );
+  await expect(page.locator(".passage-choice").first()).toContainText("Keep");
   // Unsubmitted edits and the visible occurrence page must never define the export.
   await page
     .getByLabel("Text passage", { exact: true })
@@ -121,6 +120,7 @@ test("failed exports retain results and a superseded export cannot download into
     `${token} context`,
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();

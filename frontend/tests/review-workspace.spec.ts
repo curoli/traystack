@@ -17,6 +17,7 @@ test("workspace navigation spans documents and old page boundaries with keyboard
   );
   await uploadAndProcess(page, newTitle, `${token} later context. `.repeat(7));
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -48,9 +49,7 @@ test("workspace navigation spans documents and old page boundaries with keyboard
   await expect(
     page.getByRole("progressbar", { name: "Final review decisions" }),
   ).toHaveAttribute("value", "1");
-  await detail
-    .getByRole("button", { name: "Next unreviewed", exact: true })
-    .click();
+
   await expect(detail).toContainText("Passage 8 of 14");
   await expect(
     detail.getByRole("heading", { name: oldTitle, exact: true }),
@@ -59,14 +58,12 @@ test("workspace navigation spans documents and old page boundaries with keyboard
   await expect(
     page.getByRole("progressbar", { name: "Final review decisions" }),
   ).toHaveAttribute("value", "2");
-  await detail
-    .getByRole("button", { name: "Next passage", exact: true })
-    .click();
+
   await detail
     .getByRole("button", { name: "Decide later", exact: true })
     .click();
-  await expect(detail.locator(".review-status")).toContainText(
-    "Review: Decide later",
+  await expect(page.locator(".passage-choice").nth(8)).toContainText(
+    "Decide later",
   );
   await expect(
     page.getByRole("progressbar", { name: "Final review decisions" }),
@@ -74,7 +71,7 @@ test("workspace navigation spans documents and old page boundaries with keyboard
   await page
     .getByRole("button", { name: "Refresh reviews", exact: true })
     .click();
-  await expect(detail).toContainText("Passage 9 of 14");
+  await expect(detail).toContainText("Passage 10 of 14");
   await detail
     .getByRole("button", { name: "View source text", exact: true })
     .click();
@@ -150,6 +147,7 @@ test("filtered decisions advance to the next remaining passage and final progres
     `${token} separate context. `.repeat(3),
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();

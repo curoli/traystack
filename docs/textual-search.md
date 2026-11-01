@@ -146,6 +146,7 @@ curl --fail http://localhost:8000/api/search/textual \
 | `mode` | `exact` or `normalized` |
 | `minimum_score` | Finite number, greater than 0 and at most 100; default 85 |
 | `scope` | `latest` only |
+| `ready_only` | Optional, default false for diagnostics; customer UI uses true to search only ready documents |
 | `document_id` | Optional UUID to search one document |
 | `limit`, `offset` | Document pagination, limit 1–25, default 10 |
 | `occurrence_limit` | Retained occurrences per document, 1–25, default 5 |

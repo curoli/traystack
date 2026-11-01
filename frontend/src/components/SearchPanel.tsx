@@ -7,7 +7,7 @@ import {
   type SearchResponse,
   type SearchResult,
 } from "../api";
-import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
+import SearchSource from "./SearchSource";
 
 export const searchWarnings: Record<string, string> = {
   no_revision: "No revision available yet.",
@@ -74,15 +74,6 @@ function ResultCard({
           text
         </p>
       )}
-      {result.warnings.length > 0 && (
-        <ul className="search-warnings">
-          {result.warnings.map((reason) => (
-            <li key={reason}>
-              {searchWarnings[reason] || warningLabel(reason)}
-            </li>
-          ))}
-        </ul>
-      )}
       <div className="artifact-actions">
         <button className="secondary" onClick={() => onOpen(result)}>
           {result.page_number !== null
@@ -95,42 +86,12 @@ function ResultCard({
           </a>
         )}
       </div>
-      <details className="search-provenance">
-        <summary>Source and processing status</summary>
-        <p>
-          {result.coverage ? coverageLabel[result.coverage] : "Not processed"} ·{" "}
-          {result.quality_status
-            ? qualityLabel[result.quality_status]
-            : "Quality not assessed"}
-        </p>
-        {result.pages_total !== null && (
-          <p>
-            {result.pages_processed} of {result.pages_total} pages fully
-            processed
-          </p>
-        )}
-        <p className="identifier">
-          Selected run: {result.processing_job_id || "None"}
-          <br />
-          Source: {result.artifact_id || "No selected source"}
-          <br />
-          Normalization: {result.normalization_version || "Not available yet"}
-        </p>
-        {result.latest_job?.error_message && (
-          <p className="job-error">
-            Latest run: {result.latest_job.error_message}
-          </p>
-        )}
-      </details>
     </article>
   );
 }
 
-export default function SearchPanel({
-  onOpen,
-}: {
-  onOpen: (result: SearchResult) => void;
-}) {
+export default function SearchPanel() {
+  const [source, setSource] = useState<SearchResult | null>(null);
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchRequest["mode"]>("normalized");
   const [relation, setRelation] =
@@ -145,7 +106,7 @@ export default function SearchPanel({
     setBusy(true);
     setError("");
     try {
-      const result = await searchDocuments(payload);
+      const result = await searchDocuments({ ...payload, ready_only: true });
       if (id === requestId.current) setResponse(result);
     } catch (error) {
       if (id === requestId.current)
@@ -187,9 +148,9 @@ export default function SearchPanel({
       <div className="section-heading">
         <div>
           <p className="eyebrow">FULL REVISION TEXT</p>
-          <h2 id="search-heading">Search text passages</h2>
+          <h2 id="search-heading">Find documents</h2>
         </div>
-        <span className="scope-tag">Latest revision per document</span>
+        <span className="scope-tag">Ready documents</span>
       </div>
       <form onSubmit={submit} className="search-form">
         <div className="search-query">
@@ -217,19 +178,27 @@ export default function SearchPanel({
             <option value="exact">Exact</option>
           </select>
         </div>
-        <div>
-          <label htmlFor="search-relation">Find documents</label>
-          <select
-            id="search-relation"
-            value={relation}
-            onChange={(event) =>
-              setRelation(event.target.value as SearchRequest["relation"])
-            }
-          >
-            <option value="contains">Contains the passage</option>
-            <option value="lacks">Not found in extracted text</option>
-          </select>
-        </div>
+        <fieldset className="search-goal">
+          <legend>Find documents that</legend>
+          <label>
+            <input
+              type="radio"
+              name="search-goal"
+              checked={relation === "contains"}
+              onChange={() => setRelation("contains")}
+            />{" "}
+            Contain this phrase
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="search-goal"
+              checked={relation === "lacks"}
+              onChange={() => setRelation("lacks")}
+            />{" "}
+            Do NOT contain this phrase
+          </label>
+        </fieldset>
         <button className="primary" disabled={busy || !query.trim()}>
           {busy ? "Searching …" : "Run search"}
         </button>
@@ -240,9 +209,9 @@ export default function SearchPanel({
           : "Exact search preserves case, spaces and line breaks in the extracted text."}
       </p>
       <p className="search-notice">
-        “Not found” refers to the selected extracted text. Incomplete
-        extractions or those with known quality issues are unverifiable; a
-        search result is not a legal assessment.
+        Search covers ready documents only. “Do NOT contain” checks the full
+        text for this wording; it does not decide whether an equivalent legal
+        clause exists.
       </p>
       {busy && (
         <p role="status" className="job-progress">
@@ -254,6 +223,9 @@ export default function SearchPanel({
           {error}
         </p>
       )}
+      {source && (
+        <SearchSource source={source} onClose={() => setSource(null)} />
+      )}
       {response && (
         <div className="search-response" aria-busy={busy}>
           <p className="search-query-summary">
@@ -261,23 +233,22 @@ export default function SearchPanel({
             {response.mode === "exact" ? "Exact" : "Normalized"} ·{" "}
             {response.relation === "contains"
               ? "Contains"
-              : "Not found in extracted text"}
+              : "Documents without this phrase"}
           </p>
           <p className="fineprint">
             {response.summary.documents_total} documents in scope ·{" "}
             {response.summary.found} found ·{" "}
-            {response.summary.not_found_in_processed_text} not found in
-            processed text · {response.summary.unverifiable} unverifiable
+            {response.summary.not_found_in_processed_text} without the phrase
           </p>
           <p className="fineprint">
-            Snapshot taken at {formatDate(response.searched_at)}. Run the search
-            again after reprocessing.
+            Results from {formatDate(response.searched_at)}. Run the search
+            again to include changes.
           </p>
           <section aria-label="Search results">
             <h3>
               {response.relation === "contains"
                 ? "Documents found"
-                : "Not found in extracted text"}{" "}
+                : "Documents without this phrase"}{" "}
               ({response.total})
             </h3>
             {response.results.length ? (
@@ -285,7 +256,7 @@ export default function SearchPanel({
                 <ResultCard
                   key={result.document_id}
                   result={result}
-                  onOpen={onOpen}
+                  onOpen={(result) => setSource({ ...result })}
                 />
               ))
             ) : (
@@ -320,61 +291,6 @@ export default function SearchPanel({
                 onClick={() => paginate("results", response.limit)}
               >
                 Next results
-              </button>
-            </nav>
-          </section>
-          <section
-            className="search-unknown"
-            aria-label="Unverifiable documents"
-          >
-            <h3>Unverifiable ({response.unverifiable_total})</h3>
-            {response.unverifiable.length ? (
-              response.unverifiable.map((result) => (
-                <ResultCard
-                  key={result.document_id}
-                  result={result}
-                  onOpen={onOpen}
-                />
-              ))
-            ) : (
-              <p className="search-empty">
-                {response.unverifiable_total > 0
-                  ? "This results page is empty after an update. Go back a page or run the search again."
-                  : "No unverifiable documents in this search scope."}
-              </p>
-            )}
-            <nav className="pagination" aria-label="Unverifiable pages">
-              <button
-                className="secondary"
-                disabled={busy || response.unverifiable_offset === 0}
-                onClick={() =>
-                  paginate("unverifiable", -response.unverifiable_limit)
-                }
-              >
-                Previous unverifiable
-              </button>
-              <span>
-                {response.unverifiable.length
-                  ? response.unverifiable_offset + 1
-                  : 0}
-                –
-                {response.unverifiable.length
-                  ? response.unverifiable_offset + response.unverifiable.length
-                  : 0}{" "}
-                of {response.unverifiable_total}
-              </span>
-              <button
-                className="secondary"
-                disabled={
-                  busy ||
-                  response.unverifiable_offset + response.unverifiable_limit >=
-                    response.unverifiable_total
-                }
-                onClick={() =>
-                  paginate("unverifiable", response.unverifiable_limit)
-                }
-              >
-                Next unverifiable
               </button>
             </nav>
           </section>

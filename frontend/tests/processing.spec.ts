@@ -11,6 +11,7 @@ for (const fixture of [
   }) => {
     const title = `Processing demo ${fixture.file} ${Date.now()}`;
     await page.goto("/");
+    await page.getByText("Manage documents", { exact: true }).click();
     await page.getByLabel("Title", { exact: true }).fill(title);
     await page
       .getByLabel("Original file", { exact: true })

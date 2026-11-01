@@ -69,9 +69,8 @@ export default function SavedSource({
       aria-label="Saved source text"
     >
       <h3>Saved source text</h3>
-      <p className="message warning">
-        This is the extraction preserved with the saved search. The current
-        document may have been reprocessed since then.
+      <p className="fineprint">
+        Document text preserved with this saved search.
       </p>
       <button className="secondary" onClick={onClose}>
         Close saved text
@@ -84,21 +83,24 @@ export default function SavedSource({
       {!text && !error && <p role="status">Loading saved text …</p>}
       {text && (
         <>
-          <p>
-            {coverageLabel[text.status]} · {qualityLabel[text.quality_status]}
-          </p>
-          {text.quality_warnings.map((reason) => (
-            <p className="fineprint" key={reason}>
-              {warningLabel(reason)}
+          <details>
+            <summary>Source details</summary>
+            <p>
+              {coverageLabel[text.status]} · {qualityLabel[text.quality_status]}
             </p>
-          ))}
-          <p className="identifier">
-            Processing run: {text.processing_job_id}
-            <br />
-            Source: {text.source_artifact_id}
-            <br />
-            Normalization: {text.normalization_version}
-          </p>
+            {text.quality_warnings.map((reason) => (
+              <p className="fineprint" key={reason}>
+                {warningLabel(reason)}
+              </p>
+            ))}
+            <p className="identifier">
+              Processing run: {text.processing_job_id}
+              <br />
+              Source: {text.source_artifact_id}
+              <br />
+              Normalization: {text.normalization_version}
+            </p>
+          </details>
           <a className="download" href={artifactUrl(text.source_artifact_id)}>
             Download original ↓
           </a>
@@ -116,31 +118,6 @@ export default function SavedSource({
           </select>
           {selected && (
             <>
-              <p className="fineprint">
-                {selected.extraction_method === "plain_text" ||
-                selected.extraction_method === "html_text"
-                  ? "Logical text page"
-                  : selected.extraction_method === "ocr"
-                    ? "Tesseract OCR"
-                    : selected.extraction_method === "embedded_pdf_text"
-                      ? "Embedded PDF text"
-                      : "Extraction unavailable"}
-                {selected.confidence !== null &&
-                  ` · Mean OCR word score: ${selected.confidence.toFixed(1)}/100 (not a probability)`}
-              </p>
-              <p className="fineprint">
-                {coverageLabel[selected.status as keyof typeof coverageLabel] ??
-                  selected.status}{" "}
-                ·{" "}
-                {qualityLabel[
-                  selected.quality_status as keyof typeof qualityLabel
-                ] ?? selected.quality_status}
-              </p>
-              {selected.quality_warnings.map((reason) => (
-                <p className="fineprint" key={reason}>
-                  {warningLabel(reason)}
-                </p>
-              ))}
               <pre className="text-preview">
                 {selected.text || "No text was detected on this page."}
               </pre>

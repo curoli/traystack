@@ -44,7 +44,7 @@ async function process(request: APIRequestContext, revisionId: string) {
   return job;
 }
 
-test("real full-text search separates negative and unverifiable results and opens source pages", async ({
+test("ready-only full-text search finds presence and absence and opens source text", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -73,6 +73,7 @@ test("real full-text search separates negative and unverifiable results and open
   for (const document of [positive, negative, review])
     await process(page.request, document.revisions[0].id);
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByLabel("Text passage", { exact: true })
     .fill("THE receiving party\n shall not disclose confidential information");
@@ -115,17 +116,19 @@ test("real full-text search separates negative and unverifiable results and open
     await expect(viewer.locator("pre")).toContainText("shall not disclose");
   }
 
-  await page.getByLabel("Find documents").selectOption("lacks");
+  await page
+    .getByRole("radio", { name: "Do NOT contain this phrase", exact: true })
+    .check();
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(hits).toContainText(negative.title);
   await expect(hits).not.toContainText(review.title);
   await expect(hits).not.toContainText(pending.title);
-  await expect(unknown).toContainText(review.title);
-  await expect(unknown).toContainText(pending.title);
-  await expect(unknown).toContainText("No selected text yet");
+  await expect(unknown).toHaveCount(0);
 
   await page.getByLabel("Search mode").selectOption("exact");
-  await page.getByLabel("Find documents").selectOption("contains");
+  await page
+    .getByRole("radio", { name: "Contain this phrase", exact: true })
+    .check();
   await page
     .getByLabel("Text passage", { exact: true })
     .fill(PHRASE.toLowerCase());
@@ -138,9 +141,7 @@ test("real full-text search separates negative and unverifiable results and open
   await expect(card).toBeVisible();
   await process(page.request, positive.revisions[0].id); // Change the selected run after the search snapshot.
   await card.getByRole("button", { name: "View page 1" }).click();
-  await expect(page.locator(".details").getByRole("alert")).toContainText(
-    "changed since the search",
-  );
+  await expect(viewer.getByRole("alert")).toContainText("document has changed");
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
     await page.evaluate(
@@ -209,6 +210,7 @@ test("search highlighting respects code-point offsets before non-BMP characters"
     }),
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page.getByLabel("Text passage", { exact: true }).fill("target");
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.locator(".search-snippet mark")).toHaveText("target");

@@ -12,6 +12,7 @@ class SearchRequest(BaseModel):
 
     query: str = Field(min_length=1, max_length=2000)
     mode: Literal["exact", "normalized"] = "normalized"
+    ready_only: bool = False
     relation: Literal["contains", "lacks"] = "contains"
     scope: Literal["latest"] = "latest"
     limit: int = Field(default=25, ge=1, le=100)

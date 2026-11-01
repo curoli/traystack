@@ -15,7 +15,7 @@ import {
   type SearchTarget,
   type TextualSearchResponse,
 } from "../api";
-import { Occurrence, Provenance, reviewLabels } from "./PassageDetails";
+import { Occurrence, reviewLabels } from "./PassageDetails";
 
 export default function ReviewWorkspace({
   response,
@@ -226,16 +226,18 @@ export default function ReviewWorkspace({
       };
       setData(next);
       onChange(next);
-      if (data.review_filter !== "all" && decision !== data.review_filter) {
-        setSelected(Math.min(selected, Math.max(0, remaining - 1)));
+      if (data.review_filter === "all" || decision !== data.review_filter) {
+        const nextIndex =
+          data.review_filter === "all"
+            ? Math.min(selected + 1, remaining - 1)
+            : Math.min(selected, Math.max(0, remaining - 1));
+        setSelected(Math.max(0, nextIndex));
         const flat = results.flatMap((group) => group.occurrences);
-        onSelectionChange(
-          flat[Math.min(selected, Math.max(0, remaining - 1))]?.occurrence_id ??
-            null,
-        );
-        requestAnimationFrame(() =>
-          detail.current?.focus({ preventScroll: true }),
-        );
+        onSelectionChange(flat[Math.max(0, nextIndex)]?.occurrence_id ?? null);
+        requestAnimationFrame(() => {
+          detail.current?.focus({ preventScroll: true });
+          detail.current?.scrollIntoView({ block: "start" });
+        });
       }
     } catch (error) {
       if (alive.current)
@@ -352,7 +354,6 @@ export default function ReviewWorkspace({
                 ? "Logical text section"
                 : `Pages: ${active.occurrence.page_numbers.join(", ") || "unavailable"}`}
             </p>
-            <Provenance document={active.document} />
             <Occurrence
               occurrence={active.occurrence}
               mode={response.mode}

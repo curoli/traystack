@@ -69,6 +69,7 @@ test("a contract batch supports source inspection, material differences and save
     )
     .toBe(true);
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();

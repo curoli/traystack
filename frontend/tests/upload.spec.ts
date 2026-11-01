@@ -19,6 +19,7 @@ test("upload, inspect, reload and download identical original bytes", async ({
   const sha = createHash("sha256").update(original).digest("hex");
   const title = `Kündigung – Straße ${Date.now()}`;
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page).toHaveTitle("TrayStack · Contract library");
   await page.getByLabel("Title", { exact: true }).fill(title);
@@ -55,6 +56,7 @@ test("upload, inspect, reload and download identical original bytes", async ({
     page.getByText("Not processed yet · Flagged for manual review"),
   ).toBeVisible();
   await page.reload();
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .locator(".document-list")
     .getByRole("button", { name: new RegExp(title) })
@@ -107,6 +109,7 @@ test("API explorer renders the current schema without a CDN", async ({
 
 test("invalid upload shows the real API error in English", async ({ page }) => {
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page.getByLabel("Title", { exact: true }).fill("Invalid file demo");
   await page.getByLabel("Original file", { exact: true }).setInputFiles({
     name: "invalid.pdf",
@@ -131,6 +134,7 @@ test("network and validation failures have English fallback messages", async ({
     }),
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await expect(page.getByRole("alert")).toHaveText(
     "Unable to reach the server. Please check your connection and try again.",
   );

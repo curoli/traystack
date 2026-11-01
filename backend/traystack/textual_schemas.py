@@ -22,6 +22,7 @@ class TextualAssessmentRequest(BaseModel):
 
 
 class TextualSearchRequest(TextualAssessmentRequest):
+    ready_only: bool = False
     review_filter: ReviewFilter = "all"
     minimum_semantic_score: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
     scope: Literal["latest"] = "latest"

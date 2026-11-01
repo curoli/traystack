@@ -43,7 +43,9 @@ def textual_snapshot(
     column = (
         RevisionText.normalized_text if request.mode == "normalized" else RevisionText.plain_text
     )
-    statement = selected_scope(phrase, column).add_columns(column.label("search_text"))
+    statement = selected_scope(phrase, column, ready_only=request.ready_only).add_columns(
+        column.label("search_text")
+    )
     if request.document_id is not None:
         statement = statement.where(Document.id == request.document_id)
     legacy_request = SearchRequest(query=request.query, mode=request.mode)

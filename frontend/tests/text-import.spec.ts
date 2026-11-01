@@ -17,6 +17,7 @@ for (const format of ["txt", "html"]) {
         unwanted.push(request.url());
     });
     await page.goto("/");
+    await page.getByText("Manage documents", { exact: true }).click();
     await page.getByLabel("Title", { exact: true }).fill(title);
     await page.getByLabel("Original file", { exact: true }).setInputFiles({
       name: `synthetic.${format}`,

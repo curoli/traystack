@@ -12,6 +12,7 @@ test("textual matches show differences, navigate occurrences and retain submitte
   const text = `Start of synthetic document.\n${Array.from({ length: 7 }, (_, index) => `${query}.\nSeparate background paragraph number ${index}.`).join("\n")}\nThe receiving party shall disclose confidential information.\nEnd.`;
   const document = await uploadAndProcess(page, title, text);
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -90,6 +91,7 @@ test("zero is blocked, scope can be narrowed, and exact mode is preserved", asyn
     "An unrelated shipping note is stored here.",
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -159,6 +161,7 @@ test("too many real passages abort without partial results and can be refined", 
     `${(token + " ").repeat(251)}${ending}`,
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -192,6 +195,7 @@ test("a failed workspace load offers retry without showing partial passages", as
   const token = `WorkspaceFailure${Date.now()}`;
   await uploadAndProcess(page, token, `${token} context`);
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -224,6 +228,7 @@ test("a delayed workspace failure cannot clear a newer search", async ({
   const next = `NewWorkspace${Date.now()}`;
   await uploadAndProcess(page, old, `${old} context ${next}`);
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -289,6 +294,7 @@ test("local semantic scores filter actual passages and preserve submitted naviga
       `${query.replace("500", "5000")}.`,
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -368,6 +374,7 @@ test("semantic validation and unavailable-model errors never show textual result
   page,
 }) => {
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();

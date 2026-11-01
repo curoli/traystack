@@ -15,10 +15,10 @@ import {
   type TextualSearchResponse,
 } from "../api";
 import { formatDate } from "../format";
-import SavedSearches, { SavedScope } from "./SavedSearches";
+import SavedSearches from "./SavedSearches";
 import SavedSource, { type SavedSourceLocation } from "./SavedSource";
 import ReviewWorkspace from "./ReviewWorkspace";
-import { Provenance, reviewLabels } from "./PassageDetails";
+import { reviewLabels } from "./PassageDetails";
 import SearchRunExport from "./SearchRunExport";
 
 function QueryGuidance({
@@ -310,25 +310,6 @@ export default function TextualSearchPanel({
       document_id: onlyOpenDocument ? scopeDocument!.id : undefined,
     });
   }
-  function paginate(group: "results" | "unsearchable", delta: number) {
-    if (!response) return;
-    void run(
-      {
-        query: response.query,
-        mode: response.mode,
-        minimum_score: response.minimum_score,
-        minimum_semantic_score: response.minimum_semantic_score,
-        review_filter: response.review_filter,
-        document_id: response.document_id ?? undefined,
-        limit: response.limit,
-        offset: response.offset + (group === "results" ? delta : 0),
-        unsearchable_limit: response.unsearchable_limit,
-        unsearchable_offset:
-          response.unsearchable_offset + (group === "unsearchable" ? delta : 0),
-      },
-      response.run_id ?? undefined,
-    );
-  }
   return (
     <section
       className="panel search-panel textual-search-panel"
@@ -339,7 +320,7 @@ export default function TextualSearchPanel({
           <p className="eyebrow">COMPARE WORDING</p>
           <h2 id="textual-search-heading">Find similar passages</h2>
         </div>
-        <span className="scope-tag">Latest revision per document</span>
+        <span className="scope-tag">Ready documents</span>
       </div>
       <SavedSearches
         generation={historyGeneration}
@@ -614,7 +595,6 @@ export default function TextualSearchPanel({
               >
                 Refresh reviews
               </button>
-              <SavedScope key={response.run_id} id={response.run_id} />
               <SearchRunExport
                 key={`export:${response.run_id}`}
                 runId={response.run_id}
@@ -698,7 +678,7 @@ export default function TextualSearchPanel({
             {response.total} with candidate passages ·{" "}
             {response.summary.occurrences_total} passages ·{" "}
             {response.summary.documents_without_matches} without a match for
-            these filters · {response.unsearchable_total} unsearchable
+            these filters
           </p>
           {response.semantic && (
             <details className="search-provenance">
@@ -719,8 +699,8 @@ export default function TextualSearchPanel({
             </details>
           )}
           <p className="fineprint">
-            Snapshot taken at {formatDate(response.searched_at)}. Rerun after
-            processing changes only when you want a new run.
+            Results from {formatDate(response.searched_at)}. Run again to create
+            a new result set.
           </p>
           <section aria-label="Similar passage results">
             <ReviewWorkspace
@@ -773,75 +753,6 @@ export default function TextualSearchPanel({
                 else onOpen(target);
               }}
             />
-          </section>
-          <section
-            className="search-unknown"
-            aria-label="Unsearchable documents"
-          >
-            <h3>Unsearchable ({response.unsearchable_total})</h3>
-            <p className="fineprint">
-              No selected text, no usable text, or unsupported normalization.
-              These documents were not treated as missing the passage.
-            </p>
-            {response.unsearchable.map((document) => (
-              <article
-                className="search-result uncertain"
-                key={document.document_id}
-              >
-                <h4>{document.title}</h4>
-                <Provenance document={document} />
-                <button
-                  className="secondary"
-                  onClick={() => onOpen({ ...document, page_number: null })}
-                >
-                  {response.run_id ? "Open current document" : "Open document"}
-                </button>
-              </article>
-            ))}
-            {!response.unsearchable.length && (
-              <p>
-                {response.unsearchable_total
-                  ? "This page is empty after an update. Go back or run the search again."
-                  : "No unsearchable documents in this scope."}
-              </p>
-            )}
-            <nav
-              className="pagination"
-              aria-label="Unsearchable document pages"
-            >
-              <button
-                className="secondary"
-                disabled={busy || response.unsearchable_offset === 0}
-                onClick={() =>
-                  paginate("unsearchable", -response.unsearchable_limit)
-                }
-              >
-                Previous unsearchable
-              </button>
-              <span>
-                {response.unsearchable.length
-                  ? response.unsearchable_offset + 1
-                  : 0}
-                –
-                {response.unsearchable.length
-                  ? response.unsearchable_offset + response.unsearchable.length
-                  : 0}{" "}
-                of {response.unsearchable_total}
-              </span>
-              <button
-                className="secondary"
-                disabled={
-                  busy ||
-                  response.unsearchable_offset + response.unsearchable_limit >=
-                    response.unsearchable_total
-                }
-                onClick={() =>
-                  paginate("unsearchable", response.unsearchable_limit)
-                }
-              >
-                Next unsearchable
-              </button>
-            </nav>
           </section>
           <details className="search-provenance">
             <summary>Scoring method</summary>
