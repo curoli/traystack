@@ -7,7 +7,7 @@ from test_reviews import command
 from test_search import indexed
 
 from traystack.api import search_runs as api
-from traystack.models import PassageReview
+from traystack.models import Document, PassageReview
 
 pytestmark = pytest.mark.integration
 
@@ -148,6 +148,43 @@ def test_categories_filter_before_scope_capture_and_do_not_rewrite_old_runs(clie
         ).status_code
         == 422
     )
+
+
+def test_legacy_category_types_have_disjoint_saved_scopes(client, monkeypatch):
+    expected = {}
+    for title, metadata in [
+        ("String number", {"category": "1"}),
+        ("Legacy number", {"category": 1}),
+        ("String boolean", {"category": "true"}),
+        ("Legacy boolean", {"category": True}),
+        ("Legacy array", {"category": ["1"]}),
+        ("Legacy object", {"category": {"value": "1"}}),
+        ("Null", {"category": None}),
+        ("Empty", {"category": ""}),
+        ("Missing", {}),
+    ]:
+        source = indexed(client, title, ["target phrase"])
+        with client.app.state.session_factory.begin() as session:
+            session.get(Document, source["document_id"]).metadata_json = metadata
+        expected[title] = str(source["document_id"])
+
+    assert client.get("/api/categories").json()["items"] == ["1", "true"]
+    scopes = []
+    for selection, titles in [
+        ({"category": "1"}, {"String number"}),
+        ({"category": "true"}, {"String boolean"}),
+        ({"uncategorized": True}, set(expected) - {"String number", "String boolean"}),
+    ]:
+        saved = run(client, monkeypatch, **selection)
+        assert saved["scope_total"] == len(titles)
+        assert saved["summary"]["documents_searched"] == len(titles)
+        current = workspace(client, saved)
+        identities = {row["document"]["document_id"] for row in current["document_outcomes"]}
+        assert identities == {expected[title] for title in titles}
+        assert {group["document"]["document_id"] for group in current["results"]} == identities
+        assert all(not identities.intersection(previous) for previous in scopes)
+        scopes.append(identities)
+    assert set.union(*scopes) == set(expected.values())
 
 
 def test_upload_category_roundtrip_validation_and_metadata_preservation(client):

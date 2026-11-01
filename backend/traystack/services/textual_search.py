@@ -48,7 +48,8 @@ def textual_snapshot(
     )
     if request.category is not None:
         statement = statement.where(
-            Document.metadata_json["category"].as_string() == request.category
+            func.jsonb_typeof(Document.metadata_json["category"]) == "string",
+            Document.metadata_json["category"].as_string() == request.category,
         )
     if request.uncategorized:
         statement = statement.where(
