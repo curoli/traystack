@@ -1,111 +1,76 @@
-# Entscheidungen
+# Engineering decisions
 
-- **Abgeschlossener lokaler Core:** Meilenstein 4 ergänzt eine ausführbare
-  Demo-Prüfung und einen Präsentations-/Einführungsplan. Azure, SharePoint,
-  Handschriftevaluation und Nutzerpilot bleiben ausgewiesene Vorschläge.
-  Der [Produktionsentwurf](production.md) vergleicht Microsoft-Alternativen;
-  weder ein Suchcluster noch ein Cloud-/LLM-Dienst wird dafür zur Laufzeit eingeführt.
-- **Schmaler erster Durchstich:** Ein kombinierter Upload legt Dokument, Revision 1
-  und Original an. Weitere Revisionen und Repräsentationen bleiben im Datenmodell
-  möglich; ihre Schreib-APIs und komfortable Verwaltung folgen später.
-- **PostgreSQL von Anfang an:** JSONB, Fremdschlüssel und echte Migrationen werden
-  gegen PostgreSQL geprüft. Die erste textuelle Ähnlichkeitssuche scannt begrenzte
-  vollständige Textbestände mit RapidFuzz. Ein `pg_trgm`-Kandidatenindex und
-  persistierte Suchsegmente bleiben einer gemessenen Optimierung vorbehalten.
-- **Originalbytes und Herkunft:** Dateiname ist ein bereinigtes Anzeigefeld,
-  niemals ein Dateipfad. SHA-256 adressiert Inhalt, die Artefakt-ID dessen konkrete
-  Herkunft. Inhaltsgleiche Uploads werden nicht als dasselbe Dokument behandelt.
-- **Lokale Ablage:** Der API-Container läuft ohne root-Rechte. Ein benanntes Volume
-  hält Originalbytes; ein späterer Blob-Storage-Adapter kann die Ablage ersetzen.
-  Die tatsächliche Storage-Schnittstelle bietet Stream-/Byte-Ablage und Abruf.
-- **Ehrlicher Status:** Ein erfolgreicher Upload ist keine erfolgreiche Extraktion.
-  Jobstatus, Seitenabdeckung und Qualität sind getrennt. Eine Prüfvormerkung bleibt
-  auch bei vollständig verarbeitetem Text sichtbar und wird für dieselbe Quelle
-  nicht automatisch zurückgenommen; daraus wird kein Qualitätssiegel abgeleitet.
-- **Lokale API-Dokumentation:** Swagger-JavaScript und CSS kommen aus einer
-  installierten Abhängigkeit statt aus einem CDN. Der Core braucht nach dem Build
-  keine externen Dienste.
-- **Suchprinzip:** Exact/normalized prüfen den ganzen
-  ausgewählten Text. Fehlende oder fragwürdige Extraktion wird unverifizierbar;
-  ein Treffer wird mit Quelle belegt. Textuelle Ähnlichkeit hat einen separaten
-  positiven Kandidatenablauf; sie und eine spätere semantische Ähnlichkeit sind
-  keine Beweise für Abwesenheit.
-
-- **Ein Job ist ein Lauf:** Pro Revision genau ein aktiver Lauf, transaktional
-  beansprucht. Wiederholung erstellt einen neuen Datensatz. Alte Artefakte bleiben
-  erhalten; erst die abgeschlossene Veröffentlichung wechselt den ausgewählten Text.
-- **Einfache Warteschlange:** PostgreSQL reicht für diesen lokalen Prototyp.
-  Ein eigener Worker hält OCR außerhalb von HTTP-Anfragen. Ein hart abgebrochener
-  Lauf erfordert explizite Wiederherstellung statt einer riskanten automatischen
-  Zeitüberschreitung mit eventuell noch arbeitendem Vorgänger.
-- **Konservative Extraktion:** Jede PDF-Seite mit Rasterbildern wird als Ganzes
-  OCRt, auch wenn eine Textschicht vorhanden ist. Das verhindert, dass ein Header
-  den unlesenen Scaninhalt verdeckt. Hochwertige Mischlayouts könnten später gezielt
-  kombiniert werden. Leere Seiten werden vorerst zur Prüfung markiert.
-- **Qualitätsheuristik v1:** Weniger als zehn alphanumerische Zeichen,
-  Unicode-Ersatzzeichen oder mehr als max(5, 8 Prozent der Zeichen) ungewöhnliche
-  Zeichen erzeugen Prüfbedarf. Bei OCR gelten ein mittlerer Wortscore unter 80/100
-  oder mehr als 20 Prozent Wörter unter 50/100 als Auffälligkeit. Fehlende
-  Konfidenzwerte erzeugen ebenfalls Prüfbedarf. Die Werte sind keine kalibrierten
-  Wahrscheinlichkeiten und keine Garantie für Handschrift oder korrektes Wording.
-- **Stabile Normalisierung:** NFC und Whitespace-/Casefold-Regeln behalten rechtlich
-  bedeutsame Zeichen bei. Mehrdeutige Silbentrennungen werden nicht repariert.
-  Unicode-Casefold kann Zeichen erweitern; deshalb referenzieren Seitenoffsets
-  ausdrücklich den normalisierten Text und keine geratenen Rohtextpositionen.
-
-- **Ein gemeinsamer Such-Snapshot:** Die neueste Revision wird unabhängig vom
-  Verarbeitungszustand gewählt. PostgreSQL prüft den gesamten ausgewählten Text
-  per `strpos`; eine Read-only-Transaktion mit `REPEATABLE READ` hält Zählungen,
-  Herkunft, Ausschnitte und Seitenpositionen konsistent. Unverifizierbare Dokumente
-  haben eigene Pagination und werden nie in negativen Treffern versteckt.
-- **Erste Fundstelle pro Dokument:** Dokumente sind die Einheit der Ergebnisliste,
-  kein Ranking über Textsegmente. Alle Offsets nennen ihren Roh-/Normaltextbezug
-  und sind Unicode-Codepoints. Seiten und Originale sind aufrufbar; geänderte
-  ausgewählte Läufe lösen einen Hinweis zur erneuten Suche aus.
-
-- **Suchsteuerung vor Semantik:** Textuelle Schwelle 0 wird abgelehnt. Ein gemeinsam
-  verwendetes Query-Assessment erklärt längenabhängige Edit-Budgets und einfache
-  Risikohinweise, ohne einen statistisch sicheren Mindestwert zu behaupten.
-  Fundstellenanzahl/-dichte und Ressourcenbudgets können einen Lauf abbrechen;
-  dann wird keine Teilmenge als fertiges Suchergebnis ausgegeben. Die Oberfläche
-  verändert keine Schwelle automatisch und kann auf das offene Dokument eingrenzen.
-
-- **Semantik nach konkreten Fundstellen:** Ein lokales, fest versioniertes
-  MiniLM-ONNX-Modell bewertet erst textuell gefundene Passagen. Embeddings entstehen
-  bei Bedarf und werden nach Textinhalt und Pipeline-Version wiederverwendet.
-  Kontext wird angezeigt, aber nicht in den Passagenscore eingemischt. Semantische
-  Filterung erfolgt vor Pagination und Zählung; textuelle Rangfolge bleibt erhalten.
-  100 bedeutet ausdrücklich identischen Vergleichstext, niedrigere Scores sind
-  keine Wahrscheinlichkeiten oder juristische Äquivalenz. Überlange Modelleingaben
-  werden abgelehnt statt abgeschnitten. Feste Singleton-Eingaben verhindern, dass
-  dynamische INT8-Quantisierung vom übrigen Batch oder Cache-Zustand abhängt.
-  Grenzen und Messbeispiele stehen in [semantic-search.md](semantic-search.md).
-
-- **Prüfentscheidungen pro Fundstelle und Ausdruck:** Keep, Dismiss und Decide
-  later werden getrennt von Not reviewed gespeichert. Identität folgt dem
-  Verarbeitungslauf, Modus, effektiven Suchausdruck und den vorhandenen
-  Fundstellenregeln; Schwellen und semantisches Modell sind keine menschliche
-  Entscheidungsidentität. Explizite Resets behalten eine Versionsnummer gegen
-  veraltete Schreibversuche. Statusfilter wirken nach beiden Ähnlichkeitsfiltern
-  und vor Pagination; Zähler zeigen den Bestand vor dem Statusfilter. Ein neuer
-  Lauf erhält neue Fundstellenidentitäten. Die lokale Anwendung teilt aktuelle
-  Entscheidungen ohne Reviewer-Konten oder vollständiges Ereignis-Audit.
-
-- **Gemessene Optimierung mit unveränderter Treffersemantik:** Ein begrenzter
-  gemischter Bestand trennt textuelle Suche, Modellinitialisierung, neue Embeddings,
-  Cache-Treffer und HTTP-Gesamtzeit. Vorberechnete Wortpositionen und konservative
-  Längenprüfung sparen Arbeit in der Python-Schleife; vollständige Cache-Treffer
-  vermeiden einen Verzeichnisscan. Scores, Fundstellen und Budgetverbrauch werden
-  gegen den bisherigen Stand verglichen. Messung und Grenzen stehen in
-  [search-performance.md](search-performance.md); der gesamte Originalkorpus und
-  ein neuer Kandidatenindex sind damit noch nicht bewertet.
-
-- **Suchergebnisse dauerhaft als vollständige Momentaufnahme:** Ein gespeicherter
-  Ausdruck allein reproduziert nach Neuverarbeitung oder Bestandsänderung nicht
-  dieselben Treffer. Deshalb speichert jeder erfolgreiche UI-Suchlauf die komplette
-  Menge nach beiden Ähnlichkeitsfiltern, vor Review-Filter und Pagination, samt
-  damaligem Scope und einmal pro Job archiviertem Text. Wiederöffnen liest diese
-  Daten ohne Matcher/Modell; Run again erstellt eine verknüpfte neue Momentaufnahme.
-  Aktuelle Bewertungen bleiben bearbeitbar, der Erfassungszustand separat erhalten.
-  Atomare Persistenz und explizite Größenlimits verhindern gespeicherte Teilmengen.
-  Einzelheiten und Aufbewahrungsgrenzen: [saved-search-runs.md](saved-search-runs.md).
+- **Completed local core:** milestone 4 added executable demo checks and an
+  introduction/presentation plan. Azure, SharePoint, real-handwriting evaluation
+  and the user pilot remain proposals. The [production design](production.md)
+  compares Microsoft alternatives without adding runtime cloud/LLM/search services.
+- **Small first vertical slice:** combined upload creates a document, revision 1
+  and original. Further revisions/representations fit the model; convenient write
+  APIs and management UI remain future work.
+- **PostgreSQL from the start:** JSONB, foreign keys and migrations are tested on
+  PostgreSQL. Initial fuzzy retrieval scans bounded full text with RapidFuzz;
+  `pg_trgm` and persisted segments require measured justification.
+- **Originals and provenance:** sanitized filenames are display fields, never
+  storage paths. SHA-256 addresses contents; artifact IDs identify provenance.
+  Equal upload bytes do not imply the same logical contract.
+- **Local storage:** API runs without root; a named volume stores originals. The
+  stream/byte storage interface permits a future blob adapter, not yet implemented.
+- **Honest status:** upload is not extraction. Job, coverage and quality remain
+  separate. Review flags survive complete extraction and later runs of the same
+  source; they are not automatically cleared or treated as quality approval.
+- **Local API documentation:** packaged Swagger assets replace CDN dependencies;
+  the core requires no external services after build.
+- **Search contract:** exact/normalized examine all selected text. Missing or
+  questionable extraction is unverifiable; positives have source evidence.
+  Textual and semantic similarity retrieve positive candidates, never prove absence.
+- **One job is one run:** one active job per revision, claimed transactionally.
+  Retry creates another record. Old artifacts remain; only completed publication
+  changes selected text.
+- **Simple queue:** PostgreSQL is sufficient for the local prototype. A separate
+  worker keeps OCR outside HTTP. Hard crashes require explicit recovery rather
+  than unsafe timed takeover while a predecessor may still be running.
+- **Conservative extraction:** whole PDF pages containing raster images use OCR,
+  even with embedded text, avoiding unread scans hidden by headers. Combining
+  high-quality mixed-layout regions may be future work. Empty pages require review.
+- **Quality heuristic v1:** fewer than ten alphanumeric characters, replacement
+  characters, or more than max(5, 8% of characters) unusual characters flag review.
+  OCR flags a mean word score below 80/100 or over 20% of words below 50/100;
+  missing confidence also flags review. These are not calibrated probabilities or
+  handwriting/wording guarantees.
+- **Stable normalization:** NFC, whitespace and casefold retain legally meaningful
+  characters; ambiguous hyphenation is not repaired. Casefold can expand characters,
+  so page offsets explicitly refer to normalized text, not guessed raw positions.
+- **One search snapshot:** latest revision is chosen regardless of processing.
+  PostgreSQL `strpos` and read-only REPEATABLE READ keep counts, snippets, provenance
+  and page references consistent. Unverifiable documents have separate pagination.
+- **First literal occurrence per document:** results count documents rather than
+  ranked segments. Offsets specify raw/normalized Unicode code points. Changed
+  selected text asks users to rerun rather than attaching evidence to new content.
+- **Control before semantics:** textual zero is rejected. Shared query assessment
+  illustrates length-dependent edit budgets and risk without claiming a safe
+  learned threshold. Occurrence/density/compute limits abort without successful
+  subsets. The UI never raises thresholds silently and can narrow to one document.
+- **Semantics after concrete passages:** pinned local MiniLM ONNX embeds retrieved
+  passages on demand and caches by text/pipeline. Context is displayed but not
+  embedded. Filtering precedes counts/pagination and keeps textual ranking.
+  Semantic 100 explicitly requires identity; lower scores are not legal confidence.
+  Overlong input is rejected, not truncated. Fixed singleton inputs avoid dynamic
+  INT8 dependence on batch/cache state. See [semantic rules](semantic-search.md).
+- **Decisions per expression and occurrence:** Keep/Dismiss/Later are distinct from
+  Not reviewed. Identity uses job, mode, effective query and occurrence policy;
+  thresholds/model are not human-decision identity. Resets retain versions to block
+  stale writes. Counts precede review filtering; new processing IDs get new
+  occurrences. Decisions are shared, without accounts or complete event audit.
+- **Measured optimization with unchanged results:** a bounded mixed collection
+  separates matching, model startup, new embeddings, cache hits and HTTP time.
+  Prepared word positions and conservative length pruning reduce Python work;
+  complete cache hits avoid directory scans. Compare scores/occurrences/budget
+  usage against baseline. [Measurements](search-performance.md) do not evaluate
+  the full original corpus or establish recall of a new candidate index.
+- **Durable full result snapshots:** saved parameters alone cannot reproduce old
+  results after reprocessing/library changes. Successful UI runs save all matches
+  after both similarity filters, before review filtering/pagination, with scope and
+  deduplicated per-job source text. Reopen without matching/models; Run again creates
+  a linked new snapshot. Current reviews stay editable and capture-time state is
+  retained. Atomic writes and explicit caps prevent partial saves. See
+  [saved searches](saved-search-runs.md).

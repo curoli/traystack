@@ -1,8 +1,8 @@
-# Volltextsuche — Meilenstein 3
+# Full-text search — milestone 3
 
-`POST /api/search` prüft den gesamten ausgewählten Text der **neuesten Revision
-jedes Dokuments**. Eine neuere unverarbeitete Revision fällt nicht auf einen
-älteren Suchindex zurück. Dokumente ohne Revision sind ebenfalls unverifizierbar.
+`POST /api/search` checks all selected text from the **latest revision of each
+document**. An unprocessed newer revision never falls back to an older index.
+Documents without revisions are also unverifiable.
 
 ```json
 {
@@ -17,83 +17,73 @@ jedes Dokuments**. Eine neuere unverarbeitete Revision fällt nicht auf einen
 }
 ```
 
-## Bedeutung der Ergebnisse
+## Result meanings
 
-| Status | Aussage |
-|---|---|
-| `found` | Die Passage kommt im ausgewählten Text vor. Qualitätswarnungen bleiben erhalten, auch bei einem positiven Treffer. |
-| `not_found_in_processed_text` | Die Passage wurde im ganzen ausgewählten Text nicht gefunden; Abdeckung ist vollständig und Qualität hat keine bekannte Auffälligkeit. |
-| `unverifiable` | Es fehlt ein ausgewählter Text, die Abdeckung/Qualität genügt nicht oder die gespeicherten Normalisierungsregeln werden nicht unterstützt. |
+| Status | Meaning |
+| --- | --- |
+| `found` | Passage occurs in selected text; positive findings retain quality warnings |
+| `not_found_in_processed_text` | Absent from all selected text, with complete coverage and no known quality issue |
+| `unverifiable` | Missing text, insufficient coverage/quality or unsupported normalization rules |
 
-`contains` liefert positive Ergebnisse in `results`, `lacks` negative Ergebnisse.
-`unverifiable` wird bei beiden Relationen separat zurückgegeben. Die unabhängigen
-Offsets/Limits beider Gruppen beeinflussen nie die Klassifikation oder die globalen
-Zählungen in `summary`. Ein leerer erster Ergebnisbereich beweist daher nicht,
-dass alle Dokumente zuverlässig geprüft wurden.
+`contains` returns positives in `results`; `lacks` returns negatives. Both separately
+return `unverifiable`. Independent offsets/limits never change classification or
+global `summary` counts. An empty first result group does not prove all documents
+were examined reliably.
 
-Eine explizite manuelle Prüfvormerkung des Quellartefakts oder eines späteren Laufs
-mit derselben Quelle verhindert negative Ergebnisse auch dann, wenn noch ein
-älterer, unauffälliger Text ausgewählt ist. Fehlschläge und laufende Neuverarbeitung
-werden neben dem tatsächlich ausgewählten Lauf angezeigt. Ein weiterhin gültiger
-alter Index darf verwendet werden, seine Herkunft bleibt sichtbar.
+A source or subsequent same-source run's manual flag prevents negative findings,
+even if an older clean text remains selected. Failed/pending newer runs are shown
+beside the actual selected run. Valid older text may remain selected with explicit
+provenance; this differs from falling back to an older revision.
 
-## Literalität und Normalisierung
+## Literal matching and normalization
 
-- `exact`: unveränderte Zeichenfolge in `revision_texts.plain_text`, inklusive
-  Groß-/Kleinschreibung und Zeilenumbrüchen. Zwischen Seiten steht `\n\f\n`.
-- `normalized`: dieselbe versionierte NFC-/Whitespace-/Casefold-Funktion wie bei
-  der Verarbeitung. Zahlen, Negationen, Satzzeichen und Bindestriche bleiben
-  erhalten. Leerraum zwischen nichtleeren Seiten wird zu einem Leerzeichen.
-- PostgreSQL `strpos` prüft den vollständigen Text mit gebundenen Parametern.
-  Prozentzeichen, Unterstriche, Backslashes und SQL-artige Zeichenfolgen sind
-  gewöhnlicher Suchtext. Keine Top-k- oder Segmentbegrenzung entscheidet Abwesenheit.
-- Eine nicht unterstützte Normalisierungsversion liefert im normalisierten Modus
-  `unverifiable`; rohe exakte Suche bleibt unabhängig davon möglich.
+- `exact`: unchanged substring in `revision_texts.plain_text`, including case and
+  line breaks. Raw pages are separated by `\n\f\n`.
+- `normalized`: the same versioned NFC/whitespace/casefold function as processing.
+  Numbers, negation, punctuation and hyphens remain; nonempty pages join with a space.
+- PostgreSQL `strpos` examines full text with bound parameters. Percent signs,
+  underscores, backslashes and SQL-like input are ordinary text. No top-k or segment
+  cutoff decides absence.
+- Unsupported normalization yields `unverifiable` in normalized mode; exact raw
+  search remains possible independently.
 
-Der Eingabetext darf 1–2000 Zeichen enthalten und muss mindestens ein Nicht-
-Leerraumzeichen besitzen. Nullzeichen, ungültiges Unicode, unbekannte Felder,
-Fuzzy-Modus, `scope: all` und ungültige Pagination werden mit 422 abgelehnt.
-Validierungsantworten nennen Feld und Grund, ohne Eingabetext zurückzuspiegeln.
+Input is 1–2000 characters, nonblank. NUL, invalid Unicode, unknown fields, fuzzy
+mode, `scope: all` and invalid pagination return 422. Validation identifies fields
+and reasons without reflecting input contents.
 
-## Fundstellen und Herkunft
+## Evidence and provenance
 
-Pro Dokument wird die erste Fundstelle der neuesten Revision zurückgegeben
-(`match_policy: first_occurrence_per_revision`). `total` zählt Dokumente, keine
-Vorkommen. Positive Ergebnisse enthalten passenden Text, Ausschnitt, Original-
-Artefakt-ID, ausgewählten Lauf, Engine-Versionen, Qualität und verfügbare Seiten.
-Negative/unverifizierbare Ergebnisse erfinden keine Fundstelle oder Offsets.
+Each document returns the first occurrence in its newest revision
+(`match_policy: first_occurrence_per_revision`). `total` counts documents, not
+occurrences. Positives include matched text, snippet, original artifact, selected
+job, engine versions, quality and available pages. Negatives/unverifiables invent
+no occurrence or offsets.
 
-Alle Offsets sind nullbasiert, das Ende exklusiv, gezählt in Unicode-Codepoints.
-`offset_basis` nennt `plain_text` oder `normalized_text`; `snippet_start_offset`
-bezieht sich auf denselben String. JavaScript-Hervorhebung berücksichtigt dabei
-Codepoints statt UTF-16-Codeeinheiten. `page_numbers` und Anfangs-/Endseite können
-mehrere Seiten umfassen. Rohtextseiten werden aus Seitenlängen und den exakt
-verwendeten Trennern zugeordnet; normalisierte Seiten nutzen gespeicherte Offsets.
-Fehlt eine zuverlässige Zuordnung, wird keine Seitennummer geraten. `score` ist null.
+Offsets are zero-based Unicode code points with exclusive ends. `offset_basis`
+is `plain_text` or `normalized_text`; `snippet_start_offset` uses the same string.
+JavaScript highlighting handles code points rather than UTF-16 units.
+`page_numbers` and start/end pages can span multiple pages. Raw mappings use exact
+page lengths/separators; normalized mappings use stored offsets. Unknown page
+positions are not guessed. `score` is null.
 
-Die Oberfläche öffnet auf Wunsch den Seitentext des ausgewählten Laufs. Wurde der
-Text inzwischen neu verarbeitet, wird eine erneute Suche angefordert, statt die
-Fundstelle dem neuen Textbestand zuzuordnen. Ergebnisse bleiben bis zur nächsten
-Suche eine ausdrücklich beschriftete Momentaufnahme.
+The UI opens selected-run page text. Reprocessing prompts another literal search
+rather than reattaching old evidence to new text. Displayed results are explicitly
+labelled snapshots until the next search; durable positive saved runs are separate.
 
-## Konsistenz und Grenzen
+## Consistency and limitations
 
-Zählungen, Ausschnitte, Herkunft und Seitenpositionen kommen aus einer gemeinsamen
-Read-only-Transaktion mit `REPEATABLE READ`. Ein Integrationstest veröffentlicht
-einen neuen Textbestand zwischen den Suchabfragen und prüft die alte, konsistente
-Antwort. Gleichzeitige Worker-Verarbeitung kann deshalb keine Seiten eines anderen
-Laufs in die Antwort mischen.
+Counts, snippets, provenance and page references share one read-only REPEATABLE
+READ transaction. Integration coverage publishes new text between queries and
+checks that the original coherent result remains; concurrent workers cannot mix
+another run's pages into the response.
 
-Der Prototyp scannt den ausgewählten Volltext in PostgreSQL und lädt Metadaten für
-den gesamten Suchumfang, Ausschnitte und Seitenmetadaten nur für die ausgegebenen
-positiven Treffer. Für große Bestände wären Abfragepläne und serverseitige
-Aggregation/Pagination zu optimieren. Dieser Meilenstein benötigt keine neue
-Tabelle oder Migration. Die zusätzliche [textuelle Ähnlichkeitssuche](textual-search.md)
-hat einen eigenen Endpunkt, mehrere Fundstellen und einen expliziten Score. Sie
-ändert diesen Literal-/Negativ-Suchvertrag nicht. Semantische Suche ist noch nicht
-implementiert.
+The prototype scans selected full text in PostgreSQL and loads scope-wide metadata;
+snippets/pages are loaded only for returned positives. Large collections need query
+plan and server aggregation/pagination work. This milestone added no migration.
+The separate [textual API](textual-search.md) adds multiple scored positives; the
+optional [semantic stage](semantic-search.md) does not change this literal/absence
+contract.
 
-Die Aussage bleibt auf den extrahierten Text beschränkt, nicht auf juristische
-Vollständigkeit oder fehlerfreie OCR. Bereits mit einer fehlerhaften älteren
-Extraktion verarbeitete Quellen müssen neu verarbeitet werden; eine Suche startet
-keine neue Extraktion und ersetzt keinen manuell zu prüfenden Vertrag.
+Findings concern extracted text, not legal completeness or perfect OCR. Sources
+processed with older faulty extraction need reprocessing; search itself never
+extracts again or replaces required human review.

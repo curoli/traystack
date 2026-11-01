@@ -1,142 +1,129 @@
-# Produktionskonzept und Technologievergleich
+# Production proposal and technology comparison
 
-Stand: 30.10.2026. **Entwurf, nicht ausgerollt oder benchmarked.** Der aktuelle
-lokale Stand ist in [Architektur](architecture.md) dokumentiert. Diese Zuordnung
-schlägt einen möglichen Produktionspfad vor; sie ist keine Produktionsfreigabe.
+Proposal originally dated 30 October 2026: **not deployed or benchmarked**.
+The implemented local system is described in [architecture](architecture.md).
+This is a possible production path, not production approval. External-source
+references below retain their original review date; translation is not a fresh
+verification of cloud capabilities or prices.
 
-## Vorgeschlagene Azure-Zuordnung
+## Proposed Azure mapping
 
 ```mermaid
 flowchart LR
-    Legal[Legal im Browser] --> Identity[Entra-Anmeldung]
+    Legal[Legal browser] --> Identity[Entra sign-in]
     Identity --> Web[Web / API: Container Apps]
-    Source[SharePoint: freigegebene Quellen] --> Import[Import mit Quellversion und Rechten]
+    Source[SharePoint: approved sources] --> Import[Import with version and permissions]
     Import --> Web
     Web --> DB[(Azure Database for PostgreSQL)]
-    Web --> Blob[(Blob Storage: Originale und Ableitungen)]
+    Web --> Blob[(Blob Storage: originals and derivatives)]
     Worker[Worker: Container Apps] --> DB
     Worker --> Blob
-    Worker --> OCR[Lokale OCR oder evaluierter Azure-Extraktor]
-    Web --> Archive[Archiv-REST-API: ausschließlich zusätzliche Kopie]
+    Worker --> OCR[Local OCR or evaluated Azure extractor]
+    Web --> Archive[Archive REST API: additional copy only]
     Web --> Observe[Monitoring / Audit]
     Worker --> Observe
 ```
 
-Die Pfeile sind beabsichtigte Datenflüsse, keine bereits implementierten Connectoren.
+Arrows are intended data flows, not implemented connectors.
 
-| Lokaler Baustein | Vorschlag | Vor Umsetzung zu klären |
-|---|---|---|
-| Nginx/React und FastAPI | Container Apps mit HTTPS und Entra-Anmeldung | Tokenvalidierung, Sitzungen, Rechteprüfung aller API-Routen; API nicht neben dem Gateway offen lassen |
-| Python-Worker | Separater Container-App-Dienst; anfangs mindestens eine aktive Instanz für DB-Polling | CPU/RAM nach OCR-Messung, Wiederanlauf, Heartbeat/Lease und idempotente Veröffentlichung; Scale-to-zero würde den heutigen Poller anhalten |
-| PostgreSQL | Azure Database for PostgreSQL | Private Anbindung, Version, Backups, Restore-Test, Lastmessung und Kosten |
-| Dateivolume | Blob Storage über neuen Storage-Adapter | Unveränderliche Originale, Hashprüfung, atomare Veröffentlichung und Umgang mit verwaisten Objekten; bestehender Dateisystem-Code ist kein Cloud-Adapter |
-| Lokale Standardkonfiguration | Managed Identities und getrennte Dienstrechte | Least Privilege, Secretverwaltung für verbleibende Geheimnisse und Trennung von Umgebungen |
-| Lokale Logs/Health | Zentrale Metriken, Alarmierung und Audit | Keine Vertragstexte oder Suchpassagen in Logs; Zugriffe und Verarbeitungsläufe nachvollziehbar halten |
+| Local component | Proposal | Resolve before implementation |
+| --- | --- | --- |
+| Nginx/React and FastAPI | Container Apps, HTTPS and Entra sign-in | Tokens, sessions and authorization on every route; no exposed API bypass |
+| Python worker | Separate Container App, initially at least one active DB-polling instance | Measured CPU/RAM, recovery, heartbeat/lease and idempotent publication; scale-to-zero stops today's poller |
+| PostgreSQL | Azure Database for PostgreSQL | Private connectivity, version, backups, restore tests, load and cost |
+| File volume | Blob Storage through a new adapter | Immutable originals, hashes, atomic publication and orphan handling; filesystem code is not a cloud adapter |
+| Local configuration | Managed Identities and separate service permissions | Least privilege, remaining secrets and environment separation |
+| Logs/health | Central metrics, alerting and audit | No contract/query text in logs; traceable accesses and processing |
 
-Container Apps dokumentiert API- und Hintergrundworkloads. Managed Identities
-ermöglichen Dienstzugriffe ohne im Anwendungscode verwaltete Zugangsdaten;
-Ressourcenrechte müssen separat vergeben werden.
+Container Apps documents API/background workloads. Managed Identities remove
+application-managed service credentials, but resource rights still need assignment:
 [Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/overview),
 [Managed Identities](https://learn.microsoft.com/en-us/azure/container-apps/managed-identity).
-PostgreSQL und Blob Storage sind vorgeschlagene verwaltete Entsprechungen der
-heutigen Datenbank und Dateiablage.
+Managed database/storage equivalents:
 [PostgreSQL](https://learn.microsoft.com/en-us/azure/postgresql/overview),
 [Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview).
 
-Terraform und CI/CD würden diese Ressourcen später reproduzierbar bereitstellen.
-Es gibt hier keine Terraform-Dateien, Cloud-Schlüssel oder Live-Integrationen.
-Ein zusätzlicher Broker oder Suchcluster ist erst bei belegtem Bedarf vorgesehen.
+Terraform and CI/CD could provision these later. There are no Terraform resources,
+cloud keys or live integrations here. Add brokers/search clusters only for proven need.
 
-## Quellen, Rechte und Archiv
+## Sources, rights and archive
 
-SharePoint ist die führende Quelle. Ein künftiger Import muss stabile Quell-ID,
-Quellversion, Änderungsstand und Herkunft speichern. Gleiche Quellversionen dürfen
-bei Wiederholung keine neue Vertragsrevision erzeugen. Inhaltsänderungen und
-neue Extraktionsläufe müssen weiterhin verschieden bleiben.
+SharePoint remains authoritative. Import needs stable source ID/version, change
+state and provenance. Reimporting the same version must not create another contract
+revision. Content changes remain distinct from extraction attempts.
 
-Vor privaten Daten ist ein abgestimmtes Berechtigungsmodell erforderlich:
+Before private data:
 
-- Zugriff auf Dokumentliste, Treffer, Snippets, globale Zählungen, Text und Downloads
-  jeweils auf berechtigte Quellen beschränken. Auch Zählungen können Inhalte verraten.
-- Berechtigungsänderungen und Quellenlöschungen übernehmen; bei unbekanntem oder
-  veraltetem Rechtezustand keinen Zugriff gewähren. Entra-Anmeldung allein reicht nicht.
-- Auch Ableitungen, Suchtexte, alte Laufartefakte, Caches und Backups in Aufbewahrung,
-  Löschung und Legal-Hold-Regeln einbeziehen. „Immutable“ in diesem Prototyp bedeutet
-  keine Änderungs-API und ist kein rechtliches Retention-Konzept.
-- Importfehler und noch nicht synchronisierte Quellen sichtbar halten. Eine
-  Negativsuche gilt nur für den explizit ausgewiesenen untersuchten Bestand.
+- Authorize lists, results, snippets, counts, text and downloads by source rights;
+  even counts can leak contents.
+- Propagate permission changes/deletions. Deny unknown/stale permission states;
+  Entra authentication alone is insufficient.
+- Include derivatives, text, historical artifacts, caches and backups in retention,
+  deletion and legal hold. Prototype immutability is not a legal retention policy.
+- Expose import failures/unsynchronized sources. Absence checks concern only the
+  explicitly identified examined collection.
 
-Die eingeschränkte Archiv-REST-API darf nur eine zusätzliche Vertragskopie erhalten.
-Dafür braucht es einen idempotenten Export mit Quellhash, Zustellnachweis und
-sichtbaren Fehlern; dieser Export ersetzt keine Rechteprüfung oder Suche. Die
-Case Study erlaubt keine Nutzung des Archivs als allgemeines Lesebackend.
+The restricted archive REST API receives only an additional copy. It needs
+idempotent delivery, source hashes, receipt evidence and visible failures, without
+replacing authorization or search. The case study does not permit treating that
+archive as a general read backend.
 
-## Vergleich der Extraktion und vorhandener Microsoft-Wege
+## Extraction and existing Microsoft alternatives
 
-Offizielle Quellen wurden am 30.10.2026 geprüft. Dokumentierte Funktionen sind
-keine Messresultate auf Riverty-Verträgen. Die folgende Auswahlentscheidung ist
-eine Hypothese bis zur Evaluation.
+Official sources were reviewed on **30 October 2026**. Documented capabilities are
+not measured results on Riverty contracts; selection remains a hypothesis pending
+evaluation.
 
-| Kriterium | Lokale PyMuPDF-/Tesseract-Basis | Azure Document Intelligence Read | SharePoint OCR und vorhandene Suche |
-|---|---|---|---|
-| Digital-PDF / Druckscan | Im Prototyp mit echter Textschicht und OCR geprüft | PDF-/Bild-OCR dokumentiert; hier nicht aufgerufen | OCR für Bilder, gescannte und hybride PDFs dokumentiert; hier nicht aktiviert |
-| Handschrift | Kein belastbarer Nachweis; manuelle Prüfung | Druck und Handschrift dokumentiert, Sprach-/Modellversion prüfen; historische Schrift ungemessen | Handschrift laut Dienstbeschreibung; Qualität im konkreten Bestand ungemessen |
-| Quellenbelege | Eigene Seite, Ausschnitt, Original, Lauf und Artefakte | Liefert Text und Positionsdaten; Adapter in dieselbe Provenienz nötig | Extraktion wird indexiert; bei PDF/TIFF ist der OCR-Text laut Doku nicht als Metadatenspalte verfügbar |
-| Negativsuche | Expliziter Volltext-/Qualitätsvertrag umgesetzt | Extraktor allein implementiert diesen Suchvertrag nicht | Zu prüfen: vollständiger Bestand, Indexierungsfehler, Prüfbedarf und Wortlautregeln; kein Beleg aus einer leeren Trefferliste |
-| Betrieb / offline | Nach Build offline; eigenes Patchen und OCR-Tuning | Cloud-Dienst, Integration und Dienstfehler behandeln; keine Offline-Abhängigkeit im Core | Tenant-Konfiguration und Dienstverfügbarkeit erforderlich; Bestandsmigration separat klären |
-| Latenz / Kosten | Lokaler Ressourcenverbrauch; noch keine Lastmessung | Keine gemessenen Zeiten/Kosten; Angebot für Region, Tarif und Seitenvolumen ermitteln | Lizenz-/Abrechnungs- und Tenantvoraussetzungen vor Pilot prüfen; keine Kostenbehauptung |
-| Datenverarbeitung | Kein externer Versand zur Laufzeit | Übertragung zu einem Cloud-Dienst; Region, Vertrag, Aufbewahrung und Löschweg vorab prüfen | Verarbeitung im M365-Kontext; Zugriff und Governance im Tenant prüfen |
+| Criterion | Local PyMuPDF/Tesseract | Azure Document Intelligence Read | SharePoint OCR and existing search |
+| --- | --- | --- | --- |
+| Digital PDF / print scan | Real text/OCR checked locally | PDF/image OCR documented; not called here | Image/scanned/hybrid PDF OCR documented; not enabled here |
+| Handwriting | No reliable evidence; manual review | Print/handwriting documented; verify language/model, historical writing unmeasured | Service describes handwriting; actual corpus quality unmeasured |
+| Evidence | Page, snippet, original, run and artifacts | Text/positions need mapping into our provenance | Indexed extraction; PDF/TIFF OCR text not available as a metadata column according to documentation |
+| Negative findings | Explicit full-text/quality contract implemented | Extractor alone does not implement search semantics | Must verify complete scope, indexing errors, review requirements and wording; an empty list proves nothing |
+| Operation / offline | Offline after build; maintain patches/OCR tuning | Cloud integration/failures to handle; no runtime cloud dependency in core | Tenant setup/service availability; migration to assess separately |
+| Latency / cost | Local resources; original proposal had no load measurement | No measured cost/time; determine region/tier/page-volume offer | Verify licensing/billing/tenant requirements before pilot; no cost claim |
+| Data processing | No runtime external transfer | Review region, agreement, retention/deletion before cloud transfer | M365 processing; verify tenant access/governance |
 
-Quellen zum Vergleich: Tesseract bezeichnet Handschrift in seiner
-[FAQ](https://tesseract-ocr.github.io/tessdoc/FAQ.html#can-i-use-tesseract-for-handwriting-recognition)
-als problematischen Einsatz. Microsoft dokumentiert PDF-/Bildextraktion,
-Handschrift und Positionen für
+Tesseract describes handwriting as problematic in its
+[FAQ](https://tesseract-ocr.github.io/tessdoc/FAQ.html#can-i-use-tesseract-for-handwriting-recognition).
+Microsoft documents text, handwriting and position extraction in
 [Read v4](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/prebuilt/read?view=doc-intel-4.0.0).
-Für Handschrift nennt die
-[Sprachtabelle](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/language-support/ocr?view=doc-intel-4.0.0)
-unter anderem Deutsch und Englisch; das ist keine Zusage für historische Schriften.
+The [language table](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/language-support/ocr?view=doc-intel-4.0.0)
+includes English/German handwriting, not a promise for historical scripts.
 [SharePoint OCR](https://learn.microsoft.com/en-us/microsoft-365/documentprocessing/ocr-overview?view=o365-worldwide)
-beschreibt die Indexierung und Einschränkungen, darunter Verarbeitung neu
-hochgeladener Bilder nach Aktivierung. Die Dokumentation begründet keine Annahme,
-dass alle vorhandenen Altverträge automatisch neu verarbeitet werden.
+describes indexing/limits, including newly uploaded images after enablement; it does
+not establish automatic reprocessing of all old contracts.
 
-Für Azure Read dokumentiert Microsoft bei v4 bis zu 2.000 PDF-/TIFF-Seiten;
-im F0-Tarif werden nur die ersten zwei Seiten verarbeitet. Das ist bei einem
-künftigen Adapter als Teilabdeckung zu behandeln. Modell/API-Version, Tarif,
-Region und tatsächliche verarbeitete Seiten müssen pro Lauf gespeichert werden.
-[Read-Eingabegrenzen](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/prebuilt/read?view=doc-intel-4.0.0#input-requirements-v4).
+Read v4 documents up to 2,000 PDF/TIFF pages, while F0 processes only the first two.
+A future adapter must treat this as partial coverage and record model/API version,
+tier, region and actual processed pages per run.
+[Input limits](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/prebuilt/read?view=doc-intel-4.0.0#input-requirements-v4).
 
-## Auswahl durch gemeinsame Evaluation
+## Select through shared evaluation
 
-Die Offline-Basis wurde für eine prüfbare Demo ohne Zugangsdaten gewählt.
-Eine Produktionsentscheidung zugunsten lokaler oder Microsoft-Extraktion folgt
-daraus nicht. Zuerst vorhandene M365-Möglichkeiten prüfen; bei fehlenden Belegen
-oder Qualitätssteuerung einen eigenen Workflow mit austauschbarem Extraktor evaluieren.
+The offline baseline supports reproducible demos without credentials; it does not
+settle production extractor choice. Evaluate existing M365 first, then a custom
+workflow with replaceable extraction if evidence/quality controls justify it.
 
-Für denselben freigegebenen Referenzbestand beide Extraktoren getrennt ausführen.
-Digitale Dokumente, Druckscans und Handschrift getrennt berichten. Legal erstellt
-bekannte Dokument-Passagen-Paare inklusive Zahlen, Negationen, Firmennamen und
-Seitenübergängen; unlesbare Stellen bleiben als unsicher annotiert. Abstimmung
-von Heuristiken und endgültige Bewertung auf getrennten Teilmengen durchführen.
+Run both extractors on the same approved reference set. Report digital, printed
+and handwritten results separately. Legal labels document-passage pairs including
+numbers, negation, names and page crossings; unreadable spans remain uncertain.
+Keep heuristic tuning separate from final evaluation.
 
-Erfassen: positive Präzision/Recall, fehlerhafte Abwesenheitsvorschläge,
-unverifizierbarer Anteil, manuelle Prüfminuten, Seitenbelege, OCR-Zeichenfehler,
-Latenz und Kosten pro tatsächlich verarbeiteter Seite. Auch gescheiterte und
-partielle Läufe einschließen. Schwellenwerte vor der Auswertung mit Legal
-vereinbaren; generische OCR-Scores sind keine vergleichbaren Wahrscheinlichkeiten.
+Measure precision/recall, false absence, unverifiable fraction, manual review time,
+page evidence, OCR character errors, latency and cost per actually processed page.
+Include failed/partial runs. Agree acceptance thresholds with Legal beforehand;
+generic OCR scores are not comparable probabilities. A better extractor must still
+expose coverage, warnings, hashes and versions. Poor handwriting stays manual.
+Current optional semantic comparison also needs legal-error evaluation and cannot
+replace literal absence checks.
 
-Ein besserer Extraktor muss weiterhin Abdeckung, Warnungen, Quellhash und
-Versionen liefern. Ohne belegte Qualität bleiben schwierige Handschriften im
-manuellen Workflow. Eine spätere semantische Suche würde separat auf juristische
-Fehlinterpretationen geprüft und dürfte die Literal-Negativsuche nicht ersetzen.
+## Operational release gate
 
-## Betriebliches Freigabetor
-
-Vor Produktivdaten benötigen die zuständigen Teams eine Abnahme von Berechtigungen,
-Datenschutz/Region/Retention, Audit und Incident-Prozess sowie demonstrierten
-Backup-/Restore- und Wiederanlaufverfahren. Lasttests müssen Korpusgröße,
-Suchlatenz und OCR-Durchsatz abdecken; heutige Vollscans sind nicht dafür vermessen.
-Ownership: Legal verantwortet Referenzset und fachliche Abnahme; Engineering
-Verarbeitung und Support; Plattform/Sicherheit Identität, Infrastruktur und
-Betriebsfreigabe. Der [Präsentationsleitfaden](presentation.md) beschreibt den
-Nutzerpilot und die zu vereinbarenden Erfolgskriterien.
+Before production data, obtain approval for authorization, privacy/region/retention,
+audit/incidents and demonstrated backup/restore/recovery. Load tests must cover
+corpus size, search latency and OCR throughput; bounded local measurements do not
+establish production scale. Legal owns reference data/business acceptance,
+Engineering processing/support, and Platform/Security identity, infrastructure and
+operational release. The [presentation guide](presentation.md) covers the proposed
+user pilot and success criteria to agree.

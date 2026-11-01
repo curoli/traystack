@@ -1,127 +1,107 @@
-# Demo und Prüfstand — Meilenstein 4
+# Demo and validation evidence — milestone 4
 
-## Frischer Prüf-Stack
+## Fresh validation stack
 
-Vom Repository-Stamm aus; Docker/Compose v2 und Python 3.12+ vorausgesetzt.
-Ein eigener Compose-Projektname und eigene Ports trennen die Demo vom normalen
-Stack. Beim ersten Aufruf entstehen neue Datenvolumes. Der Build braucht Zugriff
-auf Image-/Paketregistries, die laufende Anwendung keine externen Dienste.
+Run from the repository root with Docker/Compose v2 and Python 3.12+. A separate
+project name and ports isolate demo data. A new project creates new volumes.
+Build needs registry access; the running app needs no external services.
 
 ```sh
 WEB_PORT=18080 API_PORT=18000 docker compose -p traystack-m4-review up -d --build --wait
 python3 scripts/demo_smoke.py --base-url http://localhost:18080
 ```
 
-<http://localhost:18080> öffnen. Das Skript zeigt einen Laufbezeichner wie
-`Demo 02aa7981`; die vier Dokumenttitel beginnen damit. Es prüft tatsächliche
-Uploads, bytegleiche Originaldownloads, Worker/OCR, JSON-/Markdown-Abruf sowie
-A/P als Treffer, D als negativ und E als unverifizierbar. Vorhandene Trefferlisten
-werden vollständig paginiert. Pro Aufruf entstehen vier weitere Dokumente.
-Die Skriptprüfung ersetzt nicht die Browserprüfungen für Fokus und Bedienung.
+Open <http://localhost:18080>. The script prints a prefix such as `Demo 02aa7981`
+used in four document titles. It checks real uploads, identical original downloads,
+worker/OCR, JSON/Markdown and A/P positive, D negative, E unverifiable results,
+fully paginating lists. Each invocation creates four more records. This does not
+replace browser focus/usability tests.
 
-Browserprüfungen gegen genau diesen Stack:
+Run browser checks against that exact stack:
 
 ```sh
 TRAYSTACK_BASE_URL=http://localhost:18080 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome npm run test:e2e --prefix frontend
 ```
 
-Alternativ Playwright-Chromium wie in der README installieren und
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` weglassen. Die Browserprüfungen legen weitere
-synthetische Dokumente an. Für eine kurze Präsentation die Demo vor diesen Tests
-vorbereiten oder einen weiteren eigenen Compose-Projektnamen mit freien Ports
-verwenden. Den Prüf-Stack anschließend stoppen, Daten bleiben erhalten:
+Alternatively install Playwright Chromium as in README and omit the executable
+variable. Browser checks create more synthetic records. Prepare a presentation
+before these tests, or use another unused project/ports. Stop while retaining data:
 
 ```sh
 docker compose -p traystack-m4-review down
 ```
 
-Kein `down -v` auf dem regulären Stack verwenden, um eine Demo aufzuräumen.
-Für einen weiteren Start aus leerem Zustand einen bisher unbenutzten Projektnamen
-wählen. Wiederverwendung desselben Projektnamens verwendet vorhandene Volumes.
+Never use `down -v` on the normal stack to clean up a demo. Reusing a project name
+reuses its volumes; choose a previously unused name for an empty collection.
 
-## Vorführung und Ersatzablauf
+## Presentation and fallback
 
-Den [18-Minuten-Leitfaden](presentation.md) mit einer sechsminütigen Live-Demo
-verwenden. Die vier Beispiele vorher verarbeiten, eine Neuverarbeitung von A
-kann live gezeigt werden. Die Zielpassage steht unten und im Fixture-Manifest.
-Ist der Stack nicht verfügbar, anhand der Architektur und des dokumentierten
-Prüfstands erklären, was geprüft wurde; keine Screenshots als laufende Verarbeitung
-ausgeben. Bei Workerproblemen Jobstatus/Fehler und den Wiederherstellungsablauf
-der README zeigen. Fehlgeschlagene oder unsichere Dokumente bleiben prüfbedürftig.
+Use the [18-minute guide](presentation.md) with a six-minute live demo. Process the
+four fixtures in advance; reprocessing A can be live. The target appears below and
+in the fixture manifest. If the stack is unavailable, explain architecture and
+recorded evidence; do not present screenshots as live processing. For worker
+problems, show status/errors and README recovery. Failed/uncertain documents still
+require review.
 
-## Reproduzierbarer Ablauf
+## Repeatable walkthrough
 
-1. `docker compose up --build` starten. Migration `0002` muss erfolgreich enden;
-   API, PostgreSQL, Webserver und separater Worker laufen. <http://localhost:8080> öffnen.
-   Bereits hochgeladene Dokumente aus Meilenstein 1 bleiben erhalten.
-2. `examples/synthetic-contracts/A-confidentiality.pdf` mit einem Titel hochladen.
-   Die Details zeigen Dokument, Revision 1 und das unveränderte Original.
-3. Quelle in den Details prüfen und **Start processing** wählen. Der Status
-   wechselt von wartend/laufend auf verarbeitet. Seitenabdeckung und Qualität
-   erscheinen getrennt: eine verarbeitete Seite, keine bekannte Auffälligkeit.
-4. **View page text** öffnen. Die Vertraulichkeitspassage stammt aus der realen
-   PDF-Textschicht. JSON und Markdown stehen als neue Artefakte mit Quelle, Lauf-ID,
-   Verfahren und Hash bereit; ihre Vorschau zeigt tatsächlichen Dateiinhalt.
-5. **Download original** wählen und Bytes/Hash mit der Eingabedatei vergleichen.
-6. `D-delivery.pdf` ebenfalls hochladen und verarbeiten; es enthält die Zielpassage
-   nicht. Danach `P-printed-scan.jpg` hochladen und verarbeiten. Hier arbeitet tatsächlich
-   Tesseract. Die Seitenansicht nennt OCR und den mittleren Wortscore; der Score
-   ist keine Wahrscheinlichkeit für einen korrekten Vertragstext.
-7. `E-difficult-scan.jpg` mit **Manual review required** hochladen und
-   verarbeiten. Der Eintrag bleibt in der gesonderten Prüfgruppe. Auch vollständig
-   verarbeitete Seiten können weiterhin prüfbedürftig sein. Original herunterladen
-   und manuell prüfen; es gibt keinen Knopf, der OCR als rechtlich korrekt bestätigt.
-8. Beim digitalen PDF **Reprocess** wählen. Es entstehen ein neuer Lauf
-   und zwei neue Artefakte; alte Artefakte bleiben zugänglich. Die Textansicht
-   nennt den neu ausgewählten Lauf.
-9. **Processing runs** aufklappen: Eingabeparameter, Engine-Versionen und
-   Normalisierungsversion sind pro Lauf nachvollziehbar. Bei Fehlern wird ein
-   fester Fehlercode gezeigt; vorhandener ausgewählter Text bleibt erhalten.
-10. Seite neu laden. Dokumente, Artefakte, Status und ausgewählter Text bleiben
-    bestehen. Nun oben die Passage `The receiving party shall not disclose confidential information`
-    im normalisierten Modus suchen. A und P liefern positive Treffer; D erscheint
-    bei „Not found in extracted text“. E bleibt unverifizierbar.
-11. Einen weiteren Vertrag hochladen und noch nicht verarbeiten: Auch er bleibt
-    unverifizierbar und wird nicht als negativer Treffer ausgegeben.
-12. Bei einem Treffer **View page 1** wählen. Der Seitentext wird geöffnet;
-    Qualitätsinformationen und Originaldownload bleiben verfügbar. Nach erneuter
-    Verarbeitung eines Treffers weist ein Klick auf die alte Suchfundstelle auf
-    die veraltete Momentaufnahme hin.
+1. Start `docker compose up --build`; migrations must succeed and API, PostgreSQL,
+   web and the separate worker run. Open <http://localhost:8080>. Existing data remains.
+2. Upload `examples/synthetic-contracts/A-confidentiality.pdf` with a title.
+   Inspect document, revision 1 and unchanged original.
+3. Choose Start processing. Watch queued/running become processed. Coverage and
+   quality appear separately: one page processed, no known issue.
+4. Open View page text. The clause comes from the real PDF text layer. New JSON
+   and Markdown artifacts expose source, job, method/hash and actual preview bytes.
+5. Download original and compare bytes/hash with the input.
+6. Upload/process `D-delivery.pdf` without the clause, then `P-printed-scan.jpg`.
+   Tesseract really runs; page text names OCR and mean word score, not legal confidence.
+7. Upload/process `E-difficult-scan.jpg` with Manual review required. It remains
+   separately flagged despite complete coverage. Inspect the original; there is
+   no button certifying legal correctness of OCR.
+8. Reprocess the digital PDF. A new job and two artifacts appear; earlier artifacts
+   remain and text details identify the newly selected job.
+9. Expand Processing runs for parameters, engine and normalization versions.
+   Failures show fixed error codes and retain any previously selected text.
+10. Reload, then use Literal search in normalized mode for
+    `The receiving party shall not disclose confidential information`.
+    A/P match, D appears under Not found in extracted text, E is unverifiable.
+11. Upload another document without processing: it remains unverifiable, not negative.
+12. Open View page 1 on a positive. Quality and originals remain available.
+    After reprocessing, an old literal occurrence requests a new search rather
+    than opening mismatched text.
 
-Die schwierige Datei ist ein degradierter Druckscan und ersetzt keine Evaluation
-historischer Handschrift. Die Sucherwartungen im Fixture-Manifest dienen der Prüfung tatsächlicher Ergebnisse;
-die Anwendung berechnet ihre Treffer ausschließlich aus dem gewählten Textbestand.
+The difficult fixture is degraded print, not an evaluation of historical
+handwriting. Manifest expectations test actual results; the app calculates matches
+only from selected text. Later features are described in the [user guide](user-guide.md).
 
-## API-Demo
+## API demo
 
-Upload vom Repository-Stammverzeichnis:
+Upload from the repository root:
 
 ```sh
 curl --fail http://localhost:8000/api/health
 curl --fail -X POST http://localhost:8000/api/documents/upload \
-  -F 'title=Vertraulichkeitsvereinbarung' \
+  -F 'title=Confidentiality agreement' \
   -F 'metadata={"company":"Example Company"}' \
   -F 'file=@examples/synthetic-contracts/A-confidentiality.pdf'
 ```
 
-Revisions- und Artefakt-ID aus der Antwort übernehmen:
+Replace placeholders with revision/artifact IDs from the response:
 
 ```sh
-curl --fail -X POST http://localhost:8000/api/revisions/REVISIONS-ID/process \
-  -H 'Content-Type: application/json' -d '{"source_artifact_id":"ARTEFAKT-ID"}'
+curl --fail -X POST http://localhost:8000/api/revisions/REVISION-ID/process \
+  -H 'Content-Type: application/json' -d '{"source_artifact_id":"ARTIFACT-ID"}'
 curl --fail http://localhost:8000/api/jobs/JOB-ID
-curl --fail http://localhost:8000/api/revisions/REVISIONS-ID/text
-curl --fail http://localhost:8000/api/artifacts/ARTEFAKT-ID/content -o /tmp/traystack-original.pdf
+curl --fail http://localhost:8000/api/revisions/REVISION-ID/text
+curl --fail http://localhost:8000/api/artifacts/ARTIFACT-ID/content -o /tmp/traystack-original.pdf
 sha256sum examples/synthetic-contracts/A-confidentiality.pdf /tmp/traystack-original.pdf
 ```
 
-Ein weiterer Start während eines aktiven Laufs liefert 409. Ein fehlgeschlagener
-Job lässt sich über `POST /api/jobs/JOB-ID/retry` als neuer Lauf wiederholen.
-Seine Parameter werden übernommen; ein inzwischen gesetzter manueller Prüfbedarf
-wird zusätzlich beibehalten. Bei geänderten OCR-Sprachen oder Grenzen einen neuen
-Verarbeitungslauf starten statt die alten Parameter unverändert zu wiederholen.
-
-Suchanfrage:
+Starting while another run is active returns 409. `POST /api/jobs/JOB-ID/retry`
+creates a new attempt with inherited parameters plus newly introduced review flags.
+For different OCR languages/limits, start fresh processing rather than retrying old
+parameters unchanged.
 
 ```sh
 curl --fail -X POST http://localhost:8000/api/search \
@@ -129,71 +109,47 @@ curl --fail -X POST http://localhost:8000/api/search \
   -d '{"query":"The receiving party shall not disclose confidential information","mode":"normalized","relation":"lacks","scope":"latest","limit":25}'
 ```
 
-Den [Suchvertrag](search.md) für Status, separate Pagination und Offsetregeln beachten.
+See the [search contract](search.md) for statuses, separate pagination and offsets.
 
-## Prüfungen
+## Checks and recorded milestone evidence
 
-Die exakten Testkommandos stehen in der README. Backendtests verwenden eine
-eigene PostgreSQL-Datenbank, angewendete Migrationen und echte OCR für gedruckte
-Scans. Sie prüfen auch gemischte PDFs, Text-/Seitenoffsets, Fremdquellen, parallele
-Worker-Claims, Timeout/Enginefehler, fehlerhafte Veröffentlichung, Auswahl alter
-Ergebnisse nach Fehlschlag und neue Wiederholungsläufe. Kontrolliert simulierte
-Fehler ergänzen die Tests; erfolgreiche Demo-Ergebnisse werden nie simuliert.
-Kontrollierte kanonische Textfixtures decken zusätzliche Suchrandfälle ab; ein
-End-to-End-Test führt PDF/JPEG-Upload, echten Worker, Suche und Originalabruf aus.
+Exact commands are in README. Backend tests use dedicated PostgreSQL, migrations
+and real printed-scan OCR. Coverage includes mixed/inline PDFs, offsets, foreign
+sources, concurrent claims, timeouts/engine failures, failed publication, retained
+old text and retries. Simulated failures supplement real success paths. Controlled
+canonical fixtures cover additional search cases; end-to-end checks upload PDF/JPEG,
+run the actual worker, search and download originals.
 
-Worker-Abbruch und Wiederherstellung sind in der README beschrieben. Für diesen
-Prototyp sind weder automatische Wiederholungen noch sichere zeitbasierte
-Lease-Übernahmen implementiert. Mehrbild-/animierte Bilddateien werden bei der
-Verarbeitung explizit abgelehnt, statt nur das erste Bild als vollständigen Inhalt
-zu behandeln. Leere Seiten werden vorsichtshalber zur Prüfung markiert.
+Recovery is explicit, without automatic retries/timed takeover. Multi-frame images
+are rejected rather than treating frame 1 as the entire document. Empty pages
+conservatively require review.
 
-## Tatsächlich geprüft am 30.10.2026
+Historical milestone run on **30 October 2026**:
 
-- Getrennter Compose-Stack `traystack-m4-review` mit neuen PostgreSQL-/Blob-Volumes:
-  Build, beide Migrationen und gesunder Start erfolgreich. Der reguläre Datenbestand
-  wurde dafür nicht gelöscht. Zusätzlich alle Backendtests auf der separaten,
-  flüchtigen PostgreSQL-17-Testdatenbank ausgeführt.
-- `scripts/demo_smoke.py` gegen den frischen Stack: alle vier Uploads, Originalbytes,
-  reale Extraktion/OCR, Ableitungen und erwartete Suchklassifikation erfolgreich.
-  Kein Azure-/SharePoint-Aufruf und keine Handschriftevaluation durchgeführt.
-- 102 Backendtests: bestanden, keine übersprungenen Tests. Darunter echte OCR,
-  gemischte/Inline-PDFs, Worker-Claims und atomare Veröffentlichung sowie Volltext-
-  suche, neueste Revisionen, getrennte Negativ-/Unverifizierbar-Pagination,
-  Unicode-Fundstellen und ein Snapshot-Test bei gleichzeitiger Neuverarbeitung.
-- Neun Chrome-/Playwright-Szenarien: Upload/Download, echte Verarbeitung, Navigation
-  auf Desktop/Mobil, positive/negative Suche mit separaten unverifizierbaren
-  Dokumenten, Seitensprung einschließlich wiederholtem Öffnen derselben Fundstelle,
-  veraltete Fundstellen und API-Explorer ohne CDN.
-  Ein isolierter Renderer-Test prüft Unicode-Codepoint-Hervorhebung; die übrigen
-  Abläufe verwenden den echten Compose-Stack.
-- TypeScript-Prüfung, Vite-Produktionsbuild, Ruff, Prettier und `git diff --check`:
-  bestanden. `docker compose -p traystack-m4-review exec -T api alembic check`
-  meldet keine Schemaabweichung. `pip check` meldet keine defekten Abhängigkeiten.
+- Fresh `traystack-m4-review` PostgreSQL/blob volumes: build, both migrations then
+  present and healthy startup passed. Normal data was preserved; backend tests also
+  used disposable PostgreSQL 17.
+- Smoke script: four uploads, original bytes, real extraction/OCR, derivatives and
+  expected classification passed. No Azure/SharePoint call or handwriting evaluation.
+- **102 backend tests**, none skipped: real OCR, mixed/inline PDFs, claims/atomic
+  publication, latest revisions, negative/unverifiable pagination, Unicode and
+  concurrent-publication snapshot checks.
+- **Nine Chrome/Playwright scenarios**: upload/download, processing, desktop/mobile
+  navigation, literal search, repeated page opening, stale occurrences and local API
+  explorer. One isolated renderer test covered code-point highlighting; others used
+  the real stack.
+- TypeScript, Vite, Ruff, Prettier, diff checks, `alembic check` and `pip check` passed.
+  Starlette's HTTPX TestClient deprecation warning remained, without runtime impact.
 
-Die installierte Starlette-Version meldet weiterhin eine Deprecation-Warnung für
-HTTPX im Testclient. Die Tests laufen erfolgreich; diese Warnung betrifft nicht
-die HTTP-Verarbeitung der laufenden Anwendung.
+English-interface validation, also **30 October 2026**:
 
-## Englische Oberfläche — geprüft am 30.10.2026
-
-Die App verwendet durchgehend englische Bedienelemente, Status-/Qualitätshinweise,
-Fehlermeldungen und zugängliche Beschriftungen. Die Dokumentensprache bleibt
-unverändert. Datumsanzeigen in Bibliothek, Such-Snapshot und Laufhistorie verwenden
-englische Monatsnamen und 24-Stunden-Zeit in der Zeitzone des Browsers.
-Die oben genannten Bedienaktionen sind an die englischen Beschriftungen angepasst.
-
-- Alle elf Playwright-/Chrome-Szenarien gegen den echten Compose-Stack auf Port
-  8080 bestanden: darunter Upload/Download, echte OCR, Suche, Desktop/Mobil,
-  wiederholter Seitensprung und ein realer ungültiger PDF-Upload.
-- Mit deutscher Browser-Sprache geprüft: `lang="en"`, Seitentitel, englische
-  Datumsanzeige und unveränderte deutsche Dokumenttitel.
-- Isolierte Tests decken Unicode-Hervorhebung sowie Verbindungsfehler und den
-  Fallback für strukturierte Validierungsfehler ab; sie simulieren keine
-  erfolgreichen Verarbeitungsergebnisse in der laufenden Anwendung.
-- TypeScript, Vite-Produktionsbuild, Prettier und `git diff --check`: erfolgreich.
-  Sichtprüfung der englischen Oberfläche durchgeführt.
-
-Backend, Datenmodell und Suchregeln wurden für diese Sprachumstellung nicht
-geändert. Der Backend-Prüfstand bleibt der oben dokumentierte Lauf; die 102 Tests
-wurden für diese reine Frontend-Änderung nicht erneut ausgeführt.
+- All **eleven** Chrome/Playwright scenarios passed on port 8080, including real OCR,
+  repeated page navigation and a real invalid PDF upload.
+- German browser locale checks confirmed `lang="en"`, English title/date display
+  and unchanged German document titles. Dates use English months and 24-hour time
+  in the browser timezone.
+- Isolated checks covered Unicode, network errors and structured-validation fallback;
+  successful processing was not simulated.
+- TypeScript, Vite, Prettier, diff checks and visual inspection passed. Backend/model/
+  search semantics were unchanged; the 102 backend tests were not rerun for that
+  frontend-only change. These are historical counts, not today's complete suite.

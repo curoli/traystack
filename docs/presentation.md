@@ -1,153 +1,142 @@
-# TrayStack — Präsentationsleitfaden (18 Minuten)
+# TrayStack — presentation guide (18 minutes)
 
-Stand: 30.10.2026. Sprechfertiger Ablauf zur beigefügten Riverty Case Study;
-als Foliengliederung oder direkt als Gesprächsleitfaden nutzbar.
-**Lokal implementiert** sind Upload, Extraktion, Qualität, Suche und Quellenbelege.
-**Vorgeschlagen** sind Azure-Betrieb, SharePoint-Anbindung und Pilot. Ein
-Handschriftvergleich wurde noch nicht durchgeführt.
+Original core-demo outline dated 30 October 2026, translated into English.
+Upload, extraction, quality, literal search and evidence are demonstrated locally.
+Azure, SharePoint and the pilot are proposals. Real historical handwriting has not
+been evaluated. Later textual/semantic search, saved reviews/runs and exports are
+now implemented; see the [user guide](user-guide.md) for current functionality.
 
-## 1. Aufgabe und Erfolgskriterium · 0:00–1:30
+## 1. Problem and success criterion · 0:00–1:30
 
-**Auf die Folie:** „Verträge schneller finden — mit prüfbarer Quelle und sichtbarer Unsicherheit.“
+**Slide:** “Find contracts faster, with traceable evidence and visible uncertainty.”
 
-- Zwei Aufgaben: einen Firmennamen finden und Verträge identifizieren, in deren
-  extrahiertem Text eine vorgegebene Passage nicht gefunden wurde.
-- Heute: Dokumente einzeln öffnen, suchen, Ergebnisse überprüfen.
-- Ziel: Sucharbeit bündeln; juristische Entscheidung bleibt bei Legal.
+- Find a company name and identify contracts whose extracted text lacks a phrase.
+- Current work means opening, searching and checking documents individually.
+- Batch the search work while Legal retains the actual decision.
 
-**Sprechtext:** „Der kritische Fall ist die fehlende Passage. Ein nicht gefundener
-Treffer kann auch bedeuten, dass wir den Scan nicht lesen konnten. Deshalb liefert
-TrayStack drei Ergebnisse: gefunden, im verarbeiteten Text nicht gefunden und
-unverifizierbar.“
+**Talk track:** “The critical case is the missing passage. A failed match can also
+mean we could not read the scan. TrayStack therefore distinguishes found, not
+found in processed text, and unverifiable.”
 
-## 2. Wortlaut, Qualität und Herkunft · 1:30–3:00
+## 2. Wording, quality and provenance · 1:30–3:00
 
-**Auf die Folie:** Drei unabhängige Fragen: Ist der Lauf fertig? Sind alle Seiten
-verarbeitet? Gibt es bekannte Qualitätsprobleme?
+**Slide:** Did the job finish? Were all pages processed? Are quality issues known?
 
-Exact prüft den Wortlaut. Normalized vereinheitlicht Unicode, Groß-/Kleinschreibung
-und Whitespace; Zahlen, Negationen und Satzzeichen bleiben erhalten. Beide Modi
-prüfen den gesamten ausgewählten Text der neuesten Revision. Ein positiver
-Treffer darf Qualitätswarnungen tragen; ein negatives Ergebnis benötigt vollständige
-Abdeckung ohne bekannte Auffälligkeit. Das ist keine Garantie fehlerfreier OCR.
+Exact checks wording; Normalized standardizes Unicode, case and whitespace while
+preserving numbers, negation and punctuation. Both examine the entire selected text
+of the latest revision. Positives can carry warnings; negatives require complete
+coverage without known issues. Neither guarantees perfect OCR.
 
-**Beispiel:** Eine Top-k-Liste mit zehn ähnlichen Absätzen sagt nicht, dass die
-Passage im übrigen Vertrag fehlt. Semantische Klauselbewertung ist eine spätere,
-separat zu evaluierende Aufgabe. Hier ist kein LLM erforderlich.
+A top-ten list of similar paragraphs cannot prove absence elsewhere in a contract.
+Legal equivalence requires separate evaluation; an LLM is unnecessary for this
+literal workflow. Current optional semantic scores do not change that contract.
 
-## 3. Live-Demo · 3:00–9:00
+## 3. Live demo · 3:00–9:00
 
-Vorbereitung und Ersatzablauf: [Demo](demo.md). Den Prüf-Stack oder einen mit den
-vier synthetischen Dateien vorbereiteten Stack nutzen; OCR nicht erst während
-der Präsentation installieren. Keine Echtverträge verwenden.
+Use the [demo setup/fallback](demo.md), with four synthetic files processed in
+advance. Install OCR before presenting; do not use real contracts.
 
-| Zeit | Aktion | Aussage am Bildschirm |
-|---|---|---|
-| 3:00–4:00 | A hochladen, Original herunterladen, Verarbeitung starten | Dokument, Revision und Artefakt bleiben verschieden; Originalbytes bleiben erhalten. |
-| 4:00–5:00 | Seitentext, JSON/Markdown und Laufhistorie öffnen | Text stammt aus tatsächlicher Verarbeitung; Quelle, Parameter und Versionen sind sichtbar. |
-| 5:00–6:15 | Normalisiert nach `The receiving party shall not disclose confidential information` suchen | A und der vorab verarbeitete Druckscan P liefern Treffer. Fundstelle öffnen, zum Original zurückgehen. |
-| 6:15–7:30 | Auf „Not found in extracted text“ wechseln | D ist negativ; der schwierige, vorgemerkte Scan E bleibt separat unverifizierbar. |
-| 7:30–8:15 | Prüfgruppe und Qualität von E öffnen | Vollständige Seitenabdeckung kann mit Prüfbedarf zusammenfallen. E ist degradierter Druck, keine Handschrift-Evaluation. |
-| 8:15–9:00 | Erneute Verarbeitung und Herkunft erklären | Neuer Lauf erzeugt neue Artefakte. Fehlgeschlagene Läufe erhalten den bisherigen ausgewählten Text und zeigen den Fehler. |
+| Time | Action | Point to demonstrate |
+| --- | --- | --- |
+| 3:00–4:00 | Upload A, download original, start processing | Document/revision/artifact differ; original bytes remain unchanged |
+| 4:00–5:00 | Open page text, JSON/Markdown and job history | Real processing with source, parameters and versions |
+| 5:00–6:15 | Normalized search for `The receiving party shall not disclose confidential information` | A and printed scan P match; open evidence and original |
+| 6:15–7:30 | Switch to Not found in extracted text | D is negative; difficult flagged E remains unverifiable |
+| 7:30–8:15 | Inspect E's quality/review group | Complete coverage can still require review; degraded print is not handwriting evaluation |
+| 8:15–9:00 | Explain reprocessing/provenance | New jobs create new artifacts; failures retain old selected text and expose errors |
 
-**Sprechtext:** „Ein Firmenname wird genauso als Literal gesucht. Ich lasse mir
-Fundstelle und Original zeigen; eine Vertragsänderung erfolgt anschließend im
-freigegebenen juristischen Prozess. Die Anwendung verändert keine Vertragsdateien.“
+**Talk track:** “A company name uses the same literal workflow. I inspect the
+passage and original; changes to the contract follow the approved legal process.
+The application does not modify contract files.”
 
-## 4. Umsetzung und vorgeschlagener Azure-Betrieb · 9:00–11:00
+## 4. Implementation and proposed Azure operation · 9:00–11:00
 
-**Auf die Folie:** Diagramm aus [Produktionskonzept](production.md).
+**Slide:** [Production diagram](production.md).
 
-Lokal laufen React/TypeScript, FastAPI, ein separater Python-Worker, PostgreSQL und
-ein Dateivolume. Jobs werden transaktional beansprucht. Erst die Veröffentlichung
-eines Ergebnisses ersetzt den ausgewählten Text. Ein Such-Snapshot hält
-Ergebnisliste, Herkunft und Seitenbelege konsistent.
+Local components: React/TypeScript, FastAPI, separate Python worker, PostgreSQL and
+file volume. Jobs are claimed transactionally; publication changes selected text.
+Search snapshots keep results, provenance and page evidence consistent.
 
-Azure-Vorschlag: Container Apps für Web/API/Worker, Azure Database for PostgreSQL
-für Metadaten/Text und Blob Storage für Originale und Ableitungen. Dazu Entra ID,
-Managed Identities und Monitoring. Das sind Entwurfsentscheidungen, keine bereits
-ausgerollten Ressourcen. Der Blob-Adapter und Berechtigungsprüfung fehlen noch.
+Proposed Azure mapping: Container Apps for web/API/worker, Azure Database for
+PostgreSQL, Blob Storage, Entra ID, Managed Identities and monitoring. None is a
+claim of deployed resources; blob adapter and authorization remain missing.
 
-SharePoint bleibt Quelle. Quell-ID, Quellversion, Rechte und Löschungen müssen
-übernommen werden. Die eingeschränkte Archiv-REST-API erhält ausschließlich eine
-zusätzliche Kopie; sie ist weder Such- noch Extraktionsbackend.
+SharePoint stays authoritative. Import must preserve source/version, permissions
+and deletion semantics. The restricted archive REST API receives only an extra
+copy; it is not a search/extraction backend.
 
-## 5. Microsoft-Vergleich und Auswahl · 11:00–13:00
+## 5. Microsoft comparison and selection · 11:00–13:00
 
-**Auf die Folie:** Vergleichstabelle aus [Produktionskonzept](production.md).
+**Slide:** [Comparison table](production.md).
 
-- Lokale Extraktion ist die reproduzierbare Offline-Basis. Gedruckte Scans sind
-  geprüft; Tesseract wird hier nicht als zuverlässige Handschrifterkennung verkauft.
-- Azure Document Intelligence Read ist ein dokumentierter Kandidat für Druck und
-  Handschrift mit Seiten-/Positionsdaten. Wie gut historische Vertragsseiten
-  erkannt werden, bleibt eine offene Messfrage.
-- SharePoint OCR mit vorhandener Suche ist eine zu prüfende Microsoft-Alternative.
-  OCR und Indexierung allein belegen noch nicht den hier benötigten vollständigen
-  Negativ-Suchvertrag mit Qualitätsausschluss.
+- Local extraction is a reproducible offline baseline. Printed scans are checked;
+  Tesseract is not presented as reliable handwriting recognition.
+- Azure Document Intelligence Read is a documented print/handwriting candidate
+  with positional data; performance on historical contracts remains unmeasured.
+- SharePoint OCR plus existing search deserves evaluation. OCR/indexing alone do
+  not establish complete negative-search semantics with quality exclusions.
 
-**Entscheidung:** Vor einem Eigenbau-Rollout vorhandene Microsoft-Möglichkeiten
-am gleichen freigegebenen Korpus prüfen. Eigene Verarbeitung nur dort behalten,
-wo Qualität, Nachvollziehbarkeit oder Arbeitsablauf sie rechtfertigen. Keine
-Behauptung über bessere Erkennung, geringere Kosten oder Zeitersparnis ohne Messung.
+**Decision:** evaluate existing Microsoft capabilities on the same approved corpus
+before rolling out a custom system. Keep custom components where quality,
+traceability or workflow justifies them. Do not claim better recognition, lower
+cost or time savings without measurement.
 
-## 6. Pilot und Adoption · 13:00–16:00
+## 6. Pilot and adoption · 13:00–16:00
 
-**Auf die Folie:** „Gemeinsam definieren → kontrolliert vergleichen → gezielt erweitern.“
+**Slide:** “Define together → compare under controlled conditions → expand selectively.”
 
-Vorschlag: ein Legal-Verantwortlicher, drei bis fünf Anwender sowie Engineering
-und ein Ansprechpartner für Informationssicherheit. Größe und Dauer werden vor
-Beginn abgestimmt; das ist keine bereits getroffene Organisationsentscheidung.
+Proposal: a Legal owner, three to five users, Engineering and an information-security
+contact. Agree size/duration beforehand; this is not an existing organizational decision.
 
-1. Zwei echte Arbeitsaufgaben auswählen und Wortlaut versus Bedeutung klären.
-2. Freigegebenes, menschlich geprüftes Referenzset nach Digital-PDF, Druckscan und
-   schwierigen/handgeschriebenen Seiten schichten. Bekannte Positive, Negative
-   und unentscheidbare Fälle getrennt markieren.
-3. Kurze Einführung am Original: Fundstelle öffnen, Qualitätswarnungen verstehen,
-   „unverifizierbar“ eskalieren. Es gibt im Prototyp keine Freigabe von Prüfbedarf.
-4. Manuelle und unterstützte Bearbeitung derselben Aufgaben gegenbalanciert
-   vergleichen; Reihenfolge wechseln, damit Erinnerung die Zeitmessung nicht verfälscht.
-5. Wöchentlich Fehlertypen und Begriffe mit Legal besprechen. Ein fachlicher Owner
-   priorisiert; Engineering verantwortet Laufprobleme und Betrieb.
+1. Select two real tasks and distinguish wording from meaning.
+2. Build an approved, human-checked reference set stratified by digital PDF, print
+   and difficult/handwritten pages; separate known positives, negatives and undecidable cases.
+3. Teach evidence/original inspection, warnings and escalation of unverifiable cases.
+   The prototype has no quality-review approval action.
+4. Counterbalance manual/assisted task order to avoid memory bias in time measurement.
+5. Review error types/terminology weekly with Legal. A business owner prioritizes;
+   Engineering owns processing failures and operation.
 
-| Messgröße | Definition und Entscheidung |
-|---|---|
-| Trefferpräzision/-recall | Korrekte positive Dokument-Passagen-Paare / alle vorgeschlagenen bzw. alle bekannten positiven Paare. Unverifizierbare bekannte Positive zählen beim Recall als nicht gefunden. |
-| Falsche Abwesenheit | Negative Vorschläge trotz bekannter Passage / alle negativen Vorschläge; separat absolute Anzahl und nach Dokumenttyp ausweisen. |
-| Prüfaufwand | Anteil unverifizierbarer Paare und Minuten für Originalprüfung; nicht aus Erfolgsfällen herausrechnen. |
-| Zeit bis Entscheidung | Median und langsame Fälle je Aufgabe einschließlich manueller Nachprüfung, verglichen mit manueller Basis. |
-| Nutzbarkeit | Aufgabenabschluss, Fehlinterpretationen der drei Status und konkrete Rückmeldungen. |
+| Metric | Definition / decision |
+| --- | --- |
+| Positive precision/recall | Correct document-passage pairs / proposed or known positive pairs; unverifiable known positives count as missed for recall |
+| False absence | Negative suggestions despite known presence / all negative suggestions; also report absolute counts by document type |
+| Review work | Unverifiable fraction and original-inspection minutes, included rather than excluded as failures |
+| Time to decision | Median and slow cases, including manual follow-up, compared with manual baseline |
+| Usability | Task completion, misunderstanding of the three statuses and concrete feedback |
 
-Vor Beginn legt Legal mit dem Team tolerierbare Fehler und Mindestnutzen fest.
-Ein nachgewiesener falscher Abwesenheitsvorschlag wird untersucht; bis zur Klärung
-wird dieser Workflow im Pilot nur mit obligatorischer Originalprüfung verwendet.
-Bei unzureichender Handschriftqualität bleiben diese Seiten im manuellen Prozess.
-Ausrollen erst nach fachlicher Abnahme und den offenen Betriebsvoraussetzungen.
+Agree tolerated error and minimum benefit before evaluation. Investigate any false
+absence suggestion; until resolved, require original inspection for that pilot
+workflow. Inadequate handwriting remains manual. Roll out only after business
+acceptance and operational prerequisites.
 
-## 7. Grenzen, nächste Schritte und Gespräch · 16:00–18:00
+## 7. Limits, next steps and discussion · 16:00–18:00
 
-**Auf die Folie:** „Core demonstriert; Produktionsreife und Handschrift noch offen.“
+**Slide:** “Core demonstrated; production readiness and real handwriting remain open.”
 
-- Suche ist ein Vollscan des ausgewählten Textes; keine Lastmessung für große Bestände.
-- Qualitätsheuristiken erkennen nicht jeden OCR-Fehler. Historische Handschrift
-  braucht ein eigenständiges Referenzset und ggf. einen anderen Extraktor.
-- Authentifizierung, Rechteübernahme, Retention, Backup/Restore und Audit fehlen
-  im lokalen Prototyp. Produktionskonzept und Pilot sind noch nicht umgesetzt.
-- Fuzzy-Suche, komfortable Revisionserstellung, zusätzliche Upload-Repräsentationen
-  und semantischer Vergleich sind ausdrücklich zurückgestellt.
+- Full scans do not establish large-collection performance; later bounded
+  [measurements](search-performance.md) are not full-corpus load tests.
+- Heuristics miss some OCR errors; historical handwriting needs a reference set
+  and potentially another extractor.
+- Authentication, permission inheritance, retention, restore and full audit remain
+  production requirements, not delivered infrastructure.
+- At the original milestone, fuzzy/semantic search and revision UI were deferred.
+  Textual/semantic comparison is now implemented; convenient revision creation and
+  additional uploaded representations remain future work.
 
-**Abschlussfrage an das Team:** „Welche Vertragsarten und Fehlertypen verursachen
-heute den größten Prüfaufwand? Damit würde ich Korpus und Pilot zuerst ausrichten.“
+**Closing question:** “Which contract types and errors cause the most review work
+now? That is where I would focus the reference corpus and pilot.”
 
-## Rückfragen vorbereiten
+## Prepare for questions
 
-- **Warum kein Agent?** Der klar umrissene Wortlaut-Workflow benötigt keine autonome
-  Werkzeugwahl. Ein Agent würde die Vollständigkeit einer Negativsuche nicht garantieren.
-- **Warum PostgreSQL?** Ein konsistenter Bestand für Metadaten, Jobs und Volltext
-  reicht für den begrenzten Prototyp. Größere Bestände brauchen Messung und Optimierung.
-- **Ist ein Hash ein Compliance-Nachweis?** Er prüft Bytegleichheit, ersetzt aber
-  weder Aufbewahrungsregeln noch Zugriffskontrolle oder ein rechtssicheres Archiv.
-- **Was passiert beim Absturz?** Alte veröffentlichte Ergebnisse bleiben erhalten;
-  ein hart abgebrochener laufender Job benötigt dokumentierte Betreiberwiederherstellung.
-- **Wie wurde KI genutzt?** Codex unterstützte Implementierung und Dokumentation;
-  API-/OCR-/Browserprüfungen und PR-Reviews prüfen konkrete Ergebnisse. Zur Laufzeit
-  verwendet der Prototyp keine generative KI und keine Cloudmodelle.
+- **Why no agent?** Bounded wording search needs no autonomous tool selection;
+  an agent would not guarantee complete negative findings.
+- **Why PostgreSQL?** One consistent metadata/job/text store serves this bounded
+  prototype. Larger collections require measurement and optimization.
+- **Is a hash compliance evidence?** It checks byte identity, not retention,
+  authorization or a legally compliant archive.
+- **What happens after a crash?** Published results remain; interrupted running
+  jobs require documented operator recovery.
+- **How was AI used?** Codex assisted implementation/documentation, checked by real
+  API/OCR/browser tests and PR reviews. Runtime uses no generative AI/cloud models;
+  optional embeddings run locally.
