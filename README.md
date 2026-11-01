@@ -1,127 +1,111 @@
 # TrayStack
 
-Lokaler Prototyp für nachvollziehbare Vertragsablage und Volltextsuche.
-**Meilensteine 1–4 sind umgesetzt:** PDF/JPEG/PNG und UTF-8-TXT/HTML hochladen, Originalbytes
-herunterladen und Dokumente im Hintergrund auslesen. Ein eigener Worker erzeugt
-Seitentext, strukturierte JSON-Daten und Markdown. Oberfläche und API zeigen
-Jobstatus, Seitenabdeckung, Qualitätswarnungen und die Herkunft des ausgewählten
-Textes. Exakte und normalisierte Volltextsuche liefern Fundstellen, negative
-Ergebnisse im vollständig verarbeiteten Text und getrennte unverifizierbare Dokumente.
-Eine [18-Minuten-Präsentation](docs/presentation.md) mit Demo, vorgeschlagener
-Azure-Architektur, Microsoft-Vergleich und Nutzerpilot ergänzt den lokalen Core.
-Die App-Oberfläche ist auf Englisch. Datumsanzeigen verwenden englische Monatsnamen
-und das 24-Stunden-Format in der lokalen Zeitzone des Browsers. Dokumenttitel,
-Metadaten und Vertragsinhalte bleiben in ihrer ursprünglichen Sprache erhalten.
-Der [Daten- und Evaluationsunterbau](docs/data-evaluation.md) ergänzt lokale
-Importwerkzeuge und 300 reproduzierbare Handschrift-Simulationen mit Ground Truth.
-Die [drei Bildbeispiele](examples/synthetic-handwriting/samples/manifest.json)
-können direkt in der App geprüft werden; das vollständige Bildset wird lokal erzeugt.
-Unter **Similar passages** gibt es zusätzlich eine textuelle Ähnlichkeitssuche:
-Positive Schwelle bis 100, mehrere Fundstellen je Dokument, Kontext und markierte
-Textunterschiede. Die [Score- und Fundstellenregeln](docs/textual-search.md) erklären
-auch die Trainingsmessung mit echten OCR-Ausgaben. Suchausdruckabhängige Hinweise,
-Edit-Budgets und kontrollierte Abbrüche begrenzen zu breite Suchen; 0 ist nicht
-zulässig. Mit **Search only the open document** lässt sich die Auswahl eingrenzen.
-Optional bewertet **Compare meaning with local embeddings** die tatsächlich gefundenen
-Passagen semantisch und zeigt beide Scores. Die [semantischen Regeln](docs/semantic-search.md)
-erklären die zweite Schwelle, lokales Modell, Cache und Grenzen.
-**Keep / Dismiss / Decide later** speichert Prüfentscheidungen pro Fundstelle.
-**Not reviewed**, Statusfilter und Zähler unterstützen den Prüfablauf;
-**Reset review** setzt eine Entscheidung zurück. Die [Review-Regeln](docs/passage-reviews.md)
-beschreiben Quellenbindung, Konflikte und das Verhalten nach Neuverarbeitung.
-**Similar passages** speichert jeden erfolgreichen Suchlauf mit vollständigen
-Treffern, Scores, damaligem Dokumentbestand und Quelltexten. **Saved searches**
-öffnet diese Ergebnisse ohne neue Suche; **Run again** erstellt einen eigenen
-Folgelauf. [Gespeicherte Suchläufe](docs/saved-search-runs.md) erklären den
-Unterschied zwischen festen Treffern und weiterhin bearbeitbaren Bewertungen.
-**Export results** lädt alle Treffer eines gespeicherten Laufs als CSV oder JSON,
-wahlweise nach aktueller Prüfentscheidung gefiltert. Details stehen im
-[Exportvertrag](docs/search-exports.md).
-Die [Prüfansicht](docs/review-workspace.md) zeigt eine kompakte Trefferliste neben
-der ausgewählten Fundstelle, navigiert über Dokumentgrenzen hinweg und zählt
-Keep/Dismiss als abschließende Entscheidungen. Suchparameter sind einklappbar;
-Tastaturbedienung und die nächste ungeprüfte Fundstelle beschleunigen die Prüfung.
-Ein [reproduzierbarer Prüfbestand und Laufzeitbericht](docs/search-performance.md)
-vergleichen textuelle Suche, erste Embeddings und Cache-Nutzung. Die gemessenen
-Optimierungen erhalten Treffer und Scores; die Oberfläche zeigt Suchdauer und
-Ladezustand beim Blättern durch Fundstellen.
+**Getting started:** The [user guide](docs/user-guide.md) explains startup,
+components, uploads, file processing, contains/absence searches, passage review,
+saved searches and export using the interface's English labels.
+
+TrayStack is a local prototype for traceable contract storage and full-text search.
+**Milestones 1–4 are implemented:** upload PDF/JPEG/PNG and UTF-8 TXT/HTML, download
+unchanged originals and process documents in a separate worker. Page text,
+structured JSON and Markdown retain source/method provenance. Job status, coverage
+and quality are separate. Exact/normalized search returns evidence, negative
+findings over fully processed text and a separate unverifiable group.
+
+The interface and documentation are English. Dates use English month names and
+24-hour time in the browser's timezone. Uploaded document contents, titles,
+metadata and multilingual evaluation examples retain their original language.
+
+**Similar passages** adds textual similarity, context and highlighted differences.
+An optional local semantic stage compares only the textually retrieved passages.
+Scores are not legal confidence or equivalence. Expression-specific guidance and
+runtime budgets constrain broad queries; textual zero is not allowed.
+**Search only the open document** narrows scope.
+
+**Keep / Dismiss / Decide later** saves decisions per occurrence. Not reviewed is
+separate; Reset review restores it. Successful Similar passages searches save
+complete matches, scores, captured scope and historical text. Saved searches reopen
+without retrieval; Run again creates a separate linked run. CSV/JSON exports cover
+all selected results, with independent review filtering. The review workspace
+combines a compact list with one selected detail pane, cross-document navigation,
+keyboard controls and final-decision progress.
+
+Technical contracts and evidence:
+
+- [Literal search](docs/search.md), [textual matching](docs/textual-search.md),
+  [semantic comparison](docs/semantic-search.md).
+- [Reviews](docs/passage-reviews.md), [workspace](docs/review-workspace.md),
+  [saved runs](docs/saved-search-runs.md), [exports](docs/search-exports.md).
+- [Data and OCR evaluation](docs/data-evaluation.md): local import tools and 300
+  reproducible handwriting simulations with ground truth; [three samples](examples/synthetic-handwriting/samples/manifest.json)
+  are included, and the full image corpus is generated locally.
+- [Mixed workload/performance report](docs/search-performance.md): bounded
+  real-source, synthetic, OCR and embedding-cache measurements.
+- [18-minute presentation](docs/presentation.md) and [production proposal](docs/production.md).
 
 ## Start
 
-Voraussetzungen: Docker mit Compose v2+ und Zugriff auf den Docker-Daemon.
-Der erste Build lädt Images, Abhängigkeiten und das fest versionierte semantische
-Modell samt Tokenizer (zusammen etwa 135 MB); die laufende Anwendung benötigt
-keine Cloud-Dienste, API-Schlüssel oder externen Netzaufrufe. Auch die API-Dokumentation
-wird lokal ausgeliefert.
+Requires Docker with Compose v2+ and access to the Docker daemon. The first build
+downloads images, dependencies and the pinned local model/tokenizer (about 135 MB).
+The running app needs no cloud services, API keys or external network calls;
+API documentation assets are also served locally.
 
 ```sh
 docker compose up --build
 ```
 
-- Oberfläche: <http://localhost:8080>
-- API-Dokumentation: <http://localhost:8080/docs> oder <http://localhost:8000/docs>
-- Bereitschaftsprüfung: <http://localhost:8000/api/health>
+- Interface: <http://localhost:8080>
+- API documentation: <http://localhost:8080/docs> or <http://localhost:8000/docs>
+- Readiness: <http://localhost:8000/api/health>
 
-PostgreSQL, Migration, API, Worker und Webserver starten in der richtigen Reihenfolge.
-Die Migration endet nach erfolgreicher Ausführung mit Exit-Code 0. Daten und
-Originaldateien liegen in benannten Docker-Volumes. `docker compose down` stoppt
-den Stack und erhält die Volumes.
+PostgreSQL, migrations, API, worker and web server start in dependency order.
+The migration job normally exits with code 0. Data/originals live in named Docker
+volumes; `docker compose down` stops the stack and retains volumes.
 
-Die Standardwerte funktionieren ohne `.env`. Für Anpassungen `.env.example`
-nach `.env` kopieren. `WEB_PORT`, `API_PORT` und `UPLOAD_MAX_BYTES` sind konfigurierbar.
-Der Webserver begrenzt den gesamten Request zusätzlich auf 26 MiB; für höhere
-Dateilimits auch `frontend/nginx.conf` anpassen. Die Datenbank wird nicht zum Host
-veröffentlicht; API und Oberfläche sind an Loopback gebunden. Die Zugangsdaten
-sind ausschließlich lokale Demo-Standardwerte.
+Defaults work without `.env`. Copy `.env.example` to `.env` for customization,
+including `WEB_PORT`, `API_PORT` and `UPLOAD_MAX_BYTES`. Nginx separately limits the
+whole request to 26 MiB; increasing upload limits also requires adjusting
+`frontend/nginx.conf`. Database ports are not exposed to the host; API/web bind to
+loopback. Default credentials are for the local demo only.
 
-## Demo in fünf Minuten
+## Five-minute demo
 
-1. Oberfläche öffnen und einen Titel eingeben.
-2. `examples/synthetic-contracts/A-confidentiality.pdf` auswählen und speichern.
-3. Dokumentdetails zeigen Dokument-, Revisions- und Artefakt-ID, Dateityp, Größe und SHA-256.
-4. **Download original** wählen und mit der Eingabedatei vergleichen.
-5. In den Dokumentdetails **Start processing** wählen. Der Jobstatus aktualisiert sich automatisch.
-6. Seitenabdeckung und Qualität getrennt ansehen; **View page text** öffnen.
-7. JSON-/Markdown-Artefakte in der Textvorschau ansehen oder herunterladen.
-8. `D-delivery.pdf` als Beispiel ohne Zielpassage verarbeiten. `P-printed-scan.jpg`
-   hochladen und echte OCR durchführen. Bei `E-difficult-scan.jpg`
-   **Manual review required** setzen: Der Eintrag bleibt auch nach Verarbeitung
-   in der Prüfgruppe. Die Vormerkung lässt sich nicht durch Neuverarbeitung beseitigen.
-9. **Reprocess** erzeugt neue Artefakte und wählt deren Textbestand aus.
-   Frühere Artefakte bleiben erhalten. Fehlgeschlagene Läufe lassen sich als neue
-   Läufe wiederholen; der bisher ausgewählte Text bleibt bei Fehlschlag unverändert.
+1. Open the interface, enter a title and upload
+   `examples/synthetic-contracts/A-confidentiality.pdf`.
+2. Inspect document/revision/artifact IDs, MIME type, size and SHA-256.
+3. Download the original and compare its bytes.
+4. Choose Start processing, watch status, inspect coverage/quality separately,
+   then open View page text and preview/download JSON and Markdown.
+5. Process `D-delivery.pdf` (no target phrase) and `P-printed-scan.jpg` (real OCR).
+6. Upload `E-difficult-scan.jpg` with Manual review required. The flag persists
+   after processing and cannot be cleared merely by another OCR run.
+7. Reprocess A: new artifacts are published and selected; old artifacts remain.
+   Failed runs can be retried as new runs and retain previously selected text.
+8. Under Literal search, enter the confidentiality phrase and choose Run search.
+   Switch between Contains the passage and Not found in extracted text. The
+   unverifiable group stays separate; positive results open source page text.
 
-10. Oben die Vertraulichkeitspassage eingeben und **Run search** wählen.
-    Zwischen **Contains the passage** und **Not found in extracted text**
-    wechseln. Die Prüfgruppe der Suche bleibt separat; Treffer öffnen die Quellseite.
-
-Die [Demo-Dateien](examples/synthetic-contracts/README.md) sind synthetisch. Ihre
-Hashwerte und Sucherwartungen stehen im Manifest. Es gibt keine
-vorgetäuschten Extraktions- oder Suchergebnisse.
-
-Die vier Beispiele lassen sich auch automatisch über die echte API prüfen und
-für die Präsentation vorbereiten (Python 3.12+, keine zusätzlichen Pakete):
+[Demo fixtures](examples/synthetic-contracts/README.md) are synthetic; their manifest
+records hashes and expectations. Processing and retrieval results are not fabricated.
+The real API smoke script (Python 3.12+, standard library only) creates four new
+synthetic documents per invocation and checks upload, original bytes, worker,
+derivatives and search classification without deleting existing records:
 
 ```sh
 python3 scripts/demo_smoke.py
 ```
 
-Das Skript legt pro Aufruf vier neue synthetische Dokumente an, prüft
-Originalbytes, echte Verarbeitung, Ableitungen und Suchergebnisse. Es löscht keine
-Daten. Es erwartet einen laufenden Worker und meldet bei Fehlern einen Exit-Code
-ungleich null. Bereits angelegte Dokumente bleiben bei Abbruch erhalten.
-Den [isolierten Demo-Aufbau](docs/demo.md#frischer-prüf-stack) verwenden, um
-Präsentation und Tests vom bisherigen Datenbestand zu trennen.
+It requires a running worker and exits nonzero on failure; records created before
+failure remain. Use an [isolated demo stack](docs/demo.md#fresh-validation-stack)
+to separate demonstrations and tests from normal data.
 
-## Entwicklung und Checks
+## Development and checks
 
-Python 3.13 (mindestens 3.12), Node 20.19+ oder 22+ und npm verwenden.
-Lockdateien wurden mit Python 3.13 erstellt. Für lokale OCR-Tests muss Tesseract
-mit englischem Sprachpaket installiert sein, z. B. unter Debian/Ubuntu mit
-`sudo apt-get install tesseract-ocr tesseract-ocr-eng`. Die Docker-Images bringen
-Englisch und Deutsch bereits mit; `OCR_LANGUAGES=eng+deu` aktiviert beide.
-Ein OCR-Aufruf hat standardmäßig 30 Sekunden Zeit, ein Lauf maximal 100 Seiten.
-Parameter und tatsächlich verwendete Engine-Versionen werden am Lauf festgehalten.
+Use Python 3.13 (minimum 3.12), Node 20.19+ or 22+, and npm. Python lock files were
+created with Python 3.13. Local OCR tests need Tesseract with English installed,
+for example `sudo apt-get install tesseract-ocr tesseract-ocr-eng` on Debian/Ubuntu.
+Containers include English and German; set `OCR_LANGUAGES=eng+deu` for both.
+Defaults are 30 seconds per OCR call and 100 pages per job. Actual parameters and
+engine versions are recorded per run.
 
 ```sh
 python3 -m venv .venv
@@ -135,9 +119,9 @@ npm run build --prefix frontend
 npm run format:check --prefix frontend
 ```
 
-Integrationstests verwenden eine **separate** PostgreSQL-Datenbank auf Port 55432.
-Die Test-Fixture leert deren Dokumenttabellen vor jedem Test. Nie die
-Anwendungsdatenbank als Testziel verwenden; der Datenbankname muss auf `_test` enden.
+Integration tests require a **separate** PostgreSQL database on port 55432.
+Fixtures clear its document tables before each test. Never point tests at the app
+database; the test database name must end in `_test`.
 
 ```sh
 docker compose -f compose.test.yaml up -d --wait
@@ -145,23 +129,21 @@ TEST_DATABASE_URL=postgresql+psycopg://traystack:traystack_test@127.0.0.1:55432/
 docker compose -f compose.test.yaml down
 ```
 
-Für echte Modelltests zusätzlich einmal das Modell vorbereiten und
-`SEMANTIC_MODEL_PATH=data/models/minilm` beim Pytest-Aufruf setzen:
+Prepare the model once and set `SEMANTIC_MODEL_PATH=data/models/minilm` on pytest
+invocations to include real-model checks:
 
 ```sh
 .venv/bin/python -m traystack.prepare_semantic_model data/models/minilm
 ```
 
-Ohne `SEMANTIC_MODEL_PATH` werden echte Modelltests ausdrücklich übersprungen;
-Filter-/API-Vertragstests bleiben davon unabhängig.
-Ohne `TEST_DATABASE_URL` werden Datenbanktests ausdrücklich übersprungen.
-Die isolierte Testdatenbank liegt im flüchtigen Speicher; ihre Daten gehen beim
-Entfernen des Testcontainers verloren. Eine frische Instanz testet die Migration
-von einer leeren Datenbank. Storage-Tests benötigen keine Datenbank.
+Without that variable real-model tests explicitly skip; filter/API contract tests
+remain independent. Without `TEST_DATABASE_URL`, database tests explicitly skip.
+Test PostgreSQL uses temporary memory storage and loses data when removed. A fresh
+instance tests migrations from an empty database. Storage tests need no database.
 
-Browser-Tests gegen den laufenden Stack (legen synthetische Datensätze an):
-Für kontrollierte Bestandsgrößen einen separaten Stack und `TRAYSTACK_BASE_URL`
-verwenden; Beispiele und Messgrenzen stehen im [Laufzeitbericht](docs/search-performance.md).
+Browser tests create synthetic records. Use a separate stack and
+`TRAYSTACK_BASE_URL` for controlled collection sizes; see the
+[performance report](docs/search-performance.md).
 
 ```sh
 cd frontend
@@ -169,61 +151,51 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Alternativ mit vorhandenem Chrome:
+Or use installed Chrome:
 
 ```sh
 cd frontend
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome npm run test:e2e
 ```
 
-Für Frontend-Entwicklung `npm run dev --prefix frontend`; Vite leitet API-Anfragen
-an `localhost:8000` weiter. Für Backend-Entwicklung `DATABASE_URL` und
-`STORAGE_PATH` als Umgebungsvariablen setzen, Migrationen mit
-`.venv/bin/alembic -c backend/alembic.ini upgrade head` ausführen und
-`.venv/bin/uvicorn traystack.main:app --reload` starten. Zusätzlich mit denselben
-DB-/Storage-Einstellungen `.venv/bin/python -m traystack.worker` in einem zweiten
-Terminal starten. Keine SQLite-Ersatzdatenbank.
+For frontend development, `npm run dev --prefix frontend` proxies API calls to
+`localhost:8000`. For backend development, set `DATABASE_URL` and `STORAGE_PATH`,
+run `.venv/bin/alembic -c backend/alembic.ini upgrade head`, then
+`.venv/bin/uvicorn traystack.main:app --reload`. Start
+`.venv/bin/python -m traystack.worker` in another terminal with matching DB/storage
+settings. Do not substitute SQLite.
 
-Wenn nach dem alleinigen Austausch des API-Containers der Webserver 502 liefert,
-`docker compose restart frontend` ausführen: Nginx muss dann die geänderte interne
-Containeradresse neu auflösen.
+After replacing only the API container, a 502 can require
+`docker compose restart frontend` so Nginx resolves the new internal API address.
+Regenerate fixtures with `.venv/bin/python scripts/generate_fixtures.py`.
+Update Python locks using pip-tools and `backend/pyproject.toml`; maintain the
+frontend lock with npm.
 
-Fixtures regenerieren: `.venv/bin/python scripts/generate_fixtures.py`.
-Abhängigkeiten aktualisieren: mit `pip-tools` aus `backend/pyproject.toml`
-beide Python-Lockdateien neu erzeugen; Frontend-Lockdatei mit npm pflegen.
+## Architecture and limitations
 
-## Architektur und Grenzen
+FastAPI, SQLAlchemy/Alembic and PostgreSQL store relationships/metadata. A local
+SHA-256-addressed file store preserves original bytes. React displays real API data;
+Nginx serves the built client and proxies requests.
 
-FastAPI + SQLAlchemy/Alembic + PostgreSQL speichern die Beziehungen und Metadaten.
-Ein lokaler, nach SHA-256 adressierter Dateispeicher bewahrt die Originalbytes.
-React/TypeScript zeigt ausschließlich Daten der API; Nginx liefert den gebauten
-Client und leitet API-Aufrufe weiter.
+[Architecture](docs/architecture.md), [decisions](docs/decisions.md) and
+[demo evidence](docs/demo.md) describe the local implementation.
+[Presentation](docs/presentation.md) and [production proposal](docs/production.md)
+distinguish delivered features from Azure, Microsoft comparison and pilot proposals.
+The [implementation brief](TrayStack_Codex_Instructions.md) contains the broader plan.
+Textual/semantic comparison, saved decisions and durable search runs are delivered;
+convenient revision-management UI remains a possible extension.
 
-[Architektur](docs/architecture.md), [Entscheidungen](docs/decisions.md) und
-[Demo/Prüfstand](docs/demo.md) beschreiben den aktuellen Stand.
-[Präsentation](docs/presentation.md) und [Produktionskonzept](docs/production.md)
-trennen gelieferte Funktionen von Azure-Vorschlag, Technologieevaluation und Pilot.
-Die [Implementierungsanleitung](TrayStack_Codex_Instructions.md) enthält den
-weiteren Plan. Textuelle und semantische Passagenvergleiche, gespeicherte
-Fundstellenentscheidungen und persistente Suchläufe sind umgesetzt; komfortable
-Revisionsverwaltung bleibt eine mögliche Erweiterung.
-Der [Suchvertrag](docs/search.md) erklärt Literalität, Qualität, Pagination,
-Seitenoffsets und konsistente Momentaufnahmen.
+The local prototype has no authentication, tenant isolation or legal contract
+assessment. Use synthetic demo data. A review flag is not completed human review.
+Complete processing and high OCR scores do not guarantee correct recognition;
+handwriting needs original inspection. Empty/failed pages are conservatively
+incomplete. “Not found” describes selected extracted text, not legal clause absence.
 
-Dieser lokale Prototyp hat noch keine Anmeldung, Mandantentrennung oder
-Vertragsprüfung. Für die Demo synthetische Daten verwenden. Ein vorgemerkter
-Prüfbedarf ist keine abgeschlossene manuelle Prüfung. Vollständige Verarbeitung
-und hohe OCR-Wortscores garantieren keine korrekte Erkennung. Handschrift muss
-am Original geprüft werden. Leere oder fehlerhafte Seiten gelten konservativ als
-nicht vollständig ausgelesen. „Nicht gefunden“ ist ausdrücklich eine Aussage
-über den ausgewählten extrahierten Text, keine juristische Klauselbewertung.
+## Recover a job after a worker crash
 
-## Worker nach einem Abbruch wieder freigeben
-
-Es gibt bewusst keine automatischen Wiederholungen oder zeitbasierten Lease-
-Übernahmen. Bei hartem Prozessabbruch bleibt ein laufender Job als `running`
-stehen und sperrt weitere Läufe derselben Revision. **Zuerst alle Worker stoppen**,
-dann unterbrochene Läufe als fehlgeschlagen markieren:
+There are no automatic retries or timed lease takeovers. A hard crash leaves the
+job `running`, preventing another active run for that revision. **Stop all workers
+first**, then mark interrupted jobs failed:
 
 ```sh
 docker compose stop worker
@@ -231,7 +203,6 @@ docker compose run --rm --no-deps worker python -m traystack.worker --recover-ru
 docker compose start worker
 ```
 
-Anschließend in der Oberfläche den fehlgeschlagenen Job als neuen Lauf wiederholen.
-Die Wiederherstellung erhält den ausgewählten Text und alle bisherigen Artefakte.
-Eine reguläre Worker-Beendigung wartet bis zu 45 Sekunden auf den aktuellen Lauf;
-größere OCR-Läufe können länger dauern und benötigen dann diese Wiederherstellung.
+Retry the failed job as a new run in the interface. Recovery retains selected text
+and existing artifacts. Normal worker shutdown waits up to 45 seconds for the
+current job; larger OCR runs may take longer and need this recovery procedure.

@@ -1,176 +1,142 @@
-# Architektur — lokaler Core (Meilensteine 1–4)
+# Architecture — local core (milestones 1–4)
 
-Dies ist die implementierte lokale Architektur. Die vorgeschlagene Azure-Zuordnung,
-Rechteübernahme und Microsoft-Alternativen stehen im [Produktionskonzept](production.md).
+This is the implemented local architecture. Proposed Azure deployment, permission
+inheritance and Microsoft alternatives are covered in the [production proposal](production.md).
 
 ```mermaid
 flowchart LR
     Browser[React / TypeScript] --> Web[Nginx :8080]
     Web --> API[FastAPI :8000]
     API --> DB[(PostgreSQL 17)]
-    API --> Blobs[(SHA-256-Dateispeicher)]
-    Migration[Alembic: einmaliger Startjob] --> DB
-    Worker[Separater Python-Worker] --> DB
+    API --> Blobs[(SHA-256 file storage)]
+    Migration[Alembic: startup job] --> DB
+    Worker[Separate Python worker] --> DB
     Worker --> Blobs
     Worker --> Extract[PyMuPDF / Tesseract]
 ```
 
-Beim Upload entstehen in einer Datenbanktransaktion ein logisches Dokument,
-dessen erste Revision und ein Originalartefakt. Das JSONB-Feld `metadata` enthält
-optionale Metadaten; Dateiname, Typ, Größe, Hash und Uploadparameter sind am
-Artefakt gespeichert. Das Feld `requires_manual_review` wird am Originalartefakt
-als Parameter aufbewahrt und in jeden Verarbeitungslauf übernommen.
+Upload creates a logical document, its first revision and an original artifact in
+one database transaction. JSONB `metadata` stores optional document metadata;
+filename, type, size, hash and upload parameters belong to the artifact.
+`requires_manual_review` is an original-artifact parameter inherited by processing.
 
-Dateiendung und tatsächlicher PDF-/Bildinhalt werden geprüft; das clientseitige
-MIME-Label wird nicht als Nachweis akzeptiert. Die API begrenzt die Dateigröße vor
-der Dateiparser-Prüfung, Nginx zusätzlich den gesamten Request. FastAPI verwendet
-für Multipart-Dateien einen temporären, auf Disk auslagerbaren Uploadpuffer.
+Both extension and actual PDF/image contents are validated; a client MIME label is
+not trusted. The API limits size before parsing; Nginx also limits the entire
+request. FastAPI multipart uploads can spool temporary buffers to disk.
 
-Die API schreibt Bytes in eine temporäre Datei, berechnet SHA-256 und veröffentlicht
-die Datei atomar unter `ab/cd/<sha256>`. Eine vorhandene Datei wird vor der
-Wiederverwendung auf ihren Hash geprüft. Gleiche Bytes teilen sich den Blob,
-behalten aber getrennte Artefakt-IDs. Nach der Veröffentlichung werden die
-Metadaten committed. Ein Download ist ausschließlich über eine vorhandene
-Artefakt-ID möglich; interne Storage-Schlüssel erscheinen nicht in der API.
+The API streams bytes to a temporary file, calculates SHA-256 and atomically
+publishes at `ab/cd/<sha256>`. Existing content is hash-checked before reuse. Equal
+bytes share a blob but retain separate artifact IDs. Metadata is committed after
+publication. Downloads require an existing artifact ID; storage keys are not exposed.
 
-Blob-Dateisystem und PostgreSQL haben keine gemeinsame Transaktion. Scheitert
-der Datenbankcommit, kann ein nicht referenzierter Blob zurückbleiben; er wird
-nicht automatisch gelöscht, weil andere Artefakte denselben Inhalt nutzen können.
-Ein Garbage Collector ist für diesen Meilenstein nicht implementiert.
+The filesystem and PostgreSQL do not share a transaction. A failed DB commit can
+leave an unreferenced blob. It is not automatically deleted because other artifacts
+can share its contents. Garbage collection is not implemented.
 
-Die API bietet Upload, paginierte Liste, Dokument-/Revisions-/Artefaktdetails,
-Dateidownload, Verarbeitungsstart/-status/-wiederholung, expliziten Textabruf und
-Readiness. Fehler in Datenbank oder Storage liefern einen
-sichtbaren Fehler; fehlende Originalbytes werden nicht als erfolgreicher leerer
-Download ausgegeben. Verträge und SQL-Parameter werden nicht in Fehlerlogs geschrieben.
+The API provides upload, paginated lists, document/revision/artifact details,
+downloads, processing/status/retry, explicit text reads and readiness. DB/storage
+failures are visible; missing originals never become successful empty downloads.
+Contract contents and SQL parameters are not written to error logs.
 
-Datenbank-Constraints sichern positive Revisionsnummern, eindeutige Nummern pro
-Dokument sowie Quellenartefakte derselben Revision. Es gibt keine Mutation oder
-Löschung von Artefakten über die API. Beliebige Provenienzgraphen und alternative
-Uploads sind noch nicht exponiert.
+Constraints enforce positive revision numbers, uniqueness per document and source
+artifacts belonging to the same revision. Artifacts cannot be mutated/deleted via
+the API. Arbitrary provenance graphs and alternative uploads are not yet exposed.
 
-## Verarbeitung und Veröffentlichung
+## Processing and publication
 
-`POST /api/revisions/{id}/process` nimmt die Originalartefakt-ID und optional eine
-Prüfvormerkung entgegen und antwortet mit 202. Nur wenn genau ein Original
-vorliegt, darf seine ID weggelassen werden. Weitere Repräsentationen wählen den
-Index nicht automatisch um. Ein partieller eindeutiger Index erlaubt höchstens
-einen queued/running Job pro Revision; Konflikte liefern 409.
+`POST /api/revisions/{id}/process` accepts an original artifact ID and optional
+review flag, returning 202. The ID can be omitted only with exactly one original.
+Additional representations do not automatically change selected search text.
+A partial unique index permits only one queued/running job per revision; conflicts
+return 409.
 
-Der Worker beansprucht einen Job mit `FOR UPDATE SKIP LOCKED`, markiert ihn als
-laufend und committet vor der CPU-Arbeit. Er kontrolliert Größe und SHA-256 der
-Quelle. Für PDF-Seiten mit mindestens 20 Zeichen und ohne Rasterbilder nutzt er
-die Textschicht; Seiten mit Bildern oder wenig Text werden vollständig gerendert
-und OCR unterzogen. Damit geht der Scaninhalt neben einem eingebetteten Header
-nicht verloren. Diese konservative Regel OCRt auch digitale Seiten mit Logos.
+The worker claims jobs using `FOR UPDATE SKIP LOCKED`, marks them running and
+commits before CPU work. It verifies source size/hash. PDF pages with at least 20
+embedded characters and no raster images use text extraction. Pages containing
+images or too little text are rendered completely and OCR'd. This avoids a text
+header concealing an unread scan, conservatively including digital pages with logos.
 
-Tesseract liefert Wörter, Bounding Boxes und echte Wort-Konfidenzwerte. PDF-Boxes
-verwenden Punkte und x0/y0/x1/y1; OCR-Boxes beziehen sich auf das gerenderte,
-orientierte Bild in Pixeln und left/top/width/height. Bilder werden auf maximal
-25 Millionen Pixel begrenzt, PDF-Rendering standardmäßig auf 200 dpi. Ein Timeout
-oder ein leerer OCR-Text wird als Seitenproblem sichtbar, nicht als fehlende Klausel.
+Tesseract returns words, boxes and actual word-confidence values. PDF coordinates
+are points in x0/y0/x1/y1; OCR boxes use oriented/rendered-image pixels and
+left/top/width/height. Images are limited to 25 million pixels; default PDF rendering
+is 200 dpi. Timeouts/empty OCR are page problems, not missing-clause evidence.
 
-Der Lauf erzeugt zwei neue immutable Artefakte, `structured_json` und
-`extracted_markdown`. Das JSON enthält Seiten, Text, Verfahren, Qualität,
-Koordinaten, Parameter und Engine-Versionen. In einer Datenbanktransaktion werden
-Artefaktmetadaten, ausgewählter Revisionstext, Seitentexte und der abgeschlossene
-Job veröffentlicht. Bei Datenbankfehlern bleiben weder halbe Seitensätze noch
-derivative Artefaktzeilen sichtbar. Nicht referenzierte Blob-Dateien sind wie
-beim Upload möglich; ein Garbage Collector bleibt offen.
+Each run creates immutable `structured_json` and `extracted_markdown` artifacts.
+JSON includes pages, text, methods, quality, coordinates, parameters and engine
+versions. Artifact metadata, selected revision text, page text and completed job
+are published in one DB transaction. Failed publication exposes no partial page
+sets or derivative rows; unreferenced blobs remain possible as with upload.
 
-Erfolgreich veröffentlichte Teilergebnisse ersetzen ebenfalls den ausgewählten
-Index und tragen ihre tatsächliche Qualität. Ein fehlgeschlagener Lauf erhält
-den vorherigen ausgewählten Index; seine Fehlermeldung ist daneben sichtbar.
-Alte Laufartefakte bleiben herunterladbar. Die aktuelle Auswahl nennt eindeutig
-Quellartefakt, Job und Normalisierungsversion. `POST /api/jobs/{id}/retry` erstellt
-einen neuen Job mit übernommenen Parametern und Verweis auf den fehlgeschlagenen
-Vorgänger. Ein inzwischen hinzugekommener manueller Prüfbedarf wird beim Retry
-zusätzlich übernommen; die alten Laufparameter bleiben unverändert erhalten.
-Ein pro Lauf gesetzter manueller Prüfbedarf wird für dieselbe Quelle
-auch in späteren Läufen beibehalten.
+Published partial extraction also replaces selected text, carrying its actual
+quality. A failed run retains the previous selection and shows its error. Old
+artifacts remain downloadable. Current selection identifies source, job and
+normalization version. `POST /api/jobs/{id}/retry` creates a new job referencing the
+failed predecessor and copying its parameters. Newly introduced review requirements
+are additionally inherited without rewriting old parameters. Once flagged for a
+source, manual review persists in subsequent runs for that source.
 
-## Abdeckung, Qualität und Text
+## Coverage, quality and text
 
-TXT- und HTML-Originale nutzen dieselbe Pipeline, mit UTF-8-Validierung und einer
-logischen Seite. HTML wird ohne Skriptausführung oder Ressourcenabruf als Text
-gelesen und immer zur Prüfung markiert. Physische Seiten oder Layouttreue werden
-dabei nicht behauptet. [Import und Evaluation](data-evaluation.md) beschreibt
-Quelleninventar, die synthetischen Bilddaten und die gemessene OCR-Basis.
+UTF-8 TXT/HTML use the same pipeline with one logical page. HTML executes no scripts,
+fetches no resources and always requires review; physical-page/layout fidelity is
+not claimed. [Data evaluation](data-evaluation.md) covers inventory, synthetic images
+and measured OCR.
 
-Abdeckung (`complete`, `partial`, `unavailable`) und Qualität (`no_known_issue`,
-`needs_review`, `unassessed`) sind getrennte Felder. Eine Seite mit Text und
-manueller Prüfvormerkung ist beispielsweise vollständig verarbeitet und trotzdem
-prüfbedürftig. Die Oberfläche zeigt eine eigene Prüfgruppe sowie Originaldownload,
-Seitentext, JSON-/Markdown-Vorschau und Laufhistorie. Sie pollt den realen API-Stand
-alle zwei Sekunden. Volltext wird nur über den expliziten Text-/Dateiabruf
-zurückgegeben, nicht in Dokumentlisten und Metadaten.
+Coverage (`complete`, `partial`, `unavailable`) is separate from quality
+(`no_known_issue`, `needs_review`, `unassessed`). A flagged text page can be complete
+and still need review. The UI provides a review group, originals, page text,
+JSON/Markdown previews and run history. It polls actual API state every two seconds.
+Full text is returned only by explicit text/file reads, not metadata lists.
 
-Normalisierung v1: Unicode NFC, einheitliche Zeilenenden, Whitespace auf ein
-Leerzeichen reduzieren, Randwhitespace entfernen und Unicode-Casefold. Zahlen,
-Negationen, Satzzeichen und Bindestriche bleiben erhalten; es gibt bewusst keine
-mehrdeutige Silbentrennungsreparatur. Rohtext verbindet Seiten mit `\n\f\n`;
-normalisierter Text verbindet nichtleere Seiten mit einem Leerzeichen. Die
-Seitenoffsets beziehen sich exakt auf diesen gespeicherten normalisierten String.
+Normalization v1 applies NFC, consistent line endings, collapsed/trimmed whitespace
+and Unicode casefold. Numbers, negation, punctuation and hyphens remain; ambiguous
+hyphenation is not repaired. Raw pages join with `\n\f\n`; nonempty normalized pages
+join with one space. Page offsets reference that exact normalized string.
 
-Ein Job kann technisch abgeschlossen sein, obwohl einzelne Seiten unverfügbar
-oder prüfbedürftig sind. Die [Volltextsuche](search.md) prüft die ganze neueste
-Revision. Negative Ergebnisse erfordern vollständige Abdeckung, keine bekannte
-Qualitätsauffälligkeit und keine manuelle Prüfvormerkung für die Quelle. Positive
-Treffer auf unsicheren Extraktionen behalten ihre Warnungen. Ein Read-only-Snapshot
-verbindet die globale Klassifikation mit Ausschnitten und Seitenpositionen.
-Automatische Wiederholung, Heartbeats und sichere Lease-Übernahme sind noch nicht
-implementiert; die README beschreibt den expliziten Wiederherstellungsablauf nach
-Worker-Abbruch. Während der Extraktion bleiben keine Datenbank-Rowlocks offen.
+A completed job can contain unavailable or questionable pages. [Literal search](search.md)
+examines the entire latest revision. Negative findings require full coverage, no
+known quality issue and no source review flag. Positive findings retain warnings.
+A read-only snapshot ties classification to snippets and page references. There are
+no automatic retries, heartbeats or safe lease takeovers; see README recovery.
+Extraction holds no database row locks during CPU work.
 
-## Textuelle Kandidatensuche
+## Textual candidate retrieval
 
-`POST /api/search/textual` verwendet dieselbe Auswahl der neuesten Revision,
-Provenienz und Qualitätswarnungen wie die Literalsuche. In einem eigenen
-Read-only-Snapshot vergleicht RapidFuzz den Suchtext mit exakten Vorkommen und
-variablen Wortfenstern. Überlappende Kandidaten werden konsolidiert; mehrere
-Fundstellen bleiben je Dokument blätterbar. Der Score bezieht sich auf die
-tatsächlich angezeigte Passage. Fundstellen und Seiteninformationen stammen aus
-demselben Snapshot. Es gibt kein zusätzliches Indexschema oder stilles Top-k-Limit.
+`POST /api/search/textual` uses the same latest-revision scope, provenance and
+warnings as literal search. In a read-only snapshot RapidFuzz compares queries
+with exact occurrences and variable word windows. Overlaps are consolidated;
+multiple occurrences retain scores for the displayed passage and consistent page
+references. There is no additional candidate index or silent top-k cutoff.
 
-Die [Kandidatenregeln](textual-search.md) und vollständige Ressourcenfehler machen
-die Grenzen des aktuellen Vollscans sichtbar. Dieser Ablauf liefert mögliche
-positive Treffer; er darf keine juristische Äquivalenz oder Abwesenheit feststellen.
+[Candidate rules](textual-search.md) and explicit resource errors expose full-scan
+limits. This retrieves possible positives, not legal equivalence or absence.
+A database-free assessment endpoint evaluates query/threshold risk with the same
+server guidance used by retrieval/UI. Compute, per-document/global occurrence and
+density budgets can abort a run. Structured errors contain partial observations,
+not a successful partial result list.
 
-Ein datenbankfreier Vorab-Endpunkt bewertet den Suchausdruck und die Schwelle;
-Suchlauf und Oberfläche verwenden dieselben serverseitigen Hinweise. Zusätzlich
-zu Rechenbudgets gelten Grenzen für konsolidierte Fundstellen je Dokument, im
-Gesamtbestand und für dichte approximative Treffer. Ein Abbruch liefert eine
-strukturierte Fehlerantwort mit Teilbeobachtungen, aber ohne erfolgreiche
-Ergebnisliste. Die Einzelheiten stehen in der [Suchsteuerung](textual-search.md).
+The optional [semantic stage](semantic-search.md) assesses fully retrieved textual
+passages using a pinned ONNX CPU model downloaded at build time. Cache identity
+includes actual text and model/pipeline version; there is no precomputed document
+embedding index. Filtering precedes counts/pagination and preserves textual ranking
+and source references. Model failures/budgets do not return successful subsets.
+Literal absence semantics remain unchanged.
 
-Die optionale [semantische Stufe](semantic-search.md) bewertet erst die vollständig
-ermittelten textuellen Fundstellen. Ein fest versioniertes, beim Build geladenes
-ONNX-Modell läuft lokal auf CPU. Der Cache adressiert den konkreten Text samt
-Modell-/Pipeline-Version, ohne einen vorab berechneten Dokumentindex einzuführen.
-Semantische Filterung erfolgt vor Zählung und Pagination; Rangfolge, Textbezug und
-Quellennachweis bleiben erhalten. Modellfehler und zusätzliche Ressourcenbudgets
-liefern keine erfolgreiche Teilmenge. Die exakte Abwesenheitssuche ist unverändert.
+[Reviews](passage-reviews.md) store current states in `passage_reviews`, bound to job,
+comparison expression/mode and occurrence. Fingerprints/FKs bind the source.
+Live-source writes lock and validate selected text; expected versions prevent lost
+updates. Ephemeral search reads remain read-only and project decisions in the same
+snapshot, counting after similarity and filtering before pagination. New processing
+runs do not inherit old decisions.
 
-[Prüfentscheidungen](passage-reviews.md) liegen als aktuelle Zustände in
-`passage_reviews`, gebunden an Verarbeitungslauf, Vergleichsausdruck, Modus und
-konkrete Fundstelle. Quellfingerprint und Fremdschlüssel sichern den Textbezug.
-Ein eigener Schreib-Endpunkt prüft die noch ausgewählte Quelle, sperrt sie für den
-kurzen Schreibvorgang und verwendet eine erwartete Versionsnummer gegen verlorene
-Updates. Die ephemeren Such-Endpunkte bleiben read-only: Sie lesen Entscheidungen im selben Snapshot,
-zählt nach textueller/semantischer Filterung und filtert vor der Pagination nach
-Review-Status. Neuverarbeitung übernimmt keine alten Entscheidungen automatisch.
+[Performance measurements](search-performance.md) separate matching, model/cache and
+HTTP costs. Optimized windows preserve scores and budgets; complete embedding-cache
+hits avoid directory scans. The bounded evidence does not justify a new index or
+search-snapshot queue by itself.
 
-Die [Laufzeitmessung](search-performance.md) trennt Matcher, Modell-/Embedding-Cache
-und tatsächliche HTTP-Anfragen. Optimierte Wortfenster behalten dieselben Scores,
-Fundstellen und Ressourcenbudgets; vollständige Embedding-Cache-Treffer benötigen
-keinen Verzeichnisscan. Ein zusätzlicher Index oder eine Such-Snapshot-Warteschlange
-wird durch diesen begrenzten Messbestand nicht eingeführt.
-
-[Gespeicherte Suchläufe](saved-search-runs.md) erfassen die gesamte positive
-Treffermenge und den damaligen Dokumentbestand im selben Read-Snapshot und
-persistieren sie anschließend atomar. Quelltexte werden pro Verarbeitungslauf
-archiviert; Hash-Prüfungen verhindern unbemerkte Substitution. Wiederöffnen und
-Pagination benötigen weder Matcher noch Modell. Aktuelle Bewertungen werden
-überlagert, während ihr Zustand zur Erfassung zusätzlich erhalten bleibt.
-Historische Review-Schreibvorgänge validieren die archivierte Fundstelle; neue
-Verarbeitungsläufe übernehmen die Entscheidungen weiterhin nicht automatisch.
+[Saved searches](saved-search-runs.md) capture all positive matches and historical
+scope in one read snapshot, then persist atomically. Text is archived per processing
+job with integrity checks. Reopening needs neither matcher nor model. Current
+reviews overlay preserved capture-time states; historical writes validate archived
+membership/source. The [workspace](review-workspace.md) navigates bounded full saved
+results. [Exports](search-exports.md) preserve provenance and a consistent review view.
