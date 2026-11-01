@@ -42,6 +42,16 @@ Technical contracts and evidence:
   real-source, synthetic, OCR and embedding-cache measurements.
 - [18-minute presentation](docs/presentation.md) and [production proposal](docs/production.md).
 
+## Search workflow
+
+Customer search includes only ready documents. Upload/processing and quality
+checks live in the collapsed **Manage documents** area. The diagnostic API retains
+its separate full-scope classification when `ready_only` is not enabled.
+
+[Search readiness and review navigation](docs/search-readiness.md) describes the
+ready-only search library, separate Manage documents area, explicit phrase-absence
+option and automatic advancement after successful decisions.
+
 ## Start
 
 Requires Docker with Compose v2+ and access to the Docker daemon. The first build

@@ -1,5 +1,10 @@
 # Full-text search — milestone 3
 
+The customer interface sends `ready_only: true`, restricting the scope before
+classification to [ready documents](search-readiness.md). The diagnostic API keeps
+`ready_only: false` as its backward-compatible default; uncertainty groups below
+describe that full-scope contract and are not displayed in customer searches.
+
 `POST /api/search` checks all selected text from the **latest revision of each
 document**. An unprocessed newer revision never falls back to an older index.
 Documents without revisions are also unverifiable.

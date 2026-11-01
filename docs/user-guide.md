@@ -97,6 +97,9 @@ replacement for that backup.
 | Migration service | Updates the database schema at startup |
 | Local embedding model | Optionally compares the query with already retrieved textual passages; not a separate Compose service |
 
+Upload and processing controls live under **Manage documents**, collapsed by
+default so search users can work without processing details.
+
 The worker uses PyMuPDF for PDFs and Tesseract for image OCR. The API uses character
 comparison for textual similarity and optionally the local model for semantic
 comparison. The worker runs independently of the browser: accepted jobs can
@@ -120,7 +123,7 @@ model distinguishes them.
 
 ## 3. Upload a document
 
-1. Open **Add a contract**.
+1. Expand **Manage documents**, then open **Add a contract**.
 2. Enter a useful **Title**, for example `Supply agreement – Oldname Ltd – 2022`.
 3. Select an **Original file**: PDF, JPEG, PNG, UTF-8 TXT or HTML.
 4. Enable **Manual review required** for handwriting or difficult scans.
@@ -146,7 +149,7 @@ clear it. Choosing **Keep** for a passage does not approve extraction quality.
 
 ## 4. Process a document and interpret its status
 
-1. Click the document in the library.
+1. Expand **Manage documents** and click the document in the library.
 2. Select its original under **Processing source**. A single original is normally
    selected automatically.
 3. Set **Manual review required** if appropriate.
@@ -185,7 +188,9 @@ conservatively.
 
 **Reprocess** creates another run and new derivatives. Earlier artifacts remain
 available. Publishing new results replaces the revision's selected search text;
-a failed run retains any previously selected text and exposes its error.
+a failed run retains any previously selected text for inspection in Manage
+documents, but the document stays outside new ready-only searches until a suitable
+current result is published.
 **Retry as a new run** retries a failed job. Repeating does not automatically fix
 bad scans or damaged files. Saved searches retain their historical matches and
 source text even after successful reprocessing.
@@ -222,7 +227,7 @@ To find `Oldname Ltd` in extracted contracts:
 2. Choose **Literal search**.
 3. Enter `Oldname Ltd` under **Text passage**.
 4. Choose **Search mode: Normalized**.
-5. Choose **Find documents: Contains the passage**.
+5. Choose **Contain this phrase**.
 6. Click **Run search**.
 
 Search examines each document's latest revision and its selected extracted text.
@@ -246,10 +251,11 @@ text in document details. Navigate additional result pages as needed. Literal
 search returns documents and a first evidence occurrence, not a complete list of
 every occurrence within each document.
 
-A positive passage can come from a partial or questionable extraction: the phrase
-was found in available text, but warnings still matter. **Unverifiable** separately
-lists documents without a reliable positive or negative finding for this search;
-it is not a list of confirmed nonmatches.
+Only ready documents appear in customer searches: complete coverage, usable text,
+no unresolved quality/manual-review flags, and a completed current processing run.
+Pending or problematic documents remain under **Manage documents**, outside the
+search scope. They are not treated as negative results. Diagnostic API consumers
+can still inspect the older full-scope classification; it is not a search UI list.
 
 ## 7. Find documents where a phrase was not found
 
@@ -261,24 +267,22 @@ Use this target phrase:
 
 1. Choose **Literal search** and enter the complete phrase under **Text passage**.
 2. Use **Normalized** to ignore case/whitespace differences, or **Exact** to retain them.
-3. Select **Find documents: Not found in extracted text**.
+3. Select **Do NOT contain this phrase**.
 4. Choose **Run search**.
-5. Inspect both negative results and **Unverifiable**.
+5. Inspect the negative results. Ineligible documents remain in Manage documents, outside this search scope.
 
-| Result | Meaning | Suggested next step |
-| --- | --- | --- |
-| **Not found in extracted text** | Phrase absent from the selected, fully processed text without known quality issues or manual-review flags | Inspect the original and alternative wording |
-| **Unverifiable** | No reliable negative finding: processing/text/pages/quality may be missing or require review | Process, resolve errors, use a better source or review manually |
-| Phrase actually found | Excluded from the negative result list | Switch to **Contains the passage** to inspect evidence |
+**Documents without this phrase** contains ready documents whose full selected
+text does not contain the submitted wording. Documents still being prepared are
+not included and do not appear as an additional search-results group. Operators
+can inspect them separately under **Manage documents**.
 
 **“Phrase not found” does not mean “the legal clause is missing.”** Equivalent
 wording may differ. Even text classified as fully processed can contain OCR errors.
 Inspect originals and alternative formulations before making contractual decisions.
 
-An unprocessed latest revision cannot borrow a clean older revision's text to
-appear successfully examined. Reprocessing within the same revision can continue
-using its previously selected text until new text is published; inspect warnings
-about newer pending or failed runs.
+An unprocessed latest revision cannot borrow an older revision's clean text.
+A pending or failed newer processing attempt also keeps the document outside new
+ready-only searches. Existing saved searches retain their historical evidence.
 
 Absence search has no semantic threshold. Failure to find a similar/semantic
 passage is never turned into a negative clause finding.
@@ -343,7 +347,9 @@ extracted text. Download the original for the actual page image.
 | **Decide later** | Defer the decision |
 | **Reset review** | Return a reviewed passage to Not reviewed |
 
-The interface confirms a decision after a successful server response.
+The interface confirms a decision after a successful server response and advances
+to the next passage. It stays at the last passage when there is no following item.
+Failed saves leave selection and the previous decision intact.
 **Final decisions** counts Keep + Dismiss; deferred/unreviewed passages remain
 pending. Progress covers all stored similarity matches before review filtering.
 
@@ -362,7 +368,7 @@ replace company names.
 | Capability | Literal search | Similar passages |
 | --- | --- | --- |
 | Find literal wording | Yes | Yes, at textual 100 in the same mode |
-| Negative findings with uncertainty group | Yes | No |
+| Explicit phrase-absence search over ready documents | Yes | No |
 | Review every retained occurrence separately | No complete occurrence list | Yes |
 | Keep / Dismiss / Decide later | No | Yes |
 | Automatically saved durable search run | No | Yes, after success |
@@ -397,7 +403,8 @@ and do not automatically inherit old decisions.
 
 Exports include all selected occurrences, not just the visible passage. Current
 decisions are read at one consistent export snapshot. Search and export times are
-separate. Unsearchable documents are included separately regardless of review filter.
+separate. New ready-only runs contain no unsearchable documents. Historical exports retain
+the original captured scope, including any older unsearchable records.
 
 CSV is for spreadsheets. `row_type` distinguishes `summary`, `passage` and
 `unsearchable` rows; filter to `passage` for a pure match list. Formula-like text
@@ -415,7 +422,7 @@ files are not embedded in result exports.
 | Job remains queued | Check the worker and `docker compose logs --tail=100 worker` |
 | Incorrectly recognized words | Compare page text with the original; consider a better scan, appropriate OCR language and reprocessing |
 | No positive match | Check mode, spelling, punctuation, hyphenation, revision and processing; consider Similar passages |
-| Fewer negative results than expected | Inspect Unverifiable; those documents are not confirmed negatives |
+| Fewer negative results than expected | Inspect Manage documents for preparation issues; excluded documents are not confirmed negatives |
 | Broad search stopped | Raise the threshold, refine wording or select one document under Similar passages; no successful partial list is returned |
 | Saved run shows old text after OCR | Expected: use Run again for current results |
 | Review changed elsewhere | Refresh reviews and inspect the current decision |

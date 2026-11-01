@@ -48,7 +48,7 @@ export default function SearchRunExport({ runId }: { runId: string }) {
         Download all matching passages across every page of this saved run.
         Exports include current review decisions, search and export times, and
         source references. Changing this filter does not change the on-screen
-        results. Unsearchable documents are included separately in every export.
+        results.
       </p>
       <label htmlFor="export-review-filter">Export review status</label>
       <select
@@ -80,11 +80,11 @@ export default function SearchRunExport({ runId }: { runId: string }) {
         </button>
       </div>
       <p className="fineprint">
-        CSV opens in spreadsheets and includes a summary row, passage rows and
-        unsearchable document rows. Formula-like text is prefixed with an
-        apostrophe. JSON preserves the original text and includes the complete
-        captured scope, text differences and comparison versions. Scores do not
-        establish legal equivalence or clause absence.
+        CSV opens in spreadsheets and includes a summary and passage rows.
+        Formula-like text is prefixed with an apostrophe. JSON preserves the
+        original text and includes the complete captured scope, text differences
+        and comparison versions. Scores do not establish legal equivalence or
+        clause absence.
       </p>
       {busy && <p role="status">Preparing export …</p>}
       {message && <p role="status">{message}</p>}

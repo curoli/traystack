@@ -187,6 +187,7 @@ export async function getArtifactText(id: string): Promise<string> {
 }
 
 export interface SearchRequest {
+  ready_only?: boolean;
   query: string;
   mode: "exact" | "normalized";
   relation: "contains" | "lacks";
@@ -303,6 +304,7 @@ export const saveReview = (payload: ReviewWrite) =>
   });
 
 export interface TextualSearchRequest {
+  ready_only?: boolean;
   review_filter?: ReviewFilter;
   minimum_semantic_score?: number | null;
   query: string;
@@ -459,7 +461,11 @@ export const createSearchRun = (
   request<TextualSearchResponse>("/api/search-runs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ search, name, parent_run_id }),
+    body: JSON.stringify({
+      search: { ...search, ready_only: true },
+      name,
+      parent_run_id,
+    }),
   });
 export function getSearchRun(
   id: string,

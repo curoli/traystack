@@ -934,3 +934,25 @@ select {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.document-management {
+  margin: 2rem 0;
+}
+.document-management > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 1rem;
+}
+.search-goal {
+  border: 1px solid #dce5df;
+  border-radius: 0.5rem;
+  min-width: 0;
+}
+.search-goal label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+.search-goal input {
+  width: auto;
+}

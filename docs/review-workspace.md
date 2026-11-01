@@ -30,7 +30,8 @@ in a sticky action panel while reading context or archived source text.
   pane. Selecting another passage clears that source viewer; repeated source
   opening retains its existing focus behavior.
 
-Saving Keep, Dismiss or Decide later keeps the selection in All review states.
+Saving Keep, Dismiss or Decide later advances to the next passage in All review
+states, staying at the end when no next passage exists.
 In a filtered view, an occurrence leaving the filter is removed locally and the
 next remaining occurrence at that position is selected (or the preceding one at
 the end). Focus moves to the detail pane, including when the last item disappears.

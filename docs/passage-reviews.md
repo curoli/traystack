@@ -25,7 +25,7 @@ turns a missing positive candidate into proof of absence.
 
 The [review workspace](review-workspace.md) loads every stored matching passage
 into a compact list with one selected detail view. With **All review states**, a
-confirmed save keeps that selection and updates its counters. In a filtered view,
+confirmed save advances to the next passage and updates its counters. In a filtered view,
 a passage leaving the filter is removed and the next remaining item is selected.
 Unsubmitted form edits are not applied. Navigation and review callbacks from a
 superseded search cannot modify newer results or their counters.

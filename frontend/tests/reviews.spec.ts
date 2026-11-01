@@ -15,6 +15,7 @@ async function find(page: Page, query: string) {
 }
 async function open(page: Page) {
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -68,8 +69,8 @@ test("review decisions persist across navigation, reload and semantics, and filt
       .first()
       .getByRole("button", { name: decision, exact: true })
       .click();
-    await expect(items.first().locator(".review-status")).toContainText(
-      `Review: ${decision}`,
+    await expect(page.locator(".passage-choice").nth(index)).toContainText(
+      decision,
     );
   }
   await expect(counts).toContainText(
@@ -87,6 +88,7 @@ test("review decisions persist across navigation, reload and semantics, and filt
     "Review: Keep",
   );
   await page.reload();
+  await page.getByText("Manage documents", { exact: true }).click();
   await expect(page.locator(".textual-response")).toBeVisible();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })

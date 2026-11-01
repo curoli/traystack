@@ -20,6 +20,7 @@ const errorText = (error: unknown) =>
   error instanceof Error ? error.message : "Request failed.";
 
 export default function App() {
+  const [managementOpen, setManagementOpen] = useState(false);
   const [searchWorkflow, setSearchWorkflow] = useState<"literal" | "textual">(
     new URLSearchParams(window.location.search).has("search_run")
       ? "textual"
@@ -197,9 +198,9 @@ export default function App() {
           </p>
         </div>
         <div className="scope-note">
-          <strong>Full-text search for your contracts.</strong> Upload documents
-          and start processing in the details. Then search the latest revision
-          of each document and inspect matches and quality warnings.
+          <strong>Find the contracts you need.</strong> Search ready documents
+          for a phrase, or find documents that do not contain it. Uploads and
+          processing are available separately under Manage documents.
         </div>
         {notice && (
           <div role="status" className="message success">
@@ -232,11 +233,7 @@ export default function App() {
           </button>
         </div>
         {searchWorkflow === "literal" ? (
-          <SearchPanel
-            onOpen={(result) => {
-              void openDocument(result.document_id, result);
-            }}
-          />
+          <SearchPanel />
         ) : (
           <TextualSearchPanel
             openDocument={selected}
@@ -245,233 +242,245 @@ export default function App() {
             }}
           />
         )}
-        <div className="workspace">
-          <aside className="panel upload-panel">
-            <p className="eyebrow">NEW DOCUMENT</p>
-            <h2>Add a contract</h2>
-            <form onSubmit={upload}>
-              <label htmlFor="title">Title</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                required
-                maxLength={300}
-                placeholder="e.g. Confidentiality agreement"
-              />
-              <label htmlFor="file">Original file</label>
-              <div className="file-field">
+        <details
+          className="document-management"
+          open={managementOpen}
+          onToggle={(event) => setManagementOpen(event.currentTarget.open)}
+        >
+          <summary>Manage documents</summary>
+          <div className="workspace">
+            <aside className="panel upload-panel">
+              <p className="eyebrow">NEW DOCUMENT</p>
+              <h2>Add a contract</h2>
+              <form onSubmit={upload}>
+                <label htmlFor="title">Title</label>
                 <input
-                  id="file"
-                  name="file"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.txt,.htm,.html"
+                  id="title"
+                  name="title"
+                  type="text"
                   required
+                  maxLength={300}
+                  placeholder="e.g. Confidentiality agreement"
                 />
-                <small>
-                  PDF, JPEG, PNG, UTF-8 TXT or HTML · up to 25 MiB by default
-                </small>
-              </div>
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  name="requires_manual_review"
-                  value="true"
-                />
-                <span>
-                  Manual review required
-                  <small>
-                    For handwriting and hard-to-read scans. Remains flagged for
-                    review even after successful OCR.
-                  </small>
-                </span>
-              </label>
-              <button className="primary" disabled={uploading}>
-                {uploading ? "Saving …" : "Save document"}
-                <span aria-hidden="true">↑</span>
-              </button>
-            </form>
-            <p className="fineprint">
-              Please use synthetic test contracts. The original is stored byte
-              for byte.
-            </p>
-          </aside>
-          <section className="panel library" aria-labelledby="library-heading">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">YOUR LIBRARY</p>
-                <h2 id="library-heading">
-                  Documents <span className="count">{total}</span>
-                </h2>
-              </div>
-              <button
-                className="secondary"
-                onClick={() => setGeneration((value) => value + 1)}
-                disabled={loading}
-              >
-                Refresh
-              </button>
-            </div>
-            {listError ? (
-              <div role="alert" className="message error">
-                {listError}
-              </div>
-            ) : loading ? (
-              <p role="status" className="empty">
-                Loading documents …
-              </p>
-            ) : documents.length === 0 ? (
-              <div className="empty">
-                <div className="empty-icon" aria-hidden="true">
-                  ▤
-                </div>
-                <h3>Room for your first contract.</h3>
-                <p>
-                  Upload a demo file using the form.
-                  <br />
-                  Your stored documents will appear here.
-                </p>
-              </div>
-            ) : (
-              <ul className="document-list">
-                {documents.map((document) => (
-                  <li key={document.id}>
-                    <button
-                      className={`document-row ${selected?.id === document.id ? "selected" : ""}`}
-                      onClick={() => openDocument(document.id)}
-                      aria-pressed={selected?.id === document.id}
-                      aria-busy={openingDocumentId === document.id}
-                    >
-                      <span className="document-icon" aria-hidden="true">
-                        ▤
-                      </span>
-                      <span className="document-info">
-                        <strong>{document.title}</strong>
-                        <small>
-                          {formatDate(document.created_at)} ·{" "}
-                          {document.revisions.length}{" "}
-                          {document.revisions.length === 1
-                            ? "revision"
-                            : "revisions"}
-                        </small>
-                      </span>
-                      <span className="badge">
-                        {openingDocumentId === document.id
-                          ? "Opening …"
-                          : statusLabel[
-                              document.revisions.at(-1)?.processing_status ||
-                                "not_processed"
-                            ]}
-                      </span>
-                      <span aria-hidden="true">→</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <nav className="pagination" aria-label="Document pages">
-              <button
-                className="secondary"
-                disabled={offset === 0 || loading}
-                onClick={() => setOffset((value) => Math.max(0, value - 20))}
-              >
-                ← Previous
-              </button>
-              <span>Page {Math.floor(offset / 20) + 1}</span>
-              <button
-                className="secondary"
-                disabled={offset + 20 >= total || loading}
-                onClick={() => setOffset((value) => value + 20)}
-              >
-                Next →
-              </button>
-            </nav>
-          </section>
-        </div>
-        {documents.some((document) => document.revisions.some(needsReview)) && (
-          <section
-            className="panel review-group"
-            aria-labelledby="review-heading"
-          >
-            <p className="eyebrow">MANUAL REVIEW · CURRENT LIST PAGE</p>
-            <h2 id="review-heading">Review originals</h2>
-            <p>
-              These documents are flagged for review or have extraction quality
-              issues. Open the original and verify the content.
-            </p>
-            <ul>
-              {documents
-                .filter((document) => document.revisions.some(needsReview))
-                .map((document) => (
-                  <li key={document.id}>
-                    <button
-                      className="review-link"
-                      onClick={() => openDocument(document.id)}
-                    >
-                      {document.title} →
-                    </button>
-                  </li>
-                ))}
-            </ul>
-          </section>
-        )}
-        {selected && (
-          <section
-            ref={detailsRef}
-            className="panel details"
-            aria-labelledby="detail-heading"
-          >
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">DOCUMENT DETAILS</p>
-                <h2 id="detail-heading" ref={detailHeadingRef} tabIndex={-1}>
-                  {selected.title}
-                </h2>
-              </div>
-              <button
-                className="secondary"
-                onClick={() => {
-                  detailRequest.current++;
-                  setOpeningDocumentId(null);
-                  setSelected(null);
-                }}
-              >
-                Close
-              </button>
-            </div>
-            <p className="identifier">Document ID: {selected.id}</p>
-            {Object.keys(selected.metadata).length > 0 && (
-              <details>
-                <summary>Metadata</summary>
-                <pre>{JSON.stringify(selected.metadata, null, 2)}</pre>
-              </details>
-            )}
-            {selected.revisions.map((revision) => (
-              <div className="revision" key={revision.id}>
-                <h3>
-                  Revision {revision.revision_number} {revision.label}
-                </h3>
-                <p className="identifier">Revision ID: {revision.id}</p>
-                <ProcessingDetails
-                  revision={revision}
-                  requestedPage={
-                    searchLocation?.revisionId === revision.id
-                      ? searchLocation
-                      : undefined
-                  }
-                  onUpdated={() => refreshDocument(selected.id)}
-                />
-                {revision.artifacts.map((artifact) => (
-                  <ArtifactCard
-                    key={artifact.id}
-                    artifact={artifact}
-                    revision={revision}
+                <label htmlFor="file">Original file</label>
+                <div className="file-field">
+                  <input
+                    id="file"
+                    name="file"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.txt,.htm,.html"
+                    required
                   />
-                ))}
+                  <small>
+                    PDF, JPEG, PNG, UTF-8 TXT or HTML · up to 25 MiB by default
+                  </small>
+                </div>
+                <label className="checkbox">
+                  <input
+                    type="checkbox"
+                    name="requires_manual_review"
+                    value="true"
+                  />
+                  <span>
+                    Manual review required
+                    <small>
+                      For handwriting and hard-to-read scans. Remains flagged
+                      for review even after successful OCR.
+                    </small>
+                  </span>
+                </label>
+                <button className="primary" disabled={uploading}>
+                  {uploading ? "Saving …" : "Save document"}
+                  <span aria-hidden="true">↑</span>
+                </button>
+              </form>
+              <p className="fineprint">
+                Please use synthetic test contracts. The original is stored byte
+                for byte.
+              </p>
+            </aside>
+            <section
+              className="panel library"
+              aria-labelledby="library-heading"
+            >
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">YOUR LIBRARY</p>
+                  <h2 id="library-heading">
+                    Documents <span className="count">{total}</span>
+                  </h2>
+                </div>
+                <button
+                  className="secondary"
+                  onClick={() => setGeneration((value) => value + 1)}
+                  disabled={loading}
+                >
+                  Refresh
+                </button>
               </div>
-            ))}
-          </section>
-        )}
+              {listError ? (
+                <div role="alert" className="message error">
+                  {listError}
+                </div>
+              ) : loading ? (
+                <p role="status" className="empty">
+                  Loading documents …
+                </p>
+              ) : documents.length === 0 ? (
+                <div className="empty">
+                  <div className="empty-icon" aria-hidden="true">
+                    ▤
+                  </div>
+                  <h3>Room for your first contract.</h3>
+                  <p>
+                    Upload a demo file using the form.
+                    <br />
+                    Your stored documents will appear here.
+                  </p>
+                </div>
+              ) : (
+                <ul className="document-list">
+                  {documents.map((document) => (
+                    <li key={document.id}>
+                      <button
+                        className={`document-row ${selected?.id === document.id ? "selected" : ""}`}
+                        onClick={() => openDocument(document.id)}
+                        aria-pressed={selected?.id === document.id}
+                        aria-busy={openingDocumentId === document.id}
+                      >
+                        <span className="document-icon" aria-hidden="true">
+                          ▤
+                        </span>
+                        <span className="document-info">
+                          <strong>{document.title}</strong>
+                          <small>
+                            {formatDate(document.created_at)} ·{" "}
+                            {document.revisions.length}{" "}
+                            {document.revisions.length === 1
+                              ? "revision"
+                              : "revisions"}
+                          </small>
+                        </span>
+                        <span className="badge">
+                          {openingDocumentId === document.id
+                            ? "Opening …"
+                            : statusLabel[
+                                document.revisions.at(-1)?.processing_status ||
+                                  "not_processed"
+                              ]}
+                        </span>
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <nav className="pagination" aria-label="Document pages">
+                <button
+                  className="secondary"
+                  disabled={offset === 0 || loading}
+                  onClick={() => setOffset((value) => Math.max(0, value - 20))}
+                >
+                  ← Previous
+                </button>
+                <span>Page {Math.floor(offset / 20) + 1}</span>
+                <button
+                  className="secondary"
+                  disabled={offset + 20 >= total || loading}
+                  onClick={() => setOffset((value) => value + 20)}
+                >
+                  Next →
+                </button>
+              </nav>
+            </section>
+          </div>
+          {documents.some((document) =>
+            document.revisions.some(needsReview),
+          ) && (
+            <section
+              className="panel review-group"
+              aria-labelledby="review-heading"
+            >
+              <p className="eyebrow">MANUAL REVIEW · CURRENT LIST PAGE</p>
+              <h2 id="review-heading">Review originals</h2>
+              <p>
+                These documents are flagged for review or have extraction
+                quality issues. Open the original and verify the content.
+              </p>
+              <ul>
+                {documents
+                  .filter((document) => document.revisions.some(needsReview))
+                  .map((document) => (
+                    <li key={document.id}>
+                      <button
+                        className="review-link"
+                        onClick={() => openDocument(document.id)}
+                      >
+                        {document.title} →
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          )}
+          {selected && (
+            <section
+              ref={detailsRef}
+              className="panel details"
+              aria-labelledby="detail-heading"
+            >
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">DOCUMENT DETAILS</p>
+                  <h2 id="detail-heading" ref={detailHeadingRef} tabIndex={-1}>
+                    {selected.title}
+                  </h2>
+                </div>
+                <button
+                  className="secondary"
+                  onClick={() => {
+                    detailRequest.current++;
+                    setOpeningDocumentId(null);
+                    setSelected(null);
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+              <p className="identifier">Document ID: {selected.id}</p>
+              {Object.keys(selected.metadata).length > 0 && (
+                <details>
+                  <summary>Metadata</summary>
+                  <pre>{JSON.stringify(selected.metadata, null, 2)}</pre>
+                </details>
+              )}
+              {selected.revisions.map((revision) => (
+                <div className="revision" key={revision.id}>
+                  <h3>
+                    Revision {revision.revision_number} {revision.label}
+                  </h3>
+                  <p className="identifier">Revision ID: {revision.id}</p>
+                  <ProcessingDetails
+                    revision={revision}
+                    requestedPage={
+                      searchLocation?.revisionId === revision.id
+                        ? searchLocation
+                        : undefined
+                    }
+                    onUpdated={() => refreshDocument(selected.id)}
+                  />
+                  {revision.artifacts.map((artifact) => (
+                    <ArtifactCard
+                      key={artifact.id}
+                      artifact={artifact}
+                      revision={revision}
+                    />
+                  ))}
+                </div>
+              ))}
+            </section>
+          )}
+        </details>
       </main>
       <footer>
         TrayStack · Traceable document storage

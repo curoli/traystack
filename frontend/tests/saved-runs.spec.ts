@@ -30,6 +30,7 @@ test("a bookmarked run preserves every result, scope and historical source while
     })
   ).json();
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -92,12 +93,15 @@ test("a bookmarked run preserves every result, scope and historical source while
   await page.route("**/api/search-runs", (route) => route.abort());
   await page.route("**/api/search/textual", (route) => route.abort());
   await page.reload();
+  await page.getByText("Manage documents", { exact: true }).click();
   await expect(page.locator(".textual-response")).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Saved search run", exact: true }),
   ).toContainText(name);
   await expect(page.locator(".textual-response")).toContainText("7 passages");
-  await expect(page.locator(".textual-response")).toContainText(pendingTitle);
+  await expect(page.locator(".textual-response")).not.toContainText(
+    pendingTitle,
+  );
   await expect(card.locator(".textual-occurrence")).toHaveCount(1);
   await card
     .getByRole("button", { name: "View source text", exact: true })
@@ -117,8 +121,8 @@ test("a bookmarked run preserves every result, scope and historical source while
     .first()
     .getByRole("button", { name: "Decide later", exact: true })
     .click();
-  await expect(card.locator(".review-status").first()).toContainText(
-    "Review: Decide later",
+  await expect(page.locator(".passage-choice").first()).toContainText(
+    "Decide later",
   );
   await page
     .getByLabel("Review saved results", { exact: true })
@@ -145,7 +149,7 @@ test("a bookmarked run preserves every result, scope and historical source while
   const fresh = await (await rerun).json();
   expect(fresh.parent_run_id).toBe(run.run_id);
   expect(fresh.run_id).not.toBe(run.run_id);
-  expect(fresh.summary.occurrences_total).toBe(8);
+  expect(fresh.summary.occurrences_total).toBe(1);
   expect(fresh.review_counts.later).toBe(0);
   await expect(page).toHaveURL(new RegExp(`search_run=${fresh.run_id}`));
   await page
@@ -169,6 +173,7 @@ test("saved semantic results reopen without the search service and list names re
     `${token} shall pay EUR 500 within thirty days.`,
   );
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();
@@ -187,6 +192,7 @@ test("saved semantic results reopen without the search service and list names re
   const score = await page.locator(".semantic-score").textContent();
   const snapshot = page.url();
   await page.goto("/");
+  await page.getByText("Manage documents", { exact: true }).click();
   await page
     .getByRole("button", { name: "Similar passages", exact: true })
     .click();

@@ -26,7 +26,7 @@ def search_snapshot(session: Session, request: SearchRequest) -> SearchResponse:
     column = (
         RevisionText.normalized_text if request.mode == "normalized" else RevisionText.plain_text
     )
-    statement = selected_scope(phrase, column)
+    statement = selected_scope(phrase, column, ready_only=request.ready_only)
     # PostgreSQL inspects every full selected text. Only metadata and positions are
     # transferred for the whole scope; snippets/page metadata are fetched for returned hits.
     results = [classify(row, request) for row in session.execute(statement).mappings()]
@@ -63,7 +63,7 @@ def search_snapshot(session: Session, request: SearchRequest) -> SearchResponse:
     )
 
 
-def selected_scope(phrase, column):
+def selected_scope(phrase, column, *, ready_only=False):
     """One latest revision and its selected-run/quality provenance per document."""
     latest_number = (
         select(func.max(Revision.revision_number))
@@ -90,7 +90,7 @@ def selected_scope(phrase, column):
         .correlate(RevisionText)
         .exists()
     )
-    return (
+    statement = (
         select(
             Document.id.label("document_id"),
             Document.title,
@@ -126,6 +126,20 @@ def selected_scope(phrase, column):
         .outerjoin(latest_job, latest_job.id == latest_job_id)
         .order_by(Document.created_at.desc(), Document.id)
     )
+    if ready_only:
+        statement = statement.where(
+            RevisionText.status == "complete",
+            RevisionText.quality_status == "no_known_issue",
+            selected_job.status == "completed",
+            latest_job.id == selected_job.id,
+            ~func.coalesce(Artifact.parameters["requires_manual_review"].as_boolean(), False),
+            ~flagged_run,
+            func.length(func.trim(column)) > 0,
+            RevisionText.normalized_text != "",
+        )
+        if column is RevisionText.normalized_text:
+            statement = statement.where(RevisionText.normalization_version == NORMALIZATION_VERSION)
+    return statement
 
 
 def classify(row, request: SearchRequest) -> SearchResult:
