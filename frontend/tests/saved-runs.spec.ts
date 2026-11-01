@@ -173,6 +173,7 @@ test("saved semantic results reopen without the search service and list names re
     .getByLabel("Text passage", { exact: true })
     .fill(`${token} shall pay EUR 5000 within thirty days.`);
   await page.getByLabel("Minimum textual match").fill("85");
+  await page.getByLabel("Minimum semantic match").fill("65");
 
   await page
     .getByRole("button", { name: "Find passages", exact: true })
@@ -190,7 +191,9 @@ test("saved semantic results reopen without the search service and list names re
   await page.route("**/api/search/textual", (route) => route.abort());
   await page.getByRole("button", { name: `Open ${name}`, exact: true }).click();
   await expect(page).toHaveURL(snapshot);
+  await expect(page.locator(".saved-searches")).not.toHaveAttribute("open", "");
   await expect(page.locator(".semantic-score")).toHaveText(score!);
+  await expect(page.getByLabel("Minimum semantic match")).toHaveValue("65");
   await expect(page.getByLabel("Text passage", { exact: true })).toHaveValue(
     `${token} shall pay EUR 5000 within thirty days.`,
   );

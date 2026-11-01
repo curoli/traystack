@@ -1,5 +1,10 @@
 # Search-ready documents and automatic review navigation
 
+The readiness rules below still apply. The literal-search interface and automatic
+review advancement described here are historical. For the current interface,
+three-state review and explicit passage navigation, use the
+[unified workflow](unified-review.md) and [user guide](user-guide.md).
+
 The search interface is separate from document preparation. **Manage documents**
 is collapsed by default and contains upload, processing, quality checks and job
 history. Search users see results from ready documents, without an unsearchable or

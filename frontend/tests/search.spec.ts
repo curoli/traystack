@@ -7,6 +7,10 @@ test("exact search is available in the unified UI with correct Unicode highlight
   const token = `Unicode${Date.now()}`;
   await uploadAndProcess(page, token, `😀 prefix ${token} suffix`);
   await page.goto("/");
+  await expect(page.getByLabel("Minimum semantic match")).toHaveValue("50");
+  await expect(page.getByLabel("Auto-confirm semantic minimum")).toHaveValue(
+    "100",
+  );
   await expect(
     page.getByRole("button", { name: "Literal search", exact: true }),
   ).toHaveCount(0);
@@ -14,7 +18,9 @@ test("exact search is available in the unified UI with correct Unicode highlight
     .getByLabel("Auto-confirm strong matches", { exact: true })
     .uncheck();
   await page.getByLabel("Text passage", { exact: true }).fill(token);
-  await page.getByLabel("Text comparison mode").selectOption("exact");
+  await page
+    .getByLabel("Text comparison mode")
+    .selectOption({ label: "Original" });
   await page.getByLabel("Minimum textual match").fill("100");
   await page
     .getByRole("button", { name: "Find passages", exact: true })

@@ -147,7 +147,7 @@ export default function TextualSearchPanel({
       window.removeEventListener("categories-changed", refresh);
     };
   }, []);
-  const [semanticThreshold, setSemanticThreshold] = useState("0");
+  const [semanticThreshold, setSemanticThreshold] = useState("50");
   const [threshold, setThreshold] = useState("85");
   const [response, setResponse] = useState<TextualSearchResponse | null>(null);
   const [responseRequestId, setResponseRequestId] = useState(0);
@@ -386,60 +386,6 @@ export default function TextualSearchPanel({
           Pagination and reopening use the saved snapshot.
         </p>
         <form className="search-form" onSubmit={submit}>
-          <div className="search-query">
-            <label htmlFor="textual-query">Text passage</label>
-            <textarea
-              id="textual-query"
-              disabled={restoring}
-              required
-              maxLength={500}
-              rows={2}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Enter the wording you want to compare"
-            />
-          </div>
-          <div>
-            <label htmlFor="textual-mode">Text comparison mode</label>
-            <select
-              id="textual-mode"
-              disabled={restoring}
-              value={mode}
-              onChange={(event) => setMode(event.target.value as typeof mode)}
-            >
-              <option value="normalized">Normalized</option>
-              <option value="exact">Exact</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="textual-threshold">Minimum textual match</label>
-            <input
-              id="textual-threshold"
-              disabled={restoring}
-              type="number"
-              min={0}
-              max={100}
-              step="any"
-              required
-              value={threshold}
-              onChange={(event) => setThreshold(event.target.value)}
-              aria-describedby="textual-threshold-help"
-            />
-          </div>
-          <div>
-            <label htmlFor="semantic-threshold">Minimum semantic match</label>
-            <input
-              id="semantic-threshold"
-              type="number"
-              min={0}
-              max={100}
-              step="any"
-              value={semanticThreshold}
-              disabled={restoring}
-              onChange={(event) => setSemanticThreshold(event.target.value)}
-              aria-describedby="semantic-threshold-help"
-            />
-          </div>
           <div>
             <label htmlFor="search-category">Document category</label>
             <select
@@ -465,39 +411,106 @@ export default function TextualSearchPanel({
             </select>
             {categoryError && <p role="status">{categoryError}</p>}
           </div>
-          <fieldset className="auto-confirm-settings">
-            <legend>Skip review for strong matches</legend>
-            <label className="checkbox">
+          <div>
+            <label htmlFor="textual-mode">Text comparison mode</label>
+            <select
+              id="textual-mode"
+              disabled={restoring}
+              value={mode}
+              onChange={(event) => setMode(event.target.value as typeof mode)}
+            >
+              <option value="normalized">Normalized</option>
+              <option value="exact">Original</option>
+            </select>
+          </div>
+          <div className="search-query">
+            <label htmlFor="textual-query">Text passage</label>
+            <textarea
+              id="textual-query"
+              disabled={restoring}
+              required
+              maxLength={500}
+              rows={2}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Enter the wording you want to compare"
+            />
+          </div>
+          <fieldset className="match-thresholds">
+            <legend>Search thresholds</legend>
+            <div>
+              <label htmlFor="textual-threshold">Minimum textual match</label>
               <input
-                type="checkbox"
-                checked={autoConfirm}
+                id="textual-threshold"
                 disabled={restoring}
-                onChange={(event) => setAutoConfirm(event.target.checked)}
+                type="number"
+                min={0}
+                max={100}
+                step="any"
+                required
+                value={threshold}
+                onChange={(event) => setThreshold(event.target.value)}
+                aria-describedby="textual-threshold-help"
               />
-              Auto-confirm strong matches
-            </label>
-            <label htmlFor="auto-text">Auto-confirm textual minimum</label>
-            <input
-              id="auto-text"
-              type="number"
-              min={0}
-              max={100}
-              step="any"
-              value={autoText}
-              disabled={!autoConfirm || restoring}
-              onChange={(event) => setAutoText(event.target.value)}
-            />
-            <label htmlFor="auto-semantic">Auto-confirm semantic minimum</label>
-            <input
-              id="auto-semantic"
-              type="number"
-              min={0}
-              max={100}
-              step="any"
-              value={autoSemantic}
-              disabled={!autoConfirm || restoring}
-              onChange={(event) => setAutoSemantic(event.target.value)}
-            />
+            </div>
+            <div>
+              <label htmlFor="semantic-threshold">Minimum semantic match</label>
+              <input
+                id="semantic-threshold"
+                type="number"
+                min={0}
+                max={100}
+                step="any"
+                value={semanticThreshold}
+                disabled={restoring}
+                onChange={(event) => setSemanticThreshold(event.target.value)}
+                aria-describedby="semantic-threshold-help"
+              />
+            </div>
+            <p className="fineprint">
+              Both minima must pass for a passage to be listed.
+            </p>
+          </fieldset>
+          <fieldset className="auto-confirm-settings">
+            <legend>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={autoConfirm}
+                  disabled={restoring}
+                  onChange={(event) => setAutoConfirm(event.target.checked)}
+                />
+                Auto-confirm strong matches
+              </label>
+            </legend>
+            <div>
+              <label htmlFor="auto-text">Auto-confirm textual minimum</label>
+              <input
+                id="auto-text"
+                type="number"
+                min={0}
+                max={100}
+                step="any"
+                value={autoText}
+                disabled={!autoConfirm || restoring}
+                onChange={(event) => setAutoText(event.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="auto-semantic">
+                Auto-confirm semantic minimum
+              </label>
+              <input
+                id="auto-semantic"
+                type="number"
+                min={0}
+                max={100}
+                step="any"
+                value={autoSemantic}
+                disabled={!autoConfirm || restoring}
+                onChange={(event) => setAutoSemantic(event.target.value)}
+              />
+            </div>
             <p className="fineprint">
               Both thresholds must pass. Explicit review decisions always take
               precedence.
@@ -636,8 +649,9 @@ export default function TextualSearchPanel({
             </section>
           )}
           <p className="search-query-summary">
-            Results for <strong>“{response.query}”</strong> · {response.mode} ·
-            minimum {response.minimum_score}% textual · minimum semantic{" "}
+            Results for <strong>“{response.query}”</strong> ·{" "}
+            {response.mode === "exact" ? "Original" : "Normalized"} · minimum{" "}
+            {response.minimum_score}% textual · minimum semantic{" "}
             {response.minimum_semantic_score ??
               "not computed in this historical run"}
             % ·{" "}

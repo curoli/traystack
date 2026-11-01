@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { listSearchRuns, getSavedScope, type SavedRunSummary } from "../api";
 import { formatDate } from "../format";
 import { qualityLabel, coverageLabel, warningLabel } from "./processingLabels";
@@ -12,6 +12,7 @@ export default function SavedSearches({
   onOpen: (id: string) => void;
   disabled: boolean;
 }) {
+  const container = useRef<HTMLDetailsElement>(null);
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<{
     items: SavedRunSummary[];
@@ -39,7 +40,7 @@ export default function SavedSearches({
     };
   }, [generation, offset]);
   return (
-    <details className="saved-searches">
+    <details className="saved-searches" ref={container}>
       <summary>Saved searches{data ? ` (${data.total})` : ""}</summary>
       <p className="fineprint">
         Each successful search saves its complete result set and matching source
@@ -55,7 +56,10 @@ export default function SavedSearches({
           <button
             className="secondary"
             disabled={disabled}
-            onClick={() => onOpen(run.id)}
+            onClick={() => {
+              if (container.current) container.current.open = false;
+              onOpen(run.id);
+            }}
           >
             Open {run.name}
           </button>

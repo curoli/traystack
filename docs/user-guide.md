@@ -225,11 +225,11 @@ There is one search interface. Enter the company name or phrase under **Text
 passage**, choose a comparison mode and select **Document category** (All,
 Uncategorized or one category). Set **Minimum textual match** to 100 for literal
 wording; Normalized ignores case/whitespace differences while preserving numbers,
-negation, punctuation and hyphens. Exact retains case and whitespace. This is not
+negation, punctuation and hyphens. Original retains case and whitespace. This is not
 regex, stemming or legal-meaning search.
 
 Semantic scoring is always enabled for new UI searches. Set **Minimum semantic
-match** to 0 to retain all textual candidates with their scores, or choose a higher
+match** (initially 50) to 0 to retain all textual candidates with their scores, or choose a higher
 minimum to filter them further. Semantic 100 retains identical comparison text.
 Choose **Find passages**. The latest revision's ready text is searched within the
 selected category; the library page does not limit the scope.
@@ -284,10 +284,10 @@ be dismissed or reset; explicit choices are never silently replaced by the
 algorithm. Old deferred decisions appear as Unreviewed. A failed save leaves the
 previous state and selection intact; refresh after a version conflict.
 
-**Previous unreviewed / Previous / Next / Next unreviewed** change documents
-without modifying states. Pending navigation skips documents without an eligible
-unreviewed passage and stops at boundaries. To select another passage in the same
-document, use the list. Up/Down and Home/End select list entries; Tab and native
+**Previous unreviewed / Previous / Next / Next unreviewed** change passages
+without modifying states, including passages within the same document. Pending
+navigation skips confirmed/dismissed passages and stops at boundaries. You can
+also select any visible passage directly from the list. Up/Down and Home/End select list entries; Tab and native
 Enter/Space activate buttons. Search parameters can be collapsed while reviewing.
 
 The three document groups update after confirmed saves. Hidden automatic matches
@@ -301,6 +301,7 @@ use **Download original** for the actual page image.
 Successful searches automatically save complete candidates, scores, category,
 document scope, sources and auto-confirmation policy. Use **Saved searches** or a
 bookmark URL containing `search_run` to reopen without retrieval or model calls.
+Selecting a saved search collapses the saved-search list.
 **Save name** changes only the label. **Run again** creates a separate linked run
 with the original criteria against the current collection. To change criteria,
 edit parameters and choose Find passages.

@@ -1,9 +1,10 @@
 # Unified document search and match review
 
 The interface has one search workflow. Exact matching is available by setting the
-textual minimum to 100 in the chosen Exact/Normalized comparison mode. Semantic
+textual minimum to 100 in the chosen Original/Normalized comparison mode. Semantic
 similarity is always computed for new UI searches; its minimum remains editable
-from 0 to 100. Zero retains all textual candidates while showing their semantic
+from 0 to 100, starting at 50 for new searches. Saved searches restore their
+captured thresholds. Zero retains all textual candidates while showing their semantic
 scores. Semantic 100 explicitly requires identical comparison text.
 
 The literal search API remains available for diagnostic/integration consumers,
@@ -26,6 +27,12 @@ criteria against the current collection.
 
 There is no “open document” search switch. Review state is a property of passages,
 so the search form no longer contains a Review status selector.
+
+Category and comparison mode appear first in the search form. **Original** keeps
+case and whitespace as extracted; the compatible API value remains `exact`.
+Search thresholds and auto-confirmation thresholds are shown in parallel panels
+on wider screens and stack on narrow screens. Opening a saved search collapses
+the saved-search list.
 
 ## Three passage states
 
@@ -74,11 +81,11 @@ through the new UI computes semantic scores.
 
 ## Navigation
 
-**Previous unreviewed**, **Previous**, **Next**, **Next unreviewed** move to another
-document's candidate passage without writing a decision. Unreviewed navigation
-skips documents without an eligible pending passage in that direction. It does
-not wrap. Buttons disable at boundaries and during saves. Multiple passages within
-one document can be selected directly from the list using mouse or arrow/Home/End
+**Previous unreviewed**, **Previous**, **Next**, **Next unreviewed** move between
+visible candidate passages without writing a decision, including passages in the
+same document. Unreviewed navigation skips confirmed/dismissed passages in that
+direction. It does not wrap. Buttons disable at boundaries and during saves.
+Multiple passages within one document can be selected directly from the list using mouse or arrow/Home/End
 keys. The selected list item remains the single Tab stop.
 
 ## Three document groups
@@ -126,8 +133,8 @@ rules continue to apply. Document preparation stays under Manage documents.
 
 ## Validation
 
-Validated with 226 backend tests (including PostgreSQL, real OCR and local
-embeddings) and all 32 browser scenarios. TypeScript, the production frontend
+Validated with 227 backend tests (including PostgreSQL, real OCR and local
+embeddings) and all 33 browser scenarios. TypeScript, the production frontend
 build, Ruff, Prettier, local documentation links and Git whitespace checks pass.
 Desktop and mobile layouts were inspected. The normal Docker Compose app was
 rebuilt and started successfully; no schema migration is needed and original

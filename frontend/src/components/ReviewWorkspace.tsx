@@ -139,25 +139,22 @@ export default function ReviewWorkspace({
     (item) => item.document.document_id === emptyDocumentId,
   )?.document;
   const locked = disabled || loading || saving;
-  const nextDocument = (direction: number, unreviewed: boolean) => {
+  const nextPassage = (direction: number, unreviewed: boolean) => {
     if (!active) return undefined;
     for (
       let i = selected + direction;
       i >= 0 && i < entries.length;
       i += direction
     ) {
-      if (
-        entries[i].document.document_id !== active.document.document_id &&
-        (!unreviewed || entries[i].occurrence.review.decision === "unreviewed")
-      )
+      if (!unreviewed || entries[i].occurrence.review.decision === "unreviewed")
         return i;
     }
     return undefined;
   };
-  const previous = nextDocument(-1, false);
-  const next = nextDocument(1, false);
-  const previousUnreviewed = nextDocument(-1, true);
-  const nextUnreviewed = nextDocument(1, true);
+  const previous = nextPassage(-1, false);
+  const next = nextPassage(1, false);
+  const previousUnreviewed = nextPassage(-1, true);
+  const nextUnreviewed = nextPassage(1, true);
   function toggleAutomatic(show: boolean) {
     setEmptyDocumentId(null);
     const visible = allEntries.filter(
@@ -488,8 +485,7 @@ export default function ReviewWorkspace({
             </button>
           </nav>
           <p className="fineprint">
-            Navigation changes documents without changing passage states. Select
-            individual passages in the list.
+            Navigation changes passages without changing their review states.
           </p>
           {!active && emptyDocument && (
             <>

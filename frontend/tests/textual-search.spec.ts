@@ -80,7 +80,7 @@ test("textual matches show differences, navigate occurrences and retain submitte
   await expect(viewer.locator(".identifier")).toHaveText(archivedIdentity!);
 });
 
-test("zero is blocked, scope can be narrowed, and exact mode is preserved", async ({
+test("zero is blocked, scope can be narrowed, and Original mode is preserved", async ({
   page,
 }) => {
   const title = `Unrelated text ${Date.now()}`;
@@ -104,6 +104,7 @@ test("zero is blocked, scope can be narrowed, and exact mode is preserved", asyn
   ).toBeDisabled();
   await page.locator(".document-row").filter({ hasText: title }).click();
   await scopeToDocument(page, title);
+  await page.getByLabel("Minimum semantic match").fill("0");
   await page.getByLabel("Minimum textual match").fill("1");
   await page
     .getByRole("button", { name: "Find passages", exact: true })
