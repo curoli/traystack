@@ -4,6 +4,8 @@
 components, uploads, file processing, contains/absence searches, passage review,
 saved searches and export using the interface's English labels.
 The [technology inventory](techstack.md) lists versions, roles and tradeoffs.
+The [processing pipeline](pipeline.md) illustrates extraction and normalization,
+with notes on orchestration, quality checks and storage.
 
 TrayStack is a local prototype for traceable contract storage and full-text search.
 **Milestones 1–4 are implemented:** upload PDF/JPEG/PNG and UTF-8 TXT/HTML, download
