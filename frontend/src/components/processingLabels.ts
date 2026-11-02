@@ -29,6 +29,7 @@ const warnings: Record<string, string> = {
     "The extracted text contains unusual characters or very little content.",
   null_character_replaced:
     "A null character that cannot be stored was marked with a replacement character.",
+  ocr_detection_limit: "OCR reached its detection limit; inspect the original.",
   ocr_timeout: "OCR exceeded the time limit.",
   ocr_failed: "OCR could not process this page.",
   page_extraction_failed: "The page could not be extracted.",

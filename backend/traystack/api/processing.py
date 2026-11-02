@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from traystack.db import get_session
 from traystack.models import Artifact, ProcessingJob, Revision, RevisionText
+from traystack.ocr_model import MODEL_ID
 from traystack.schemas import JobOut, ProcessRequest, TextContentOut
 from traystack.services.normalization import NORMALIZATION_VERSION
 
@@ -71,7 +72,13 @@ def process(revision_id: UUID, payload: ProcessRequest, request: Request, sessio
         raise HTTPException(422, "Unsupported source type")
     settings = request.app.state.settings
     parameters = {
-        "ocr_languages": settings.ocr_languages,
+        "ocr_backend": settings.ocr_backend,
+        "ocr_model": MODEL_ID
+        if settings.ocr_backend == "paddleocr"
+        else "tesseract-language-packs",
+        "ocr_languages": "multilingual"
+        if settings.ocr_backend == "paddleocr"
+        else settings.ocr_languages,
         "ocr_timeout_seconds": settings.ocr_timeout_seconds,
         "ocr_dpi": settings.ocr_dpi,
         "max_pages": settings.processing_max_pages,

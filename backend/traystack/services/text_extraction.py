@@ -1,7 +1,12 @@
 """Per-page extraction with conservative, explicitly heuristic quality checks."""
 
+import json
 import math
+import os
 import re
+import subprocess
+import sys
+import tempfile
 from dataclasses import asdict, dataclass, field
 from importlib.metadata import version
 from pathlib import Path
@@ -12,6 +17,8 @@ import pymupdf
 import pytesseract
 from PIL import Image, ImageOps
 
+from traystack.config import Settings
+from traystack.ocr_model import MODEL_ID
 from traystack.services.normalization import normalize_for_search
 from traystack.services.text_documents import TEXT_DOCUMENT_VERSION, decode_text, html_text
 
@@ -79,6 +86,8 @@ def ocr_page(image: Image.Image, page_number: int, parameters: dict[str, Any]) -
     if image.width * image.height > max_pixels:
         scale = math.sqrt(max_pixels / (image.width * image.height))
         image = image.resize((max(1, int(image.width * scale)), max(1, int(image.height * scale))))
+    if parameters.get("ocr_backend", "tesseract") == "paddleocr":
+        return paddle_page(image, page_number, parameters)
     try:
         data = pytesseract.image_to_data(
             image,
@@ -140,6 +149,66 @@ def ocr_page(image: Image.Image, page_number: int, parameters: dict[str, Any]) -
     )
 
 
+def paddle_page(image: Image.Image, page_number: int, parameters: dict[str, Any]) -> ExtractedPage:
+    if parameters.get("ocr_model") != MODEL_ID:
+        raise ProcessingError("unsupported_ocr_model")
+    try:
+        with tempfile.TemporaryDirectory(prefix="traystack-ocr-") as directory:
+            image_path = Path(directory) / "input.png"
+            output_path = Path(directory) / "output.json"
+            image.save(image_path)
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "traystack.ocr_runner",
+                    str(image_path),
+                    str(Settings().ocr_model_path),
+                    str(output_path),
+                ],
+                check=True,
+                env={**os.environ, "OMP_NUM_THREADS": "2", "OPENBLAS_NUM_THREADS": "1"},
+                timeout=parameters["ocr_timeout_seconds"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            output = json.loads(output_path.read_text())
+            lines = output["lines"]
+        scores = [line["confidence"] for line in lines]
+        confidence = mean(scores) if scores else None
+        warnings = []
+        # Engine-specific heuristic, not a calibrated probability of correctness.
+        if confidence is None:
+            warnings.append("ocr_confidence_unavailable")
+        elif confidence < 80 or sum(score < 50 for score in scores) / len(scores) > 0.2:
+            warnings.append("low_ocr_confidence")
+        if output["detection_limit_hit"]:
+            warnings.append("ocr_detection_limit")
+        return ExtractedPage(
+            page_number,
+            "\n".join(line["text"] for line in lines),
+            "ocr",
+            confidence=confidence,
+            quality_warnings=warnings,
+            layout_metadata={
+                "coordinate_space": "image_pixels",
+                "width": image.width,
+                "height": image.height,
+                "ocr_engine": "paddleocr",
+                "model": MODEL_ID,
+                "confidence_unit": "recognition_line_score_percent",
+                "lines": lines,
+                "raw_contours": output["raw_contours"],
+                "detection_limit_hit": output["detection_limit_hit"],
+            },
+        )
+    except subprocess.TimeoutExpired:
+        reason = "ocr_timeout"
+    except (OSError, ValueError, subprocess.CalledProcessError):
+        reason = "ocr_failed"
+    return ExtractedPage(page_number, "", "ocr", status="unavailable", quality_warnings=[reason])
+
+
 def extract_source(path: Path, mime_type: str, parameters: dict[str, Any]) -> Extraction:
     versions = {
         "pymupdf": pymupdf.VersionBind,
@@ -150,6 +219,10 @@ def extract_source(path: Path, mime_type: str, parameters: dict[str, Any]) -> Ex
         versions["tesseract"] = str(pytesseract.get_tesseract_version())
     except (OSError, pytesseract.TesseractNotFoundError):
         versions["tesseract"] = "unavailable"
+    if parameters.get("ocr_backend") == "paddleocr":
+        versions.update(
+            rapidocr=version("rapidocr"), onnxruntime=version("onnxruntime"), ocr_model=MODEL_ID
+        )
     pages = []
     if mime_type in {"text/plain", "text/html"}:
         try:

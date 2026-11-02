@@ -1,7 +1,7 @@
 ```mermaid
 flowchart TD
     PDF["PDF"] --> CHECK{"Enough embedded text<br/>and no images?<br/>(per page)"}
-    JPEG["JPEG"] --> OCR["OCR by Tesseract"]
+    JPEG["JPEG"] --> OCR["OCR by PaddleOCR"]
 
     CHECK -->|Yes| EXTRACT["Extract text with PyMuPDF"]
     CHECK -->|No| RENDER["Render page as an image"]
@@ -9,8 +9,8 @@ flowchart TD
 
     EXTRACT --> ORIGINAL["Original Text<br/>(plain extracted text)"]
 
-    OCR --> DATA["Structured OCR data<br/>Words, positions and confidence"]
-    DATA --> REBUILD["Reconstruct lines of text"]
+    OCR --> DATA["Structured OCR data<br/>Lines, positions and confidence"]
+    DATA --> REBUILD["Assemble recognized lines"]
     REBUILD --> ORIGINAL
 
     ORIGINAL --> NORMALIZE["Normalization<br/>Unicode NFC · whitespace · case folding"]
@@ -49,7 +49,7 @@ directly only when both conditions hold:
 - `page.get_image_info()` detects **no images**, including inline images.
 
 Otherwise, PyMuPDF renders the entire page to an image, which is passed to
-Tesseract. On that path, the OCR output becomes the page text; we do not merge it
+PaddleOCR. On that path, the OCR output becomes the page text; we do not merge it
 with embedded text.
 
 The image check is conservative. A readable heading can sit above a scanned
@@ -71,21 +71,35 @@ bounding boxes in PDF points, plus page dimensions. We currently do not retain
 the returned block/line identifiers or reconstruct a paragraph hierarchy. This
 path has no OCR confidence scores.
 
-### Tesseract
+### PaddleOCR (default)
 
-We call `pytesseract.image_to_data(..., output_type=pytesseract.Output.DICT)`.
-The Python interface returns a **dictionary**, not our final JSON artifact. It
-contains recognized words, confidence values, bounding boxes and identifiers for
-pages, blocks, paragraphs and lines.
+The default engine is **PaddleOCR PP-OCRv6 small**, run locally on CPU through
+**RapidOCR 3.10.0 and ONNX Runtime**. This multilingual model tier includes English
+and German. It targets handwriting-capable recognition; we have not evaluated its
+accuracy on our contracts and do not claim a measured improvement over Tesseract.
 
-Our code groups words by block/paragraph/line identifiers, joins words with spaces
-and joins lines with newline characters. It retains word text, confidence and
-bounding boxes, but not an explicit paragraph hierarchy in the resulting text.
+The runner returns recognized **lines**, confidence values and quadrilateral
+polygons in image pixels. We assemble line text with newlines and retain line-level
+geometry. These are line boxes, not word boxes, and no paragraph hierarchy is
+inferred. The pipeline still produces our own JSON/Markdown artifacts afterwards.
 
-OCR bounding boxes use image pixels after orientation correction and any resizing.
-They store left/top/width/height; the PyMuPDF word boxes instead store
-left/top/right/bottom. The recorded coordinate space and extraction method matter
-when interpreting these values.
+The detector and recognizer models are pinned by SHA-256 in
+[ocr_model.py](backend/traystack/ocr_model.py). They are downloaded at build/setup
+time, verified before use and used from local files. A subprocess per page enforces
+the configured timeout. Missing/corrupt models or inference failures produce an
+explicit failed/unavailable result, never a silent fallback to a different engine.
+
+### Tesseract (legacy option)
+
+`OCR_BACKEND=tesseract` retains the previous local engine. Jobs captured before the
+backend option was added continue to use Tesseract; reprocessing creates a new job
+with the current configured backend. The original source and historical artifacts
+remain unchanged.
+
+Tesseract uses `pytesseract.image_to_data(..., output_type=DICT)`, returning words,
+confidence and line identifiers. We reconstruct lines and retain word boxes as
+left/top/width/height. PyMuPDF boxes use left/top/right/bottom; PaddleOCR line
+polygons use four corner points. Each layout record identifies its coordinate space.
 
 ## Common page representation and quality checks
 
@@ -93,10 +107,14 @@ Both paths produce the same internal page representation: text, page number,
 extraction method, quality information and layout metadata. Page texts are then
 assembled into a document; the plain-text page separator is `\n\f\n`.
 
-For OCR, we compute the mean of available nonnegative word confidence scores.
+For PaddleOCR, page confidence is the mean recognized-line score scaled to 0–100;
+for Tesseract it is the mean of available nonnegative word scores.
 Current warnings include a mean below 80, or more than 20% of available scores
-below 50. Missing confidence also produces a warning. These scores describe OCR
-recognition, not semantic similarity or legal correctness.
+below 50. Missing confidence also produces a warning. These are engine-specific, uncalibrated heuristics: line and word scores are not
+interchangeable probabilities, semantic similarity, or proof of correct transcription.
+The PaddleOCR detection-limit warning also keeps affected results out of ready search.
+It is based on the raw contour count before small/low-confidence boxes are filtered,
+so fewer than 1,000 returned lines does not imply detection was complete.
 
 Further checks flag empty or suspicious text and honor manual-review requirements.
 An extraction failure or OCR timeout is recorded rather than replaced with

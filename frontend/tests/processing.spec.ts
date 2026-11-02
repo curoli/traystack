@@ -37,6 +37,8 @@ for (const fixture of [
     const response = await queued;
     expect(response.status()).toBe(202);
     const job = await response.json();
+    expect(job.parameters.ocr_backend).toBe("paddleocr");
+    expect(job.parameters.ocr_model).toBe("PP-OCRv6-small-rapidocr-3.10.0");
     const quality = page.locator(".quality-panel");
     await expect(quality).toContainText(job.id, { timeout: 60_000 });
     if (fixture.complete)
