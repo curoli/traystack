@@ -73,7 +73,15 @@ export default function DocumentGroups({
             }}
           >
             <summary>
-              {label} ({rows.length})
+              {label}{" "}
+              <span
+                className="notranslate"
+                translate="no"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                ({rows.length})
+              </span>
             </summary>
             {expanded[state] && !rows.length && (
               <p>No documents in this group.</p>

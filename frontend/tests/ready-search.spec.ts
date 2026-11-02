@@ -333,3 +333,80 @@ test("expanded document lists follow all review transitions and link to exact pa
     pending.getByRole("link", { name: "Passage 2 — Unreviewed", exact: true }),
   ).toBeVisible();
 });
+
+test("document counters survive translated headings and repeated decisions", async ({
+  page,
+}) => {
+  const category = `Counter ${randomUUID()}`,
+    token = `Count${Date.now()}`;
+  await add(page, `First ${token}`, token, category);
+  await add(page, `Second ${token}`, token, category);
+  await page.goto("/");
+  await page
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
+  await page
+    .getByLabel("Document category", { exact: true })
+    .selectOption(`category:${category}`);
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  const groups = page.getByRole("region", {
+    name: "Document match groups",
+    exact: true,
+  });
+  const detail = page.locator(".passage-detail");
+  async function counts(expected: number[]) {
+    for (let i = 0; i < 3; i++) {
+      const group = groups.locator("details").nth(i);
+      if ((await group.getAttribute("open")) !== null)
+        await expect(group.locator(".document-outcome")).toHaveCount(
+          expected[i],
+        );
+      await expect(group.locator("summary")).toContainText(`(${expected[i]})`);
+    }
+  }
+  async function decide(state: string, expected: number[]) {
+    await detail.getByRole("button", { name: state, exact: true }).click();
+    await expect(
+      detail.getByRole("button", { name: state, exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await counts(expected);
+  }
+  await counts([0, 2, 0]);
+  await decide("Match Confirmed", [1, 1, 0]);
+  await groups.locator("summary").first().click();
+  // Browser translators can replace text nodes with font wrappers. React retains
+  // references to the old nodes, so unprotected numeric text stops updating.
+  await groups.locator("summary").evaluateAll((summaries) => {
+    for (const summary of summaries) {
+      const walker = document.createTreeWalker(summary, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+      for (const node of nodes) {
+        if (
+          !node.textContent?.trim() ||
+          node.parentElement?.closest('[translate="no"]')
+        )
+          continue;
+        const wrapper = document.createElement("font");
+        wrapper.textContent = node.textContent;
+        node.replaceWith(wrapper);
+      }
+    }
+  });
+  await detail.getByRole("button", { name: "Next", exact: true }).click();
+  await decide("Match Confirmed", [2, 0, 0]);
+  for (const group of await groups.locator("details").all())
+    if ((await group.getAttribute("open")) === null)
+      await group.locator("summary").click();
+  await detail.getByRole("button", { name: "Previous", exact: true }).click();
+  await decide("Match Dismissed", [1, 0, 1]);
+  await detail.getByRole("button", { name: "Next", exact: true }).click();
+  await decide("Unreviewed", [0, 1, 1]);
+  await decide("Match Confirmed", [1, 0, 1]);
+  await detail.getByRole("button", { name: "Previous", exact: true }).click();
+  await decide("Unreviewed", [1, 1, 0]);
+});
