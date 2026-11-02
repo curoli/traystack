@@ -107,13 +107,13 @@ def test_auto_thresholds_and_document_groups_cover_full_scope(client, monkeypatc
         if group["document"]["title"] == "New approximate"
     )
     assert new_group["occurrences"][0]["auto_confirmed"]
-    # Explicit dismissal wins even under a more permissive policy.
+    # A new review has its own automatic policy and no inherited dismissal.
     candidate = next(
         group
         for group in workspace(client, broader)["results"]
         if group["document"]["title"] == "Approximate"
     )["occurrences"][0]
-    assert candidate["review"]["decision"] == "dismiss" and not candidate["auto_confirmed"]
+    assert candidate["review"]["decision"] == "keep" and candidate["auto_confirmed"]
 
 
 def test_categories_filter_before_scope_capture_and_do_not_rewrite_old_runs(client, monkeypatch):

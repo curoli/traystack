@@ -43,7 +43,8 @@ Stored positive results are not proof of absence or legal equivalence.
 
 ## Reviews remain editable
 
-Reviews are shared current annotations, not immutable result scores. **Review
+Reviews are current annotations for one saved search, not immutable result scores.
+New searches start fresh; older snapshots retain the legacy shared annotations. **Review
 saved results** changes the view over the stored candidate universe; **Refresh
 reviews** reads the latest decisions. Neither starts a new search. Counts before
 review filtering cover the stored similarity matches. A filtered view may change

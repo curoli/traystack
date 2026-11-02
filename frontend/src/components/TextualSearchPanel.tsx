@@ -696,7 +696,9 @@ export default function TextualSearchPanel({
               Counts cover all passages passing the submitted textual and
               semantic thresholds, before the review filter. Your saves update
               these counts; refresh reviews to include changes from other views.
-              Decisions are shared in this local app.
+              {response.review_scope === "run"
+                ? "Decisions are saved for this search. New searches start a fresh review."
+                : "This historical search uses shared passage decisions."}
             </p>
           </section>
           <details className="search-provenance">

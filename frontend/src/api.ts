@@ -372,6 +372,7 @@ export interface TextualGroup {
   occurrence_limit: number;
 }
 export interface TextualSearchResponse {
+  review_scope?: "shared" | "run";
   document_outcomes: {
     document: TextualDocument;
     state: "confirmed" | "unreviewed" | "no_active_match";

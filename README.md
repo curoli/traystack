@@ -21,7 +21,8 @@ text at textual 100, always-on semantic scoring and category selection. Three
 passage state buttons — **Match Confirmed**, **Match Dismissed**, **Unreviewed** — are
 separate from passage navigation. Strong matches default to automatic confirmation
 at 100 textual / 100 semantic; they are counted and can be revealed for review.
-Manual decisions take precedence. Three expandable document groups summarize
+Manual decisions take precedence within each saved search. New searches start
+fresh reviews; reopening a saved search retains its decisions. Three expandable document groups summarize
 confirmed, pending and no-active-match documents across the complete captured scope.
 Saved runs preserve results, policy and historical sources; CSV/JSON exports remain
 available. The literal API remains for integrations, without a separate UI.

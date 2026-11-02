@@ -313,3 +313,57 @@ def test_changed_archive_rejects_new_capture_atomically_and_view_rejects_outside
     assert client.get("/api/search-runs").json()["total"] == 2
     with client.app.state.session_factory() as session:
         assert session.scalar(select(func.count()).select_from(ArchivedText)) == 2
+
+
+def test_each_new_search_has_independent_reviews_and_reruns_start_fresh(client):
+    indexed(client, "Same source", ["target phrase around"])
+    first = create(client)
+    identity = first["results"][0]["occurrences"][0]["occurrence_id"]
+    # A pre-existing diagnostic/shared annotation must not seed a saved review.
+    assert client.post("/api/reviews", json=command(first)).status_code == 200
+    payload = {**command(first), "search_run_id": first["run_id"]}
+    assert client.post("/api/reviews", json=payload).status_code == 200
+    second = create(client)
+    item = second["results"][0]["occurrences"][0]
+    assert item["occurrence_id"] == identity
+    assert item["review"] == {"decision": "unreviewed", "version": 0, "updated_at": None}
+    assert item["review_at_capture"]["decision"] == "unreviewed"
+    assert second["review_scope"] == "run"
+    other = {**command(second), "search_run_id": second["run_id"], "decision": "dismiss"}
+    assert client.post("/api/reviews", json=other).status_code == 200
+    assert client.post("/api/reviews", json=other).status_code == 409
+    for saved, state in [(first, "keep"), (second, "dismiss")]:
+        for suffix in ["", "/workspace"]:
+            reopened = client.get(f"/api/search-runs/{saved['run_id']}{suffix}").json()
+            assert reopened["results"][0]["occurrences"][0]["review"]["decision"] == state
+        exported = client.get(
+            f"/api/search-runs/{saved['run_id']}/export", params={"format": "json"}
+        ).json()
+        assert exported["result"]["results"][0]["occurrences"][0]["review"]["decision"] == state
+    rerun = client.post(
+        "/api/search-runs",
+        json={"parent_run_id": first["run_id"], "search": {"query": "target phrase"}},
+    ).json()
+    assert rerun["review_counts"]["unreviewed"] == 1
+    assert rerun["results"][0]["occurrences"][0]["review"]["version"] == 0
+
+
+def test_legacy_saved_search_preserves_shared_decisions(client):
+    indexed(client, "Legacy source", ["target phrase around"])
+    saved = create(client)
+    # Reconstruct the pre-migration snapshot shape without changing its evidence.
+    with client.app.state.session_factory.begin() as session:
+        row = session.get(SearchRun, UUID(saved["run_id"]))
+        body = dict(row.result_json)
+        body.pop("review_scope")
+        row.result_json = body
+        row.snapshot_sha256 = search_runs.digest(
+            {"request": row.request_json, "scope": row.scope_json, "result": body}
+        )
+    payload = {**command(saved), "search_run_id": saved["run_id"]}
+    assert client.post("/api/reviews", json=payload).status_code == 200
+    old = client.get(f"/api/search-runs/{saved['run_id']}").json()
+    assert old["review_scope"] == "shared"
+    assert old["results"][0]["occurrences"][0]["review"]["decision"] == "keep"
+    fresh = create(client)
+    assert fresh["review_counts"]["unreviewed"] == 1

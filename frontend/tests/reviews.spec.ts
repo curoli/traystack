@@ -112,3 +112,40 @@ test("a late state save cannot affect a replacement search", async ({
     page.getByRole("region", { name: "Review counts", exact: true }),
   ).toContainText("Confirmed: 0");
 });
+
+test("a new identical search starts fresh while reopening retains each run's decisions", async ({
+  page,
+}) => {
+  await setup(page);
+  const firstUrl = page.url();
+  await page
+    .getByRole("button", { name: "Match Confirmed", exact: true })
+    .click();
+  await expect(page.locator(".review-status")).toContainText("Match Confirmed");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  await expect(page).not.toHaveURL(firstUrl);
+  const secondUrl = page.url();
+  await expect(page.locator(".passage-detail")).toContainText("Passage 1 of 2");
+  await expect(
+    page.getByRole("button", { name: "Unreviewed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page
+    .getByRole("button", { name: "Match Dismissed", exact: true })
+    .click();
+  await expect(page.locator(".review-status")).toContainText("Match Dismissed");
+  await page.goto(firstUrl);
+  await expect(
+    page.getByRole("button", { name: "Match Confirmed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.goto(secondUrl);
+  await expect(
+    page.getByRole("button", { name: "Match Dismissed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Run again", exact: true }).click();
+  await expect(page).not.toHaveURL(secondUrl);
+  await expect(
+    page.getByRole("button", { name: "Unreviewed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+});

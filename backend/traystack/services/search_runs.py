@@ -10,7 +10,13 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from traystack.models import ArchivedText, PassageReview, SearchRun, SearchRunSource
+from traystack.models import (
+    ArchivedText,
+    PassageReview,
+    RunPassageReview,
+    SearchRun,
+    SearchRunSource,
+)
 from traystack.review_schemas import ReviewCounts, ReviewOut
 from traystack.schemas import PageOut, TextSummaryOut
 from traystack.services.match_states import project_review
@@ -92,11 +98,19 @@ def create_run(factory, payload, semantic_provider, max_bytes=64_000_000, max_do
     with factory() as session:
         result = textual_snapshot(session, query, semantic_provider, capture=capture)
         body = result.model_dump(mode="json")
+        body["review_scope"] = "run"
+        captured_counts = Counter()
         for group in body["results"]:
+            group_counts = Counter()
             for item in group["occurrences"]:
+                item["review"] = ReviewOut().model_dump(mode="json")
                 item["review"], item["auto_confirmed"] = project_review(
                     item["review"], item, payload.search.model_dump()
                 )
+                group_counts[item["review"]["decision"]] += 1
+            group["review_counts"] = ReviewCounts(**group_counts).model_dump()
+            captured_counts.update(group_counts)
+        body["review_counts"] = ReviewCounts(**captured_counts).model_dump()
         capture.charge(body)
     request = payload.search.model_dump(mode="json")
     fingerprint = digest({"request": request, "scope": capture.scope, "result": body})
@@ -177,16 +191,12 @@ def read_run(
         if not document_id or item["document"]["document_id"] == document_id
     ]
     ids = [item["occurrence_id"] for group in groups for item in group["occurrences"]]
-    reviews = (
-        {
-            row.occurrence_id: row
-            for row in session.scalars(
-                select(PassageReview).where(PassageReview.occurrence_id.in_(ids))
-            )
-        }
-        if ids
-        else {}
-    )
+    independent = run.result_json.get("review_scope") == "run"
+    review_model = RunPassageReview if independent else PassageReview
+    review_statement = select(review_model).where(review_model.occurrence_id.in_(ids))
+    if independent:
+        review_statement = review_statement.where(RunPassageReview.run_id == run.id)
+    reviews = {row.occurrence_id: row for row in session.scalars(review_statement)} if ids else {}
     counts, retained = Counter(), []
     states = {}
     for group in groups:

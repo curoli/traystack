@@ -143,6 +143,7 @@ class DocumentOutcome(BaseModel):
 
 
 class TextualSearchResponse(BaseModel):
+    review_scope: Literal["shared", "run"] = "shared"
     document_outcomes: list[DocumentOutcome] = Field(default_factory=list)
     category: str | None = None
     uncategorized: bool = False
