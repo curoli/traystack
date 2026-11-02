@@ -4,7 +4,14 @@ from fastapi import HTTPException
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
-from traystack.models import Document, PassageReview, Revision, RevisionText
+from traystack.models import (
+    Document,
+    PassageReview,
+    Revision,
+    RevisionText,
+    RunPassageReview,
+    SearchRun,
+)
 from traystack.review_schemas import ReviewOut, ReviewWrite
 from traystack.services.normalization import NORMALIZATION_VERSION, normalize_for_search
 from traystack.services.passage_identity import occurrence_identity, text_fingerprint
@@ -123,6 +130,9 @@ def save_review(session, payload: ReviewWrite) -> ReviewOut:
         if payload.search_run_id
         else validate_current(session, payload)
     )
+    run = session.get(SearchRun, payload.search_run_id) if payload.search_run_id else None
+    if run is not None and run.result_json.get("review_scope") == "run":
+        return save_run_review(session, payload)
     if payload.expected_version == 0:
         values = payload.model_dump(
             exclude={"document_id", "query", "expected_version", "search_run_id"}
@@ -161,5 +171,46 @@ def save_review(session, payload: ReviewWrite) -> ReviewOut:
             ),
         )
     answer = ReviewOut.model_validate(result)
+    session.commit()
+    return answer
+
+
+def save_run_review(session, payload):
+    # validate_saved has already checked immutable source membership and hashes.
+    if payload.expected_version == 0:
+        statement = (
+            insert(RunPassageReview)
+            .values(
+                run_id=payload.search_run_id,
+                occurrence_id=payload.occurrence_id,
+                matched_sha256=payload.matched_sha256,
+                decision=payload.decision,
+                version=1,
+            )
+            .on_conflict_do_nothing()
+            .returning(RunPassageReview)
+        )
+    else:
+        statement = (
+            update(RunPassageReview)
+            .where(
+                RunPassageReview.run_id == payload.search_run_id,
+                RunPassageReview.occurrence_id == payload.occurrence_id,
+                RunPassageReview.matched_sha256 == payload.matched_sha256,
+                RunPassageReview.version == payload.expected_version,
+            )
+            .values(
+                decision=payload.decision,
+                version=RunPassageReview.version + 1,
+                updated_at=func.now(),
+            )
+            .returning(RunPassageReview)
+        )
+    row = session.scalar(statement)
+    if row is None:
+        raise HTTPException(
+            409, "This review changed in another view. Refresh reviews before saving."
+        )
+    answer = ReviewOut.model_validate(row)
     session.commit()
     return answer

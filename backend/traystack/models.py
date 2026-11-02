@@ -350,3 +350,23 @@ class SearchRunSource(Base):
     processing_job_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("archived_texts.processing_job_id", ondelete="RESTRICT"), primary_key=True
     )
+
+
+class RunPassageReview(Base):
+    __tablename__ = "run_passage_reviews"
+    __table_args__ = (
+        CheckConstraint(
+            "decision IN ('unreviewed','keep','dismiss','later')", name="ck_run_review_decision"
+        ),
+        CheckConstraint("version > 0", name="ck_run_review_version"),
+        CheckConstraint("occurrence_id ~ '^[0-9a-f]{64}$'", name="ck_run_review_identity"),
+        CheckConstraint("matched_sha256 ~ '^[0-9a-f]{64}$'", name="ck_run_review_hash"),
+    )
+    run_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("search_runs.id", ondelete="CASCADE"), primary_key=True
+    )
+    occurrence_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    matched_sha256: Mapped[str] = mapped_column(String(64))
+    decision: Mapped[str] = mapped_column(String(20))
+    version: Mapped[int] = mapped_column(Integer)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

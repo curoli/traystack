@@ -1,18 +1,17 @@
 # Saved passage reviews
 
-**Similar passages** supports **Keep**, **Dismiss** and **Decide later** for each
-individual passage. **Not reviewed** is a distinct initial state. **Reset review**
-returns a reviewed passage to that initial state. Decisions persist in PostgreSQL
-through page reloads, new searches and application restarts; they are shared in
-this local app, rather than assigned to separate reviewer accounts.
+New saved searches have independent reviews. Reopening a saved search restores its
+own decisions. **Run again** creates a fresh review, apart from auto-confirmation.
+Migration `0005` preserves older shared annotations and historical snapshots.
+The lower sections describe the legacy shared-review API; the current workflow is
+specified in [Unified document search and review](unified-review.md).
 
 ## Workflow
 
 The current [unified interface](unified-review.md) has three passage states:
-**Confirm match**, **Dismiss match** and **Unreviewed**. Exactly one is selected.
+**Match Confirmed**, **Match Dismissed** and **Unreviewed**. Exactly one is selected.
 Choosing a state does not navigate. Previous/Next and their unreviewed variants
-navigate between documents independently. Select passages within a document from
-the list. There is no review-state filter in the search form; export filtering
+navigate between passages independently. There is no review-state filter in the search form; export filtering
 still operates on passages.
 
 Auto-confirmation defaults to textual/semantic 100/100, hides automatic matches

@@ -275,8 +275,8 @@ Each passage has exactly one selected state:
 
 | Button | Meaning |
 | --- | --- |
-| **Confirm match** | Keep this passage as a match for the query |
-| **Dismiss match** | Reject this passage as a match |
+| **Match Confirmed** | Keep this passage as a match for the query |
+| **Match Dismissed** | Reject this passage as a match |
 | **Unreviewed** | Initial pending state, or an explicit reset |
 
 State choices save without moving away. Automatically confirmed matches can also
@@ -307,9 +307,11 @@ with the original criteria against the current collection. To change criteria,
 edit parameters and choose Find passages.
 
 Category edits, uploads and reprocessing do not rewrite an old snapshot. Explicit
-passage decisions remain shared/current and version-protected; their capture-time
-state is retained separately. New processing runs have different occurrence IDs
-and do not inherit decisions automatically. Reading auto-confirmed results creates
+passage decisions are saved for that search and version-protected; their capture-time
+state is retained separately. Every new search (including Run again) starts a fresh
+review, apart from its own auto-confirmations. Reopening retains its decisions.
+Older saved searches retain their legacy shared annotations; the interface identifies
+these as historical. Reading auto-confirmed results creates
 no manual decision records. Use **Refresh reviews** to load external changes.
 
 For exports, expand **Export results**, choose **Export review status** (all,

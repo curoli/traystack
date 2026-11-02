@@ -34,12 +34,28 @@ Search thresholds and auto-confirmation thresholds are shown in parallel panels
 on wider screens and stack on narrow screens. Opening a saved search collapses
 the saved-search list.
 
+## Fresh reviews for new searches
+
+Every new saved search, including **Run again**, starts its own review. Its
+passages are Unreviewed unless that search's automatic-confirmation policy
+confirms them. A decision in one search never seeds another new search, even when
+the query, source and passage are identical. Reopening a saved search retains
+its decisions, and two views of that same search share version-protected updates.
+
+Migration `0005` adds `run_passage_reviews`, keyed by saved search and occurrence.
+Existing saved searches retain their earlier shared-review behavior and existing
+annotations. Their immutable snapshots and source evidence are preserved; they
+are identified as historical in the UI. Starting a new search from them creates
+an independent review. Diagnostic searches without a saved run retain the legacy
+shared-review API. JSON and CSV exports identify the review scope as `run` or
+`shared`.
+
 ## Three passage states
 
 Each passage has three state buttons, with exactly one selected:
 
-- **Confirm match**: explicitly retain the passage as a match.
-- **Dismiss match**: explicitly reject the passage as a match.
+- **Match Confirmed**: explicitly retain the passage as a match.
+- **Match Dismissed**: explicitly reject the passage as a match.
 - **Unreviewed**: leave/reset the passage pending.
 
 Initially a passage is Unreviewed unless automatically confirmed or carrying an
@@ -62,11 +78,11 @@ are not probabilities or legal-equivalence guarantees.
 The policy is stored in the immutable search request. New snapshots retain
 unrounded textual/semantic scores so policy boundaries never depend on displayed
 rounding. Auto-confirmation is a deterministic projection for that saved search,
-not an unconditional write over shared human annotations. It applies only where
+not an unconditional write over human annotations. It applies only where
 no explicit decision record exists (version zero). Explicit confirmation,
 dismissal or reset to Unreviewed always takes precedence, even on exact matches.
-A manual reset persists across refresh, reload and searches using more permissive
-policies. Merely reading a search never creates decision rows.
+A manual reset persists across refresh and reload of that saved search.
+A new search evaluates its own policy independently. Merely reading a search never creates decision rows.
 
 Automatically confirmed passages are counted but hidden from the passage list by
 default. **Show automatically confirmed passages for review** reveals them. Manual
@@ -116,9 +132,9 @@ available for inspection. Group 3 alone does not establish literal or legal abse
 
 ## Storage and API
 
-No migration is required: category uses document JSON metadata, the auto-confirm
-policy and raw scores use existing snapshot JSON, and shared manual decisions keep
-the existing optimistic-concurrency table.
+Migration `0005` adds per-search review storage. Categories, policy and raw scores
+continue to use existing JSON metadata/snapshots. Legacy manual decisions retain
+the original table; new decisions use the run-and-occurrence composite key.
 
 - `GET /api/categories`: current category choices.
 - `PATCH /api/documents/{id}/category`: `{category: "Supply"}` or null to clear.
@@ -137,9 +153,9 @@ rules continue to apply. Document preparation stays under Manage documents.
 
 ## Validation
 
-Validated with 227 backend tests (including PostgreSQL, real OCR and local
-embeddings) and all 34 browser scenarios. TypeScript, the production frontend
+Validated with 229 backend tests (including PostgreSQL, real OCR and local
+embeddings) and all 35 browser scenarios. TypeScript, the production frontend
 build, Ruff, Prettier, local documentation links and Git whitespace checks pass.
 Desktop and mobile layouts were inspected. The normal Docker Compose app was
-rebuilt and started successfully; no schema migration is needed and original
-documents are preserved.
+rebuilt and started successfully; migration `0005` preserves original documents
+and existing review records.

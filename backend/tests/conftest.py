@@ -44,6 +44,7 @@ def engine(database_url):
             "revision_texts",
             "page_texts",
             "passage_reviews",
+            "run_passage_reviews",
             "search_runs",
             "archived_texts",
             "search_run_sources",
