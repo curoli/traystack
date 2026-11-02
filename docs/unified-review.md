@@ -127,8 +127,9 @@ states and matched wording. Clicking a passage link selects and focuses that exa
 result; hidden automatic matches are revealed as needed. Group membership is
 derived from the current passages after saves. Choosing a document title selects
 a state-relevant passage; choosing one without candidates shows that document's empty detail
-view instead of leaving an unrelated passage displayed. Original downloads remain
-available for inspection. Group 3 alone does not establish literal or legal absence.
+view instead of leaving an unrelated passage displayed. **View original** opens a separate browser tab for original-file inspection;
+**Download original** retains the unchanged file download. HTML viewing is
+sandboxed, with scripts and external resources blocked. Group 3 alone does not establish literal or legal absence.
 
 ## Storage and API
 
@@ -139,6 +140,8 @@ the original table; new decisions use the run-and-occurrence composite key.
 - `GET /api/categories`: current category choices.
 - `PATCH /api/documents/{id}/category`: `{category: "Supply"}` or null to clear.
 - Upload accepts an optional `category` form field.
+- `GET /api/artifacts/{id}/content?view=true` serves inline original bytes; the
+  default content URL remains an attachment download. HTML views use a sandbox CSP.
 - Textual requests accept `category`, `uncategorized`, paired nullable
   `auto_confirm_textual` / `auto_confirm_semantic`. Auto-confirm requires semantic
   scoring. Legacy API defaults do not enable it implicitly. Auto-confirm policy is
@@ -153,8 +156,8 @@ rules continue to apply. Document preparation stays under Manage documents.
 
 ## Validation
 
-Validated with 229 backend tests (including PostgreSQL, real OCR and local
-embeddings) and all 35 browser scenarios. TypeScript, the production frontend
+Validated with 231 backend tests (including PostgreSQL, real OCR and local
+embeddings) and all 40 browser scenarios. TypeScript, the production frontend
 build, Ruff, Prettier, local documentation links and Git whitespace checks pass.
 Desktop and mobile layouts were inspected. The normal Docker Compose app was
 rebuilt and started successfully; migration `0005` preserves original documents

@@ -114,6 +114,7 @@ export const getDocument = (id: string) =>
 export const uploadDocument = (form: FormData) =>
   request<Document>("/api/documents/upload", { method: "POST", body: form });
 export const artifactUrl = (id: string) => `/api/artifacts/${id}/content`;
+export const artifactViewUrl = (id: string) => `${artifactUrl(id)}?view=true`;
 
 export interface Job {
   id: string;

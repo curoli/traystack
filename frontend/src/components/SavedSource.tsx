@@ -1,5 +1,6 @@
+import OriginalActions from "./OriginalActions";
 import { useEffect, useRef, useState } from "react";
-import { getSavedSource, artifactUrl, type TextContent } from "../api";
+import { getSavedSource, type TextContent } from "../api";
 import { coverageLabel, qualityLabel, warningLabel } from "./processingLabels";
 
 export interface SavedSourceLocation {
@@ -101,9 +102,7 @@ export default function SavedSource({
               Normalization: {text.normalization_version}
             </p>
           </details>
-          <a className="download" href={artifactUrl(text.source_artifact_id)}>
-            Download original ↓
-          </a>
+          <OriginalActions id={text.source_artifact_id} />
           <label htmlFor="saved-source-page">Saved page</label>
           <select
             id="saved-source-page"

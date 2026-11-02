@@ -44,6 +44,12 @@ def test_upload_list_detail_and_byte_identical_download(client, filename):
     assert artifact["sha256"] == hashlib.sha256(original).hexdigest()
     assert artifact["size_bytes"] == len(original)
     assert "attachment" in download.headers["content-disposition"]
+    viewed = client.get(f"/api/artifacts/{artifact['id']}/content", params={"view": "true"})
+    assert viewed.status_code == 200
+    assert viewed.content == original
+    assert viewed.headers["content-disposition"].startswith("inline;")
+    assert viewed.headers["content-type"].split(";")[0] == artifact["mime_type"]
+    assert viewed.headers["x-content-type-options"] == "nosniff"
     assert download.headers["x-content-type-options"] == "nosniff"
     assert client.get(f"/api/documents/{document['id']}").json() == document
     assert client.get(f"/api/revisions/{revision['id']}").json() == revision
@@ -205,3 +211,32 @@ def test_png_and_escaped_metadata_roundtrip(client):
     artifact = response.json()["revisions"][0]["artifacts"][0]
     assert artifact["mime_type"] == "image/png"
     assert client.get(f"/api/artifacts/{artifact['id']}/content").content == data
+
+
+@pytest.mark.parametrize(
+    "filename,mime,source",
+    [
+        ("contract.txt", "text/plain", b"Contract: target phrase"),
+        ("contract.html", "text/html", b"<h1>Contract</h1><script>alert(1)</script>"),
+    ],
+)
+def test_text_originals_view_inline_and_html_is_sandboxed(client, filename, mime, source):
+    uploaded = client.post(
+        "/api/documents/upload",
+        data={"title": "Browser view"},
+        files={"file": (filename, source, mime)},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    identity = uploaded.json()["revisions"][0]["artifacts"][0]["id"]
+    viewed = client.get(f"/api/artifacts/{identity}/content?view=true")
+    assert viewed.status_code == 200
+    assert viewed.content == source
+    assert viewed.headers["content-disposition"].startswith("inline;")
+    assert viewed.headers["content-type"].split(";")[0] == mime
+    if mime == "text/html":
+        assert "sandbox;" in viewed.headers["content-security-policy"]
+        assert "default-src 'none'" in viewed.headers["content-security-policy"]
+        assert "allow-scripts" not in viewed.headers["content-security-policy"]
+    downloaded = client.get(f"/api/artifacts/{identity}/content")
+    assert downloaded.headers["content-disposition"].startswith("attachment;")
+    assert downloaded.content == source

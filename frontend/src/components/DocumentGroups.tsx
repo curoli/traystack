@@ -1,5 +1,6 @@
+import OriginalActions from "./OriginalActions";
 import { useState } from "react";
-import { artifactUrl, type TextualSearchResponse } from "../api";
+import { type TextualSearchResponse } from "../api";
 
 export function currentDocumentOutcomes(
   outcomes: TextualSearchResponse["document_outcomes"],
@@ -122,12 +123,7 @@ export default function DocumentGroups({
                     <p>No candidate passages.</p>
                   )}
                   {document.artifact_id && (
-                    <a
-                      className="download"
-                      href={artifactUrl(document.artifact_id)}
-                    >
-                      Download original ↓
-                    </a>
+                    <OriginalActions id={document.artifact_id} />
                   )}
                 </div>
               ))}

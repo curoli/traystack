@@ -296,6 +296,20 @@ original. A document with no candidates shows its own empty detail view, not
 another document's passage. **View source text** opens the preserved extraction;
 use **Download original** for the actual page image.
 
+### View original documents in the browser
+
+Choose **View original ↗** beside a passage, in an expanded document group, in the
+saved source reader, or on an original artifact under Manage documents. It opens
+that original in a separate browser tab and keeps the search/review selection in
+place. PDFs use the browser's PDF viewer; JPEG/PNG display as images, TXT as text,
+and HTML as a sandboxed page. This shows the uploaded file rather than OCR text.
+
+HTML scripts, forms and external resources are blocked in this view. Inline styles
+and embedded data images can render, but pages relying on remote assets can look
+different. **Download original** remains available and saves the unchanged bytes,
+including any original HTML markup/resources references. Browser preferences can
+override inline viewing, especially a setting that always downloads PDFs.
+
 ## 9. Reopen searches and export results
 
 Successful searches automatically save complete candidates, scores, category,
