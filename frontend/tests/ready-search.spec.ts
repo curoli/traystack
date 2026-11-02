@@ -77,9 +77,9 @@ test("auto-confirmed passages are counted and hidden, manual reset wins, and doc
   const confirmed = groups.locator("details").nth(0),
     pending = groups.locator("details").nth(1),
     noMatch = groups.locator("details").nth(2);
-  await expect(confirmed.locator("summary")).toContainText("(1)");
-  await expect(pending.locator("summary")).toContainText("(1)");
-  await expect(noMatch.locator("summary")).toContainText("(1)");
+  await expect(confirmed.locator("summary")).toContainText("(1 document)");
+  await expect(pending.locator("summary")).toContainText("(1 document)");
+  await expect(noMatch.locator("summary")).toContainText("(1 document)");
   expect(await confirmed.getAttribute("open")).toBeNull();
   await noMatch.locator("summary").click();
   await noMatch.getByRole("button", { name: missing, exact: true }).click();
@@ -96,8 +96,8 @@ test("auto-confirmed passages are counted and hidden, manual reset wins, and doc
   await page
     .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
-  await expect(pending.locator("summary")).toContainText("(0)");
-  await expect(noMatch.locator("summary")).toContainText("(2)");
+  await expect(pending.locator("summary")).toContainText("(0 documents)");
+  await expect(noMatch.locator("summary")).toContainText("(2 documents)");
   await page
     .getByLabel("Show automatically confirmed passages for review")
     .check();
@@ -248,8 +248,8 @@ test("document-group counts prioritize confirmation and links select the relevan
   await page
     .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
-  await expect(confirmed.locator("summary")).toContainText("(1)");
-  await expect(pending.locator("summary")).toContainText("(0)");
+  await expect(confirmed.locator("summary")).toContainText("(1 document)");
+  await expect(pending.locator("summary")).toContainText("(0 documents)");
   await page.locator(".passage-choice").last().click();
   await confirmed.locator("summary").click();
   await confirmed.getByRole("button", { name: token, exact: true }).click();
@@ -300,7 +300,7 @@ test("expanded document lists follow all review transitions and link to exact pa
     .click();
   await expect(documentButton(confirmed)).toBeVisible();
   await expect(documentButton(pending)).toHaveCount(0);
-  await expect(confirmed.locator("summary")).toContainText("(1)");
+  await expect(confirmed.locator("summary")).toContainText("(1 document)");
   await confirmed
     .getByRole("link", { name: "Passage 2 — Confirmed", exact: true })
     .click();
@@ -365,7 +365,9 @@ test("document counters survive translated headings and repeated decisions", asy
         await expect(group.locator(".document-outcome")).toHaveCount(
           expected[i],
         );
-      await expect(group.locator("summary")).toContainText(`(${expected[i]})`);
+      await expect(group.locator("summary")).toContainText(
+        `(${expected[i]} ${expected[i] === 1 ? "document" : "documents"})`,
+      );
     }
   }
   async function decide(state: string, expected: number[]) {
@@ -409,4 +411,49 @@ test("document counters survive translated headings and repeated decisions", asy
   await decide("Match Confirmed", [1, 0, 1]);
   await detail.getByRole("button", { name: "Previous", exact: true }).click();
   await decide("Unreviewed", [1, 1, 0]);
+});
+
+test("confirming several passages in one document shows distinct document and passage counts", async ({
+  page,
+}) => {
+  const token = `Distinguish${Date.now()}`,
+    category = `Counts ${randomUUID()}`;
+  await add(page, `Other ${token}`, token, category);
+  await add(page, `Many ${token}`, `${token} context. `.repeat(7), category);
+  await page.goto("/");
+  await page
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
+  await page
+    .getByLabel("Document category", { exact: true })
+    .selectOption(`category:${category}`);
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page.getByLabel("Minimum semantic match").fill("0");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  const detail = page.locator(".passage-detail");
+  const confirmed = page
+    .getByRole("region", { name: "Document match groups", exact: true })
+    .locator("summary")
+    .first();
+  for (let i = 1; i <= 3; i++) {
+    await detail
+      .getByRole("button", { name: "Match Confirmed", exact: true })
+      .click();
+    await expect(confirmed).toContainText("(1 document)");
+    await expect(confirmed).toContainText(
+      `${i} confirmed ${i === 1 ? "passage" : "passages"}`,
+    );
+    if (i < 3)
+      await detail.getByRole("button", { name: "Next", exact: true }).click();
+  }
+  await page.locator(".passage-choice").last().click();
+  await expect(detail).toContainText("Passage 8 of 8");
+  await detail
+    .getByRole("button", { name: "Match Confirmed", exact: true })
+    .click();
+  await expect(confirmed).toContainText("(2 documents)");
+  await expect(confirmed).toContainText("4 confirmed passages");
 });

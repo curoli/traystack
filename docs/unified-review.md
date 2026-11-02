@@ -106,7 +106,12 @@ keys. The selected list item remains the single Tab stop.
 
 ## Three document groups
 
-Below the passage list, three collapsed groups initially show document counts:
+Below the passage list, three collapsed groups show explicit document counts and
+separate passage counts. A document is counted once even if several passages are
+confirmed. For example, confirming three passages in the same document shows
+**1 document · 3 confirmed passages**; confirming a passage in a second document
+increases the document count to two. Passage counts refer to documents in each group.
+The groups are:
 
 1. Documents with at least one confirmed match.
 2. Documents with no confirmed match but at least one unreviewed match.

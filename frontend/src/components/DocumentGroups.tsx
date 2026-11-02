@@ -48,7 +48,9 @@ export default function DocumentGroups({
       <h3>Documents in this search</h3>
       <p className="fineprint">
         These groups reflect the candidate passages and their current review
-        states. The last group is not proof that equivalent wording is absent.
+        states. Each document is counted once, even when it contains several
+        matching passages. Passage counts below refer to documents in that
+        group. The last group is not proof that equivalent wording is absent.
       </p>
       {(
         [
@@ -64,6 +66,28 @@ export default function DocumentGroups({
         ] as const
       ).map(([state, label]) => {
         const rows = currentOutcomes.filter((item) => item.state === state);
+        const decision =
+          state === "confirmed"
+            ? "keep"
+            : state === "unreviewed"
+              ? "unreviewed"
+              : "dismiss";
+        const passageCount = rows.reduce(
+          (total, item) =>
+            total +
+            (passages.get(item.document.document_id) ?? []).filter(
+              (p) =>
+                p.review.decision === decision ||
+                (decision === "unreviewed" && p.review.decision === "later"),
+            ).length,
+          0,
+        );
+        const passageState =
+          state === "confirmed"
+            ? "confirmed"
+            : state === "unreviewed"
+              ? "unreviewed"
+              : "dismissed";
         return (
           <details
             key={state}
@@ -80,7 +104,16 @@ export default function DocumentGroups({
                 aria-live="polite"
                 aria-atomic="true"
               >
-                ({rows.length})
+                ({rows.length} {rows.length === 1 ? "document" : "documents"})
+              </span>{" "}
+              <span
+                className="notranslate"
+                translate="no"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                · {passageCount} {passageState}{" "}
+                {passageCount === 1 ? "passage" : "passages"}
               </span>
             </summary>
             {expanded[state] && !rows.length && (
