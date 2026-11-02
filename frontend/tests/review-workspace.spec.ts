@@ -40,11 +40,11 @@ test("passage navigation and keyboard selection never change review state", asyn
   await expect(detail).toContainText("Passage 2 of 4");
   expect(writes).toBe(0);
   await detail
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(detail).toContainText("Passage 2 of 4");
   await expect(
-    detail.getByRole("button", { name: "Confirm match", exact: true }),
+    detail.getByRole("button", { name: "Match Confirmed", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await choices.first().focus();
   await page.keyboard.press("End");
@@ -91,10 +91,10 @@ test("navigation reaches every passage in one document and skips reviewed passag
   await detail.getByRole("button", { name: "Next", exact: true }).click();
   await expect(detail).toContainText("Passage 2 of 3");
   await detail
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(
-    detail.getByRole("button", { name: "Confirm match", exact: true }),
+    detail.getByRole("button", { name: "Match Confirmed", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   let writes = 0;
   page.on("request", (request) => {

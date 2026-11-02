@@ -7,8 +7,8 @@ import type {
 import { formatDate } from "../format";
 export const reviewLabels: Record<ReviewDecision, string> = {
   unreviewed: "Unreviewed",
-  keep: "Confirm match",
-  dismiss: "Dismiss match",
+  keep: "Match Confirmed",
+  dismiss: "Match Dismissed",
   later: "Unreviewed",
 };
 

@@ -119,10 +119,10 @@ test("a bookmarked run preserves every result, scope and historical source while
   await card
     .locator(".textual-occurrence")
     .first()
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
   await expect(page.locator(".passage-choice").first()).toContainText(
-    "Dismiss match",
+    "Match Dismissed",
   );
   await page.getByLabel("Search name", { exact: true }).fill(`${name} renamed`);
   await page.getByRole("button", { name: "Save name", exact: true }).click();

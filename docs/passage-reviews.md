@@ -9,7 +9,7 @@ this local app, rather than assigned to separate reviewer accounts.
 ## Workflow
 
 The current [unified interface](unified-review.md) has three passage states:
-**Confirm match**, **Dismiss match** and **Unreviewed**. Exactly one is selected.
+**Match Confirmed**, **Match Dismissed** and **Unreviewed**. Exactly one is selected.
 Choosing a state does not navigate. Previous/Next and their unreviewed variants
 navigate between documents independently. Select passages within a document from
 the list. There is no review-state filter in the search form; export filtering

@@ -45,10 +45,10 @@ test("CSV and JSON download complete saved results with current filters and froz
   await card
     .locator(".textual-occurrence")
     .first()
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(page.locator(".passage-choice").first()).toContainText(
-    "Confirm match",
+    "Match Confirmed",
   );
   // Unsubmitted edits and the visible occurrence page must never define the export.
   await page

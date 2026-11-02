@@ -100,7 +100,7 @@ test("a contract batch supports source inspection, material differences and save
     page.getByRole("region", { name: "Saved source text", exact: true }),
   ).toBeFocused();
   await first
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(
     page.getByRole("region", { name: "Review counts", exact: true }),
@@ -118,10 +118,10 @@ test("a contract batch supports source inspection, material differences and save
   await expect(page.locator(".textual-occurrence")).toHaveCount(1);
   await expect(page.locator(".text-comparison del")).toContainText(["not"]);
   await first
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
   await expect(first.locator(".review-status")).toContainText(
-    "Review: Dismiss match",
+    "Review: Match Dismissed",
   );
   await find("amount");
   await expect(page.locator(".text-comparison ins")).toContainText(["5000"]);
@@ -129,9 +129,11 @@ test("a contract batch supports source inspection, material differences and save
     "Semantic match: 100.00%",
   );
   await first
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
-  await expect(first.locator(".review-status")).toContainText("Confirm match");
+  await expect(first.locator(".review-status")).toContainText(
+    "Match Confirmed",
+  );
   await first.getByRole("button", { name: "Unreviewed", exact: true }).click();
   await expect(first.locator(".review-status")).toContainText(
     "Review: Unreviewed",

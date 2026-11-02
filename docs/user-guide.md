@@ -275,8 +275,8 @@ Each passage has exactly one selected state:
 
 | Button | Meaning |
 | --- | --- |
-| **Confirm match** | Keep this passage as a match for the query |
-| **Dismiss match** | Reject this passage as a match |
+| **Match Confirmed** | Keep this passage as a match for the query |
+| **Match Dismissed** | Reject this passage as a match |
 | **Unreviewed** | Initial pending state, or an explicit reset |
 
 State choices save without moving away. Automatically confirmed matches can also

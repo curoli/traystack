@@ -38,8 +38,8 @@ the saved-search list.
 
 Each passage has three state buttons, with exactly one selected:
 
-- **Confirm match**: explicitly retain the passage as a match.
-- **Dismiss match**: explicitly reject the passage as a match.
+- **Match Confirmed**: explicitly retain the passage as a match.
+- **Match Dismissed**: explicitly reject the passage as a match.
 - **Unreviewed**: leave/reset the passage pending.
 
 Initially a passage is Unreviewed unless automatically confirmed or carrying an

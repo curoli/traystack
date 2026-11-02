@@ -14,6 +14,16 @@ async function setup(page: import("@playwright/test").Page) {
     .getByRole("button", { name: "Find passages", exact: true })
     .click();
   await expect(page.locator(".passage-choice")).toHaveCount(2);
+  await expect(
+    page
+      .locator(".passage-detail")
+      .getByRole("button", { name: "Unreviewed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page
+      .locator(".passage-detail")
+      .getByRole("button", { name: "Match Confirmed", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
 }
 
 test("three mutually exclusive states stay on the same passage and persist across reload", async ({
@@ -23,8 +33,8 @@ test("three mutually exclusive states stay on the same passage and persist acros
   const detail = page.locator(".passage-detail");
   for (const state of [
     "Unreviewed",
-    "Confirm match",
-    "Dismiss match",
+    "Match Confirmed",
+    "Match Dismissed",
     "Unreviewed",
   ]) {
     const button = detail.getByRole("button", { name: state, exact: true });
@@ -40,11 +50,13 @@ test("three mutually exclusive states stay on the same passage and persist acros
     await expect(detail).toContainText("Passage 1 of 2");
   }
   await detail
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
-  await expect(detail.locator(".review-status")).toContainText("Dismiss match");
+  await expect(detail.locator(".review-status")).toContainText(
+    "Match Dismissed",
+  );
   await page.reload();
-  await expect(page.locator(".review-status")).toContainText("Dismiss match");
+  await expect(page.locator(".review-status")).toContainText("Match Dismissed");
 });
 
 test("a failed state save keeps the previous state and selection", async ({
@@ -56,7 +68,7 @@ test("a failed state save keeps the previous state and selection", async ({
   );
   const detail = page.locator(".passage-detail");
   await detail
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(detail.getByRole("alert")).toHaveText("Review unavailable");
   await expect(
@@ -83,7 +95,7 @@ test("a late state save cannot affect a replacement search", async ({
     await route.fulfill({ response }).catch(() => {});
   });
   await page
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await started;
   await page

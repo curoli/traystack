@@ -94,7 +94,7 @@ test("auto-confirmed passages are counted and hidden, manual reset wins, and doc
     .filter({ hasText: approximate })
     .click();
   await page
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
   await expect(pending.locator("summary")).toContainText("(0)");
   await expect(noMatch.locator("summary")).toContainText("(2)");
@@ -108,7 +108,7 @@ test("auto-confirmed passages are counted and hidden, manual reset wins, and doc
     .first()
     .click();
   await expect(
-    page.getByRole("button", { name: "Confirm match", exact: true }),
+    page.getByRole("button", { name: "Match Confirmed", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Unreviewed", exact: true }).click();
   await expect(
@@ -170,7 +170,7 @@ test("all automatically confirmed matches can be shown even when the default rev
   await expect(page.locator(".passage-detail")).toBeFocused();
   await expect(page.locator(".passage-choice")).toHaveCount(1);
   await expect(
-    page.getByRole("button", { name: "Confirm match", exact: true }),
+    page.getByRole("button", { name: "Match Confirmed", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -240,13 +240,13 @@ test("document-group counts prioritize confirmation and links select the relevan
   const confirmed = groups.locator("details").nth(0),
     pending = groups.locator("details").nth(1);
   await page
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
   await pending.locator("summary").click();
   await pending.getByRole("button", { name: token, exact: true }).click();
   await expect(page.locator(".passage-detail")).toContainText("Passage 2 of 3");
   await page
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(confirmed.locator("summary")).toContainText("(1)");
   await expect(pending.locator("summary")).toContainText("(0)");
@@ -254,7 +254,7 @@ test("document-group counts prioritize confirmation and links select the relevan
   await confirmed.locator("summary").click();
   await confirmed.getByRole("button", { name: token, exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Confirm match", exact: true }),
+    page.getByRole("button", { name: "Match Confirmed", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -296,7 +296,7 @@ test("expanded document lists follow all review transitions and link to exact pa
   await expect(detail).toContainText("Passage 2 of 2");
   await expect(detail).toBeFocused();
   await detail
-    .getByRole("button", { name: "Confirm match", exact: true })
+    .getByRole("button", { name: "Match Confirmed", exact: true })
     .click();
   await expect(documentButton(confirmed)).toBeVisible();
   await expect(documentButton(pending)).toHaveCount(0);
@@ -305,7 +305,7 @@ test("expanded document lists follow all review transitions and link to exact pa
     .getByRole("link", { name: "Passage 2 — Confirmed", exact: true })
     .click();
   await detail
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
   await expect(documentButton(confirmed)).toHaveCount(0);
   await expect(documentButton(pending)).toBeVisible();
@@ -313,7 +313,7 @@ test("expanded document lists follow all review transitions and link to exact pa
     .getByRole("link", { name: "Passage 1 — Unreviewed", exact: true })
     .click();
   await detail
-    .getByRole("button", { name: "Dismiss match", exact: true })
+    .getByRole("button", { name: "Match Dismissed", exact: true })
     .click();
   await expect(documentButton(pending)).toHaveCount(0);
   await expect(documentButton(dismissed)).toBeVisible();
