@@ -90,8 +90,9 @@ test("auto-confirmed passages are counted and hidden, manual reset wins, and doc
   ).toBeVisible();
   await expect(page.locator(".textual-occurrence")).toHaveCount(0);
   await page
-    .locator(".passage-choice")
+    .locator(".result-document")
     .filter({ hasText: approximate })
+    .locator(".passage-choice")
     .click();
   await page
     .getByRole("button", { name: "Match Dismissed", exact: true })
@@ -103,8 +104,9 @@ test("auto-confirmed passages are counted and hidden, manual reset wins, and doc
     .check();
   await expect(page.locator(".passage-choice")).toHaveCount(3);
   await page
-    .locator(".passage-choice")
+    .locator(".result-document")
     .filter({ hasText: exact })
+    .locator(".passage-choice")
     .first()
     .click();
   await expect(

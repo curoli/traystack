@@ -1022,3 +1022,24 @@ select {
   gap: 0.5rem 1rem;
   align-items: center;
 }
+
+.result-documents,
+.document-passages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.result-document {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.25rem;
+  border-top: 1px solid #dce5df;
+}
+.result-document h4 {
+  margin: 0 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+.document-passages {
+  margin-left: 0.75rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid #dce5df;
+}

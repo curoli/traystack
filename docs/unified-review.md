@@ -95,7 +95,16 @@ Capture-time review state is retained separately from current review state.
 Historical runs without semantic scores do not invent auto-confirmation; rerunning
 through the new UI computes semantic scores.
 
-## Navigation
+## Document results and navigation
+
+The result list groups matching passages under each document title, shown once.
+Each document shows its visible passage count, with selectable passage sub-entries
+showing review state, matched text and both similarity scores. The list heading
+counts documents; the supporting text counts passages. Documents containing only
+hidden automatic matches appear when automatic matches are shown.
+
+Selecting a sub-entry opens that passage for review. The detail navigation reports
+the document position and the passage position across all visible results.
 
 **Previous unreviewed**, **Previous**, **Next**, **Next unreviewed** move between
 visible candidate passages without writing a decision, including passages in the

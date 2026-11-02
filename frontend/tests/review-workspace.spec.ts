@@ -21,6 +21,30 @@ test("passage navigation and keyboard selection never change review state", asyn
   const choices = page.locator(".passage-choice"),
     detail = page.locator(".passage-detail");
   await expect(choices).toHaveCount(4);
+  const outline = page.getByRole("navigation", { name: "Document results" });
+  await expect(
+    outline.getByRole("heading", { name: "Documents (2)", exact: true }),
+  ).toBeVisible();
+  await expect(outline).toContainText(
+    "4 visible passages across these documents.",
+  );
+  const documents = outline.locator(".result-document");
+  await expect(documents).toHaveCount(2);
+  for (const title of titles) {
+    const document = documents.filter({
+      has: page.getByRole("heading", { name: title, exact: true }),
+    });
+    await expect(
+      document.getByRole("heading", { name: title, exact: true }),
+    ).toHaveCount(1);
+    await expect(document.locator(".document-passages > li")).toHaveCount(2);
+    await expect(
+      document.getByRole("button", {
+        name: `Passage 2 in ${title}`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
   let writes = 0;
   page.on("request", (request) => {
     if (request.url().endsWith("/api/reviews") && request.method() === "POST")
@@ -49,6 +73,8 @@ test("passage navigation and keyboard selection never change review state", asyn
   await choices.first().focus();
   await page.keyboard.press("End");
   await expect(choices.last()).toBeFocused();
+  await expect(detail).toContainText("Document 2 of 2");
+  await expect(detail).toContainText(titles[0]);
   await expect(detail).toContainText("Passage 4 of 4");
   await page.keyboard.press("Home");
   await expect(choices.first()).toBeFocused();
