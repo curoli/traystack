@@ -1,3 +1,4 @@
+import OriginalActions from "./OriginalActions";
 import {
   useEffect,
   useRef,
@@ -7,7 +8,6 @@ import {
 } from "react";
 import {
   ApiError,
-  artifactUrl,
   getReviewWorkspace,
   saveReview,
   type ReviewDecision,
@@ -482,12 +482,7 @@ export default function ReviewWorkspace({
                 document.
               </p>
               {emptyDocument.artifact_id && (
-                <a
-                  className="download"
-                  href={artifactUrl(emptyDocument.artifact_id)}
-                >
-                  Download original ↓
-                </a>
+                <OriginalActions id={emptyDocument.artifact_id} />
               )}
             </>
           )}
@@ -518,12 +513,7 @@ export default function ReviewWorkspace({
                 }
               />
               {active.document.artifact_id && (
-                <a
-                  className="download"
-                  href={artifactUrl(active.document.artifact_id)}
-                >
-                  Download original ↓
-                </a>
+                <OriginalActions id={active.document.artifact_id} />
               )}
             </>
           )}

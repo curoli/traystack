@@ -1015,3 +1015,10 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+.original-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}

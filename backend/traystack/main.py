@@ -286,18 +286,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return result
 
     @app.get("/api/artifacts/{artifact_id}/content")
-    def content(artifact_id: UUID, request: Request, session: SessionDep):
+    def content(artifact_id: UUID, request: Request, session: SessionDep, view: bool = False):
         result = session.get(Artifact, artifact_id)
         if result is None:
             raise HTTPException(404, "Artifact not found")
         path = request.app.state.storage.path_for(result.storage_key)
         if not path.is_file():
             raise HTTPException(503, "Artifact bytes are unavailable")
+        headers = {"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"}
+        if view:
+            headers["Referrer-Policy"] = "no-referrer"
+        if view and result.mime_type == "text/html":
+            # Uploaded HTML must not execute scripts or access the application's origin.
+            headers["Content-Security-Policy"] = (
+                "sandbox; default-src 'none'; style-src 'unsafe-inline'; "
+                "img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+            )
         return FileResponse(
             path,
             media_type=result.mime_type,
             filename=safe_filename(result.original_filename),
-            headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"},
+            content_disposition_type="inline" if view else "attachment",
+            headers=headers,
         )
 
     return app

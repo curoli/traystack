@@ -1,3 +1,4 @@
+import OriginalActions from "./OriginalActions";
 import { useState } from "react";
 import {
   artifactUrl,
@@ -64,9 +65,13 @@ export default function ArtifactCard({
                   : "Text preview"}
             </button>
           )}
-          <a className="download" href={artifactUrl(artifact.id)}>
-            {original ? "Download original" : "Download file"} ↓
-          </a>
+          {original ? (
+            <OriginalActions id={artifact.id} />
+          ) : (
+            <a className="download" href={artifactUrl(artifact.id)}>
+              Download file ↓
+            </a>
+          )}
         </div>
       </div>
       <dl>

@@ -24,7 +24,8 @@ at 100 textual / 100 semantic; they are counted and can be revealed for review.
 Manual decisions take precedence within each saved search. New searches start
 fresh reviews; reopening a saved search retains its decisions. Three expandable document groups summarize
 confirmed, pending and no-active-match documents across the complete captured scope.
-Saved runs preserve results, policy and historical sources; CSV/JSON exports remain
+**View original** opens original documents in a separate browser tab, alongside
+unchanged downloads. Saved runs preserve results, policy and historical sources; CSV/JSON exports remain
 available. The literal API remains for integrations, without a separate UI.
 
 Technical contracts and evidence:
