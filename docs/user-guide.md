@@ -22,7 +22,7 @@ other languages. Updated: 1 November 2026.
 ### Requirements and startup
 
 You need the checked-out repository, Docker with Compose v2, and access to the
-Docker daemon. Python, Node and Tesseract do not need separate host installations
+Docker daemon. Python, Node and OCR tools do not need separate host installations
 for normal Docker operation.
 
 The first build downloads container images, dependencies and the pinned local
@@ -58,13 +58,15 @@ need to remain running. Subsequent starts without code changes normally need onl
 ### Configuration and OCR language
 
 Defaults work without `.env`. To customize them, copy `.env.example` to `.env` and
-edit the relevant values. For English and German OCR:
+edit the relevant values. Multilingual PaddleOCR is the default:
 
 ```dotenv
-OCR_LANGUAGES=eng+deu
+OCR_BACKEND=paddleocr
 ```
 
-Both language packs are installed in the container; English alone is the default.
+PP-OCRv6 small runs locally through RapidOCR/ONNX Runtime and includes English and
+German. Model files are included during the image build. For the previous engine,
+set `OCR_BACKEND=tesseract`; only that engine uses `OCR_LANGUAGES=eng+deu`.
 Run `docker compose up -d --wait` to apply changed container settings. Existing text
 is not recalculated automatically: use **Reprocess** for affected documents.
 OCR language is independent of the English interface language.
@@ -100,7 +102,7 @@ replacement for that backup.
 Upload and processing controls live under **Manage documents**, collapsed by
 default so search users can work without processing details.
 
-The worker uses PyMuPDF for PDFs and Tesseract for image OCR. The API uses character
+The worker uses PyMuPDF for PDFs and PaddleOCR for image OCR (Tesseract remains a legacy option). The API uses character
 comparison for textual similarity and optionally the local model for semantic
 comparison. The worker runs independently of the browser: accepted jobs can
 continue after closing the browser while services remain running. Uploading alone
@@ -202,7 +204,7 @@ source text even after successful reprocessing.
 | Input | Processing | What to inspect |
 | --- | --- | --- |
 | Digital PDF page with usable embedded text and no image content | Read embedded PDF text | Reading order, special characters and unusual layouts |
-| Scanned PDF, or page containing images or too little embedded text | Render the entire page and run Tesseract OCR | Mixed text/image pages also use this conservative OCR path; recognition errors remain possible |
+| Scanned PDF, or page containing images or too little embedded text | Render the entire page and run the configured OCR engine | Mixed text/image pages also use this conservative OCR path; recognition errors remain possible |
 | JPEG/PNG | OCR; one image is one page | Resolution, rotation, blur and handwriting |
 | UTF-8 TXT | Read text without OCR | Logical text page rather than a printed page reference |
 | UTF-8 HTML | Extract text without executing scripts or fetching external content | Images/layout are not fully examined; HTML always requires review |

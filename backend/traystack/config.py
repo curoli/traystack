@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,6 +16,8 @@ class Settings(BaseSettings):
     upload_max_bytes: int = Field(default=25 * 1024 * 1024, gt=0)
     cors_origins: list[str] = ["http://localhost:8080", "http://127.0.0.1:8080"]
 
+    ocr_backend: Literal["paddleocr", "tesseract"] = "paddleocr"
+    ocr_model_path: Path = Path("/opt/traystack/ocr-model")
     ocr_languages: str = Field(default="eng", pattern=r"^[a-zA-Z0-9_]+(?:\+[a-zA-Z0-9_]+)*$")
     ocr_timeout_seconds: int = Field(default=30, ge=1, le=300)
     ocr_dpi: int = Field(default=200, ge=72, le=400)

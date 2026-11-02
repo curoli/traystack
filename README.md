@@ -114,7 +114,14 @@ to separate demonstrations and tests from normal data.
 Use Python 3.13 (minimum 3.12), Node 20.19+ or 22+, and npm. Python lock files were
 created with Python 3.13. Local OCR tests need Tesseract with English installed,
 for example `sudo apt-get install tesseract-ocr tesseract-ocr-eng` on Debian/Ubuntu.
-Containers include English and German; set `OCR_LANGUAGES=eng+deu` for both.
+The default container backend is PaddleOCR PP-OCRv6 small via RapidOCR/ONNX Runtime,
+with English/German support and verified local model files. For local PaddleOCR
+integration checks, run `python -m traystack.prepare_ocr_model data/models/paddleocr-small`
+(with `PYTHONPATH=backend` if the package is not installed).
+`OCR_BACKEND=tesseract` selects the legacy engine; `OCR_LANGUAGES=eng+deu` applies
+only to that backend. Existing jobs retain their captured engine; reprocess to
+create a run using the new default. The expected handwriting benefit has not
+been measured on this corpus.
 Defaults are 30 seconds per OCR call and 100 pages per job. Actual parameters and
 engine versions are recorded per run.
 

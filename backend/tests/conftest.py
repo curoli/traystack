@@ -74,7 +74,10 @@ def client(engine, database_url, tmp_path):
             )
         )
     settings = Settings(
-        database_url=database_url, storage_path=tmp_path / "blobs", upload_max_bytes=1024 * 1024
+        ocr_backend="tesseract",
+        database_url=database_url,
+        storage_path=tmp_path / "blobs",
+        upload_max_bytes=1024 * 1024,
     )
     with TestClient(create_app(settings)) as client:
         yield client
