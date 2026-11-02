@@ -245,7 +245,12 @@ candidates can skip manual review. Manual decisions always win.
 
 ## 7. Identify documents without an active match
 
-Below the passage list, expand these document groups:
+Results are grouped by document: each title appears once, with matching passages
+listed underneath. Select a passage to review its text, scores and state. The list
+shows separate document and passage counts. Navigation moves through the visible
+passages, including multiple passages in the same document.
+
+Below the result list, expand these document groups:
 
 1. **Documents with at least one confirmed match**.
 2. **Documents with no confirmed match but at least one unreviewed match**.

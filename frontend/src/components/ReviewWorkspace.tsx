@@ -131,6 +131,24 @@ export default function ReviewWorkspace({
   const entries = allEntries.filter(
     (item) => showAutoConfirmed || !item.occurrence.auto_confirmed,
   );
+  const documentEntries = new Map<
+    string,
+    {
+      document: (typeof entries)[number]["document"];
+      passages: {
+        occurrence: (typeof entries)[number]["occurrence"];
+        index: number;
+      }[];
+    }
+  >();
+  entries.forEach(({ document, occurrence }, index) => {
+    if (!documentEntries.has(document.document_id))
+      documentEntries.set(document.document_id, { document, passages: [] });
+    documentEntries
+      .get(document.document_id)!
+      .passages.push({ occurrence, index });
+  });
+  const visibleDocuments = Array.from(documentEntries.values());
   const automaticCount = allEntries.filter(
     (item) => item.occurrence.auto_confirmed,
   ).length;
@@ -384,37 +402,61 @@ export default function ReviewWorkspace({
         Show automatically confirmed passages for review
       </label>
       <div className="review-workspace" aria-busy={locked}>
-        <nav className="passage-list" aria-label="Passage list" ref={list}>
-          <h3>Passages ({entries.length})</h3>
+        <nav className="passage-list" aria-label="Document results" ref={list}>
+          <h3>Documents ({visibleDocuments.length})</h3>
+          <p className="fineprint">
+            {entries.length} visible{" "}
+            {entries.length === 1 ? "passage" : "passages"} across these
+            documents.
+          </p>
           <p className="fineprint">
             Select a passage, or use ↑ / ↓ and Home / End. Review states change
             only when you choose a state button.
           </p>
-          {entries.map(({ document, occurrence }, index) => (
-            <button
-              key={occurrence.occurrence_id}
-              className="passage-choice"
-              tabIndex={selected === index ? 0 : -1}
-              aria-controls="selected-passage"
-              data-index={index}
-              aria-label={`Passage ${index + 1} in ${document.title}`}
-              aria-current={selected === index ? "true" : undefined}
-              disabled={locked}
-              onClick={() => select(index)}
-              onKeyDown={(event) => listKey(event, index)}
-            >
-              <strong>{document.title}</strong>
-              <span className="passage-preview">{occurrence.matched_text}</span>
-              <span>
-                Passage {index + 1} · {reviewLabels[occurrence.review.decision]}
-              </span>
-              <span>
-                Textual {occurrence.score.toFixed(2)}%
-                {occurrence.semantic_score !== null &&
-                  ` · Semantic ${occurrence.semantic_score.toFixed(2)}%`}
-              </span>
-            </button>
-          ))}
+          <ul className="result-documents">
+            {visibleDocuments.map(({ document, passages }) => (
+              <li className="result-document" key={document.document_id}>
+                <h4>{document.title}</h4>
+                <p className="fineprint">
+                  {passages.length} visible{" "}
+                  {passages.length === 1 ? "passage" : "passages"}
+                </p>
+                <ul
+                  className="document-passages"
+                  aria-label={`Passages in ${document.title}`}
+                >
+                  {passages.map(({ occurrence, index }, localIndex) => (
+                    <li key={occurrence.occurrence_id}>
+                      <button
+                        className="passage-choice"
+                        tabIndex={selected === index ? 0 : -1}
+                        aria-controls="selected-passage"
+                        data-index={index}
+                        aria-label={`Passage ${localIndex + 1} in ${document.title}`}
+                        aria-current={selected === index ? "true" : undefined}
+                        disabled={locked}
+                        onClick={() => select(index)}
+                        onKeyDown={(event) => listKey(event, index)}
+                      >
+                        <span>
+                          Passage {localIndex + 1} ·{" "}
+                          {reviewLabels[occurrence.review.decision]}
+                        </span>
+                        <span className="passage-preview">
+                          {occurrence.matched_text}
+                        </span>
+                        <span>
+                          Textual {occurrence.score.toFixed(2)}%
+                          {occurrence.semantic_score !== null &&
+                            ` · Semantic ${occurrence.semantic_score.toFixed(2)}%`}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
           {!entries.length && (
             <p>
               {automaticCount > 0 && !showAutoConfirmed
@@ -451,7 +493,7 @@ export default function ReviewWorkspace({
             </button>
             <span role="status">
               {active
-                ? `Passage ${selected + 1} of ${entries.length}`
+                ? `Document ${visibleDocuments.findIndex((group) => group.document.document_id === active.document.document_id) + 1} of ${visibleDocuments.length} · Passage ${selected + 1} of ${entries.length}`
                 : "No passage selected"}
             </span>
             <button
