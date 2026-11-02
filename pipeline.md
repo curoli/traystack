@@ -113,6 +113,8 @@ Current warnings include a mean below 80, or more than 20% of available scores
 below 50. Missing confidence also produces a warning. These are engine-specific, uncalibrated heuristics: line and word scores are not
 interchangeable probabilities, semantic similarity, or proof of correct transcription.
 The PaddleOCR detection-limit warning also keeps affected results out of ready search.
+It is based on the raw contour count before small/low-confidence boxes are filtered,
+so fewer than 1,000 returned lines does not imply detection was complete.
 
 Further checks flag empty or suspicious text and honor manual-review requirements.
 An extraction failure or OCR timeout is recorded rather than replaced with

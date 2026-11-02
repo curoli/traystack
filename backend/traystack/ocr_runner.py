@@ -29,13 +29,23 @@ def recognize(image_path: str, root: Path):
             "EngineConfig.onnxruntime.inter_op_num_threads": 1,
         }
     )
+    from traystack.ocr_detection import observe_detection
+
+    detection = observe_detection(engine)
     result = engine(image_path)
-    if result.txts is None:
-        return []
-    return [
-        {"text": text, "confidence": float(score) * 100, "polygon": box.tolist()}
-        for text, score, box in zip(result.txts, result.scores, result.boxes, strict=True)
-    ]
+    lines = (
+        []
+        if result.txts is None
+        else [
+            {"text": text, "confidence": float(score) * 100, "polygon": box.tolist()}
+            for text, score, box in zip(result.txts, result.scores, result.boxes, strict=True)
+        ]
+    )
+    return {
+        "lines": lines,
+        "detection_limit_hit": detection.limit_hit,
+        "raw_contours": detection.raw_contours,
+    }
 
 
 if __name__ == "__main__":

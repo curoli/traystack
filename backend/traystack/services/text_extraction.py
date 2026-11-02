@@ -172,7 +172,8 @@ def paddle_page(image: Image.Image, page_number: int, parameters: dict[str, Any]
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-            lines = json.loads(output_path.read_text())
+            output = json.loads(output_path.read_text())
+            lines = output["lines"]
         scores = [line["confidence"] for line in lines]
         confidence = mean(scores) if scores else None
         warnings = []
@@ -181,7 +182,7 @@ def paddle_page(image: Image.Image, page_number: int, parameters: dict[str, Any]
             warnings.append("ocr_confidence_unavailable")
         elif confidence < 80 or sum(score < 50 for score in scores) / len(scores) > 0.2:
             warnings.append("low_ocr_confidence")
-        if len(lines) >= 1000:
+        if output["detection_limit_hit"]:
             warnings.append("ocr_detection_limit")
         return ExtractedPage(
             page_number,
@@ -197,6 +198,8 @@ def paddle_page(image: Image.Image, page_number: int, parameters: dict[str, Any]
                 "model": MODEL_ID,
                 "confidence_unit": "recognition_line_score_percent",
                 "lines": lines,
+                "raw_contours": output["raw_contours"],
+                "detection_limit_hit": output["detection_limit_hit"],
             },
         )
     except subprocess.TimeoutExpired:
