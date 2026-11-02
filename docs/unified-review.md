@@ -105,8 +105,12 @@ are excluded from all groups; they are not disguised as negative findings.
 Counts include automatic confirmations and remain independent of whether those
 passages are shown. Confirm/reset/dismiss updates groups immediately after a
 successful save. Expanding a group renders its document list, with batches of 100
-and Show more documents where needed. Choosing a document with candidates selects
-its passage; choosing one without candidates shows that document's empty detail
+and Show more documents where needed. Document rows show titles and individual
+passage links with their current review
+states and matched wording. Clicking a passage link selects and focuses that exact
+result; hidden automatic matches are revealed as needed. Group membership is
+derived from the current passages after saves. Choosing a document title selects
+a state-relevant passage; choosing one without candidates shows that document's empty detail
 view instead of leaving an unrelated passage displayed. Original downloads remain
 available for inspection. Group 3 alone does not establish literal or legal absence.
 
@@ -134,7 +138,7 @@ rules continue to apply. Document preparation stays under Manage documents.
 ## Validation
 
 Validated with 227 backend tests (including PostgreSQL, real OCR and local
-embeddings) and all 33 browser scenarios. TypeScript, the production frontend
+embeddings) and all 34 browser scenarios. TypeScript, the production frontend
 build, Ruff, Prettier, local documentation links and Git whitespace checks pass.
 Desktop and mobile layouts were inspected. The normal Docker Compose app was
 rebuilt and started successfully; no schema migration is needed and original

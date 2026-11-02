@@ -15,7 +15,7 @@ import {
   type SearchTarget,
   type TextualSearchResponse,
 } from "../api";
-import DocumentGroups from "./DocumentGroups";
+import DocumentGroups, { currentDocumentOutcomes } from "./DocumentGroups";
 import { Occurrence, reviewLabels } from "./PassageDetails";
 
 export default function ReviewWorkspace({
@@ -171,7 +171,7 @@ export default function ReviewWorkspace({
     setSelected(index);
     onSelectionChange(visible[index]?.occurrence.occurrence_id ?? null);
   }
-  function selectDocument(id: string) {
+  function selectDocument(id: string, occurrenceId?: string) {
     if (locked) return;
     const state = data?.document_outcomes.find(
       (item) => item.document.document_id === id,
@@ -179,11 +179,13 @@ export default function ReviewWorkspace({
     const index = allEntries.findIndex(
       (item) =>
         item.document.document_id === id &&
-        (state === "confirmed"
-          ? item.occurrence.review.decision === "keep"
-          : state === "unreviewed"
-            ? item.occurrence.review.decision === "unreviewed"
-            : true),
+        (occurrenceId
+          ? item.occurrence.occurrence_id === occurrenceId
+          : state === "confirmed"
+            ? item.occurrence.review.decision === "keep"
+            : state === "unreviewed"
+              ? item.occurrence.review.decision === "unreviewed"
+              : true),
     );
     if (index < 0) {
       setEmptyDocumentId(id);
@@ -325,25 +327,10 @@ export default function ReviewWorkspace({
           occurrences_total: remaining,
         },
       };
-      const groupStates = new Map(
-        next.results.map(
-          (group) =>
-            [
-              group.document.document_id,
-              group.occurrences.some((item) => item.review.decision === "keep")
-                ? "confirmed"
-                : group.occurrences.some(
-                      (item) => item.review.decision === "unreviewed",
-                    )
-                  ? "unreviewed"
-                  : "no_active_match",
-            ] as const,
-        ),
+      next.document_outcomes = currentDocumentOutcomes(
+        data.document_outcomes,
+        next.results,
       );
-      next.document_outcomes = data.document_outcomes.map((item) => ({
-        ...item,
-        state: groupStates.get(item.document.document_id) ?? "no_active_match",
-      }));
       const visible = next.results
         .flatMap((group) => group.occurrences)
         .filter((item) => showAutoConfirmed || !item.auto_confirmed);
@@ -545,6 +532,7 @@ export default function ReviewWorkspace({
       {navigationMessage && <p role="status">{navigationMessage}</p>}
       <DocumentGroups
         outcomes={data?.document_outcomes ?? []}
+        results={data?.results ?? []}
         disabled={locked}
         onSelect={selectDocument}
       />

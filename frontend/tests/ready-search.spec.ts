@@ -153,9 +153,21 @@ test("all automatically confirmed matches can be shown even when the default rev
   await expect(page.locator(".review-workspace")).toContainText(
     "automatically confirmed",
   );
-  await page
-    .getByLabel("Show automatically confirmed passages for review")
-    .check();
+  const confirmed = page
+    .getByRole("region", { name: "Document match groups", exact: true })
+    .locator("details")
+    .first();
+  await confirmed.locator("summary").click();
+  await confirmed
+    .getByRole("link", {
+      name: "Passage 1 — Confirmed (automatic)",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByLabel("Show automatically confirmed passages for review"),
+  ).toBeChecked();
+  await expect(page.locator(".passage-detail")).toBeFocused();
   await expect(page.locator(".passage-choice")).toHaveCount(1);
   await expect(
     page.getByRole("button", { name: "Confirm match", exact: true }),
@@ -244,4 +256,80 @@ test("document-group counts prioritize confirmation and links select the relevan
   await expect(
     page.getByRole("button", { name: "Confirm match", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+});
+
+test("expanded document lists follow all review transitions and link to exact passages", async ({
+  page,
+}) => {
+  const category = `Live groups ${randomUUID()}`,
+    title = `Contract ${randomUUID()}`,
+    token = `Live${Date.now()}`;
+  await add(page, title, `${token} context. `.repeat(2), category);
+  await page.goto("/");
+  await page
+    .getByLabel("Auto-confirm strong matches", { exact: true })
+    .uncheck();
+  await page
+    .getByLabel("Document category", { exact: true })
+    .selectOption(`category:${category}`);
+  await page.getByLabel("Text passage", { exact: true }).fill(token);
+  await page.getByLabel("Minimum textual match").fill("100");
+  await page
+    .getByRole("button", { name: "Find passages", exact: true })
+    .click();
+  const groups = page.getByRole("region", {
+    name: "Document match groups",
+    exact: true,
+  });
+  const confirmed = groups.locator("details").nth(0),
+    pending = groups.locator("details").nth(1),
+    dismissed = groups.locator("details").nth(2);
+  for (const group of [confirmed, pending, dismissed])
+    await group.locator("summary").click();
+  const documentButton = (group: typeof pending) =>
+    group.getByRole("button", { name: title, exact: true });
+  await expect(documentButton(pending)).toBeVisible();
+  await pending
+    .getByRole("link", { name: "Passage 2 — Unreviewed", exact: true })
+    .click();
+  const detail = page.locator(".passage-detail");
+  await expect(detail).toContainText("Passage 2 of 2");
+  await expect(detail).toBeFocused();
+  await detail
+    .getByRole("button", { name: "Confirm match", exact: true })
+    .click();
+  await expect(documentButton(confirmed)).toBeVisible();
+  await expect(documentButton(pending)).toHaveCount(0);
+  await expect(confirmed.locator("summary")).toContainText("(1)");
+  await confirmed
+    .getByRole("link", { name: "Passage 2 — Confirmed", exact: true })
+    .click();
+  await detail
+    .getByRole("button", { name: "Dismiss match", exact: true })
+    .click();
+  await expect(documentButton(confirmed)).toHaveCount(0);
+  await expect(documentButton(pending)).toBeVisible();
+  await pending
+    .getByRole("link", { name: "Passage 1 — Unreviewed", exact: true })
+    .click();
+  await detail
+    .getByRole("button", { name: "Dismiss match", exact: true })
+    .click();
+  await expect(documentButton(pending)).toHaveCount(0);
+  await expect(documentButton(dismissed)).toBeVisible();
+  await expect(dismissed.getByRole("link", { name: /Dismissed/ })).toHaveCount(
+    2,
+  );
+  await dismissed
+    .getByRole("link", { name: "Passage 2 — Dismissed", exact: true })
+    .click();
+  await detail.getByRole("button", { name: "Unreviewed", exact: true }).click();
+  await expect(documentButton(dismissed)).toHaveCount(0);
+  await expect(documentButton(pending)).toBeVisible();
+  await page.reload();
+  await pending.locator("summary").click();
+  await expect(documentButton(pending)).toBeVisible();
+  await expect(
+    pending.getByRole("link", { name: "Passage 2 — Unreviewed", exact: true }),
+  ).toBeVisible();
 });
